@@ -32,11 +32,13 @@ Emma Jones, TC Howton, Anisha Haldar, and Brittany Lasseigne.
 
 ## Funding 
 
-List project funding sources. 
+NHGRI R00HG009678 (PI: Lasseigne)
+Pittman Scholar (PI: Lasseigne)
+UAB Lab Startup funds (PI: Lasseigne)
 
 ## Acknowledgements 
 
-List project acknowledgements.
+We acknowledge the members of the Lasseigne Lab for their thoughtful feedback.
 
 ## License 
 
