@@ -21,7 +21,7 @@ RUN R -e 'install.packages(c("viridis", "gprofiler2"))'
 
 #### Project Specific Bioconductor Packages ####
 
-RUN R -e 'BiocManager::install(c("IsoformSwitchAnalyzeR", "ComplexHeatmap", "AnnotationDbi", "org.Mm.eg.db")'
+RUN R -e 'BiocManager::install(c("IsoformSwitchAnalyzeR", "ComplexHeatmap", "AnnotationDbi", "org.Mm.eg.db"))'
 
 ##----------------------------------------------------------------------------##
 ## SYSTEM PACKAGES
