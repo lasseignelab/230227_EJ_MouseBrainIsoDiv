@@ -1,0 +1,459 @@
+---
+title: 'DTU Analysis: Brain Region and Sex'
+author: "Emma Jones"
+date: "2023-02-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
+
+#### Load in packages
+
+```{r load packages}
+library(tidyverse)
+library(IsoformSwitchAnalyzeR)
+library(ComplexHeatmap)
+library(viridis)
+library(org.Mm.eg.db)
+library(gprofiler2)
+```
+
+#### Load in data
+
+Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be sourced.
+
+```{r read in data and get cpm values}
+source("calculate_cpm.R", local = knitr::knit_global())
+```
+
+### Get DTU by sex
+
+Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new isoformswitchanalyzer object with metadata for sex.
+
+```{r create metadata and create object for sex}
+sex_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id,
+    condition = sample_collection_metadata$sex)
+
+sex_switchlist <- importRdata(
+    isoformCountMatrix   = merged_raw_counts,
+    isoformRepExpression = tpm,
+    designMatrix         = sex_design,
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+```
+
+Now that I have my object, I can run a DTU analysis.
+
+```{r run DEXSeq}
+sex_switchlist <- preFilter(sex_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = sex_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(sex_switchlist_analyzed)
+```
+
+No genes were considered switching, so I will try splitting by brain region.
+
+### Get sex DTU for each brain region
+
+```{r split out brain regions}
+#cerebellum
+cere_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
+cere_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
+cere_tpm <- cere_tpm[rowSums(cere_tpm[,-1]) != 0,]
+
+#cortex
+ctx_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
+ctx_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
+ctx_tpm <- ctx_tpm[rowSums(ctx_tpm[,-1]) != 0,]
+
+#hippocampus 
+hip_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
+hip_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
+hip_tpm <- hip_tpm[rowSums(hip_tpm[,-1]) != 0,]
+
+#striatum 
+stm_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
+stm_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
+stm_tpm <- stm_tpm[rowSums(stm_tpm[,-1]) != 0,]
+```
+
+Now that the data is split out, I can make SwitchLists objects for analysis.
+
+```{r make design and switchlists}
+#cerebellum
+cere_sex_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"],
+    condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "cerebellum"])
+
+cere_sex_switchlist <- importRdata(
+    isoformCountMatrix   = cere_raw_counts,
+    isoformRepExpression = cere_tpm,
+    designMatrix         = cere_sex_design,
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+
+#cortex
+ctx_sex_design <- data.frame(
+  sampleID = sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"],
+  condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "cortex"])
+
+ctx_sex_switchlist <- importRdata(
+  isoformCountMatrix   = ctx_raw_counts,
+  isoformRepExpression = ctx_tpm,
+  designMatrix         = ctx_sex_design,
+  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  showProgress = FALSE)
+
+#hippocampus
+hip_sex_design <- data.frame(
+  sampleID = sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"],
+  condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "hippocampus"])
+
+hip_sex_switchlist <- importRdata(
+  isoformCountMatrix   = hip_raw_counts,
+  isoformRepExpression = hip_tpm,
+  designMatrix         = hip_sex_design,
+  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  showProgress = FALSE)
+
+#striatum
+stm_sex_design <- data.frame(
+  sampleID = sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"],
+  condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "striatum"])
+
+stm_sex_switchlist <- importRdata(
+  isoformCountMatrix   = stm_raw_counts,
+  isoformRepExpression = stm_tpm,
+  designMatrix         = stm_sex_design,
+  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  showProgress = FALSE)
+```
+
+Finally, I can run DEXSeq.
+
+```{r DEXSeq by sex and brain region}
+#cerebellum
+cere_sex_switchlist <- preFilter(cere_sex_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+cere_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = cere_sex_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(cere_sex_switchlist_analyzed)
+
+#cortex
+ctx_sex_switchlist <- preFilter(ctx_sex_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+ctx_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = ctx_sex_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(ctx_sex_switchlist_analyzed)
+
+#hippocampus
+hip_sex_switchlist <- preFilter(hip_sex_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+hip_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = hip_sex_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(hip_sex_switchlist_analyzed)
+
+#striatum
+stm_sex_switchlist <- preFilter(stm_sex_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+stm_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = stm_sex_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(stm_sex_switchlist_analyzed)
+```
+
+Alright, now I have some differential used isoforms/genes. Let visualize them with a volcano plot, although not including background genes in the analysis might be a bit much.
+
+```{r volcano plots for sex split by brain region}
+#cerebellum
+ggplot(data = cere_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Cerebellum Differentially Used Isoforms - by sex")
+
+#cortex
+ggplot(data = ctx_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Cortex Differentially Used Isoforms - by sex")
+
+#hippocampus
+ggplot(data = hip_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Hippocampus Differentially Used Isoforms - by sex")
+
+#striatum
+ggplot(data = stm_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Striatum Differentially Used Isoforms - by sex")
+
+```
+
+Yeah, these volcano plots are awful. I'm going to add the argument to include all genes and see if it is overwhelming.
+
+```{r redo DEXSEq split by tissue and sex}
+#cerebellum
+#run DEXSeq
+cere_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = cere_sex_switchlist,
+    reduceToSwitchingGenes = FALSE)
+extractSwitchSummary(cere_sex_switchlist_analyzed)
+
+#cortex
+#run DEXSeq
+ctx_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = ctx_sex_switchlist,
+    reduceToSwitchingGenes = FALSE)
+extractSwitchSummary(ctx_sex_switchlist_analyzed)
+
+#hippocampus
+#run DEXSeq
+hip_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = hip_sex_switchlist,
+    reduceToSwitchingGenes = FALSE)
+extractSwitchSummary(hip_sex_switchlist_analyzed)
+
+#striatum
+#run DEXSeq
+stm_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = stm_sex_switchlist,
+    reduceToSwitchingGenes = FALSE)
+extractSwitchSummary(stm_sex_switchlist_analyzed)
+```
+
+Okay, now time to plot again.
+
+```{r volcano plot again}
+#cerebellum
+ggplot(data = cere_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Cerebellum Differentially Used Isoforms - by sex")
+
+#cortex
+ggplot(data = ctx_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Cortex Differentially Used Isoforms - by sex")
+
+#hippocampus
+ggplot(data = hip_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Hippocampus Differentially Used Isoforms - by sex")
+
+#striatum
+ggplot(data = stm_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle("Striatum Differentially Used Isoforms - by sex")
+```
+
+There are very few genes, but I'll still make an UpSet plot to compare them.
+
+```{r sex upset}
+#cerebellum
+cere_sex_sig_isoforms <- unique(dplyr::filter(cere_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$isoform_id)
+
+#cortex
+ctx_sex_sig_isoforms <- unique(dplyr::filter(ctx_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$isoform_id)
+
+#hippocampus isoforms
+hip_sex_sig_isoforms <- unique(dplyr::filter(hip_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$isoform_id)
+
+#striatum isoforms
+stm_sex_sig_isoforms <- unique(dplyr::filter(stm_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$isoform_id)
+
+#make all into list
+all_sex_isoform_list <- list(cerebellum = cere_sex_sig_isoforms, cortex = ctx_sex_sig_isoforms, hippocampus = hip_sex_sig_isoforms, striatum = stm_sex_sig_isoforms)
+
+#make matrix
+all_sex_isoform_list_mat <- list_to_matrix(all_sex_isoform_list)
+
+#create combination matrix
+all_sex_isoform_list_comb_mat <- make_comb_mat(all_sex_isoform_list_mat)
+
+#make UpSet plot (ComplexHeatmap)
+upset_sex_isoform <- UpSet(all_sex_isoform_list_comb_mat, comb_order = order(-comb_size(all_sex_isoform_list_comb_mat)), comb_col = viridis(4)[comb_degree(all_sex_isoform_list_comb_mat)], top_annotation = upset_top_annotation(all_sex_isoform_list_comb_mat, add_numbers = TRUE), right_annotation = upset_right_annotation(all_sex_isoform_list_comb_mat, add_numbers = TRUE))
+
+draw(upset_sex_isoform, column_title = "Overlap of sex-DTU isoforms by brain region")
+```
+
+There is no overlap! I find this interesting since that means they are brain-region specific sex differences. So what are they? Are they enriched for anything?
+
+```{r go analysis}
+#cerebellum
+cere_sex_sig_genes <- unique(dplyr::filter(cere_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id)
+
+cere_sex_sig_genes <- str_extract(cere_sex_sig_genes, "ENSMUSG...........")
+
+cere_sexgostres <- gost(query = cere_sex_sig_genes, 
+                organism = "mmusculus", ordered_query = FALSE, 
+                multi_query = FALSE, significant = TRUE, exclude_iea = FALSE, 
+                measure_underrepresentation = FALSE, evcodes = FALSE, 
+                user_threshold = 0.05, correction_method = "g_SCS", 
+                domain_scope = "custom", 
+                custom_bg = str_extract(unique(cere_sex_switchlist_analyzed$isoformFeatures$gene_id), pattern = "ENSMUSG..........."), 
+                numeric_ns = "", sources = NULL, as_short_link = FALSE)
+
+gostplot(cere_sexgostres, capped = TRUE, interactive = FALSE)
+
+#cortex
+ctx_sex_sig_genes <- unique(dplyr::filter(ctx_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id)
+
+ctx_sex_sig_genes <- str_extract(ctx_sex_sig_genes, "ENSMUSG...........")
+
+ctx_sexgostres <- gost(query = ctx_sex_sig_genes, 
+                        organism = "mmusculus", ordered_query = FALSE, 
+                        multi_query = FALSE, significant = TRUE, exclude_iea = FALSE, 
+                        measure_underrepresentation = FALSE, evcodes = FALSE, 
+                        user_threshold = 0.05, correction_method = "g_SCS", 
+                        domain_scope = "custom", 
+                        custom_bg = str_extract(unique(ctx_sex_switchlist_analyzed$isoformFeatures$gene_id), pattern = "ENSMUSG..........."), 
+                        numeric_ns = "", sources = NULL, as_short_link = FALSE)
+
+gostplot(ctx_sexgostres, capped = TRUE, interactive = FALSE)
+
+#hippocampus
+hip_sex_sig_genes <- unique(dplyr::filter(hip_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id)
+
+hip_sex_sig_genes <- str_extract(hip_sex_sig_genes, "ENSMUSG...........")
+
+hip_sexgostres <- gost(query = hip_sex_sig_genes, 
+                        organism = "mmusculus", ordered_query = FALSE, 
+                        multi_query = FALSE, significant = TRUE, exclude_iea = FALSE, 
+                        measure_underrepresentation = FALSE, evcodes = FALSE, 
+                        user_threshold = 0.05, correction_method = "g_SCS", 
+                        domain_scope = "custom", 
+                        custom_bg = str_extract(unique(hip_sex_switchlist_analyzed$isoformFeatures$gene_id), pattern = "ENSMUSG..........."), 
+                        numeric_ns = "", sources = NULL, as_short_link = FALSE)
+
+gostplot(hip_sexgostres, capped = TRUE, interactive = FALSE)
+
+#striatum
+stm_sex_sig_genes <- unique(dplyr::filter(stm_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id)
+
+stm_sex_sig_genes <- str_extract(stm_sex_sig_genes, "ENSMUSG...........")
+
+stm_sexgostres <- gost(query = stm_sex_sig_genes, 
+                        organism = "mmusculus", ordered_query = FALSE, 
+                        multi_query = FALSE, significant = TRUE, exclude_iea = FALSE, 
+                        measure_underrepresentation = FALSE, evcodes = FALSE, 
+                        user_threshold = 0.05, correction_method = "g_SCS", 
+                        domain_scope = "custom", 
+                        custom_bg = str_extract(unique(stm_sex_switchlist_analyzed$isoformFeatures$gene_id), pattern = "ENSMUSG..........."), 
+                        numeric_ns = "", sources = NULL, as_short_link = FALSE)
+
+#gostplot(stm_sexgostres, capped = TRUE, interactive = FALSE) not significant
+```
+
+It does not look like there is a lot of enrichment here. There are only a few genes so it makes sense to me that there is very little enrichment.
+
+Now, I want to get the gene symbols. Honestly, I should have done this way before in the analysis. I should consider doing that later.
+
+```{r get top sex gene symbols}
+#get symbols for each list
+#cerebellum
+cere_sex_sig_genes
+cere_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=cere_sex_sig_genes, columns=c("SYMBOL","GENENAME", "ENSEMBL"), keytype="ENSEMBL")
+
+#cortex
+ctx_sex_sig_genes
+ctx_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=ctx_sex_sig_genes, columns=c("SYMBOL","GENENAME", "ENSEMBL"), keytype="ENSEMBL")
+
+#hippocampus
+hip_sex_sig_genes
+hip_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=hip_sex_sig_genes, columns=c("SYMBOL","GENENAME", "ENSEMBL"), keytype="ENSEMBL")
+
+#striatum
+stm_sex_sig_genes
+stm_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=stm_sex_sig_genes, columns=c("SYMBOL","GENENAME", "ENSEMBL"), keytype="ENSEMBL")
+```
+
+
+#### Software versions
+
+```{r versions}
+sessionInfo()
+```
