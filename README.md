@@ -29,8 +29,9 @@ Emma Jones, TC Howton, Anisha Haldar, and Brittany Lasseigne.
 
 ## Funding
 
-NHGRI R00HG009678 (PI: Lasseigne) Pittman Scholar (PI: Lasseigne) UAB
-Lab Startup funds (PI: Lasseigne)
+NHGRI R00HG009678 (PI: Lasseigne)  
+Pittman Scholar (PI: Lasseigne)  
+UAB Lab Startup funds (PI: Lasseigne)
 
 ## Acknowledgements
 
