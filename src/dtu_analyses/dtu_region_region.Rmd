@@ -48,8 +48,8 @@ cpm_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = exp_design,
-    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
     showProgress = FALSE)
 ```
 
@@ -66,7 +66,7 @@ cpm_switchlist_dexseq <- isoformSwitchTestDEXSeq(
 
 extractSwitchSummary(cpm_switchlist_dexseq)
 
-saveRDS(cpm_switchlist_dexseq, "../data/isoformswitch_analyzed/cpm_DEXSeq_object.Rds")
+#saveRDS(cpm_switchlist_dexseq, "../../data/isoformswitch_analyzed/cpm_DEXSeq_object.Rds")
 ```
 
 ### Make UpSet Plots
@@ -179,7 +179,7 @@ create_volcano_plot <- function(x, y) {
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(x, " vs. ", y, " differentially used isoforms"))
   
-  ggsave(paste0("../plots/DEXSeq_volcano/", x, "_vs_", y, "_cpm_volcano.png"), width = 6, height = 4)
+  ggsave(paste0("../../results/plots/DEXSeq_volcano/", x, "_vs_", y, "_cpm_volcano.png"), width = 6, height = 4)
   
 }
 
@@ -218,7 +218,7 @@ cere_ctx_gostres <- gost(query = sig_isoform_genes_cere_ctx,
 
 gostplot(cere_ctx_gostres, capped = TRUE, interactive = FALSE)
 
-ggsave("../plots/gprofiler_results/cere_ctx_cpm_gprofiler.png", width = 6, height = 4)
+ggsave("../../results/plots/gprofiler_results/cere_ctx_cpm_gprofiler.png", width = 6, height = 4)
 
 #cerebellum v hippocampus
 sig_isoform_genes_cere_hip <- str_extract(sig_isoform_genes_cere_hip, "ENSMUSG...........")
@@ -231,7 +231,7 @@ cere_hip_gostres <- gost(query = sig_isoform_genes_cere_hip,
                 numeric_ns = "", sources = NULL, as_short_link = FALSE)
 gostplot(cere_hip_gostres, capped = TRUE, interactive = FALSE)
 
-ggsave("../plots/gprofiler_results/cere_hip_cpm_gprofiler.png", width = 6, height = 4)
+ggsave("../../results/plots/gprofiler_results/cere_hip_cpm_gprofiler.png", width = 6, height = 4)
 
 #cerebellum v striatum
 sig_isoform_genes_cere_stm <- str_extract(sig_isoform_genes_cere_stm, "ENSMUSG...........")
@@ -244,7 +244,7 @@ cere_stm_gostres <- gost(query = sig_isoform_genes_cere_stm,
                 numeric_ns = "", sources = NULL, as_short_link = FALSE)
 gostplot(cere_stm_gostres, capped = TRUE, interactive = FALSE)
 
-ggsave("../plots/gprofiler_results/cere_stm_cpm_gprofiler.png", width = 6, height = 4)
+ggsave("../../results/plots/gprofiler_results/cere_stm_cpm_gprofiler.png", width = 6, height = 4)
 
 #cortex v hippocampus
 sig_isoform_genes_ctx_hip <- str_extract(sig_isoform_genes_ctx_hip, "ENSMUSG...........")
