@@ -4,10 +4,10 @@
 library(tidyverse)
 
 #read in metadata
-sample_collection_metadata <- read.csv("../../data/sample_collection_metadata.csv")
+sample_collection_metadata <- read.csv("../../doc/sample_collection_metadata.csv")
 
 #read in counts data
-merged_counts <- read.table("../../data/merged_fastq_counts/merged_counts_transcript.txt", header = TRUE)
+merged_counts <- read.table("../../data/nextflow/results/bambu/counts_transcript.txt", header = TRUE)
 merged_counts_iso <- merged_counts[,-2]
 merged_counts_noid <- merged_counts[,-c(1,2)]
 
