@@ -40,8 +40,8 @@ sex_design <- data.frame(
     condition = sample_collection_metadata$sex)
 
 sex_switchlist <- importRdata(
-    isoformCountMatrix   = merged_raw_counts,
-    isoformRepExpression = tpm,
+    isoformCountMatrix   = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
     designMatrix         = sex_design,
     isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
     isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
@@ -65,24 +65,24 @@ No genes were considered switching, so I will try splitting by brain region.
 
 ```{r split out brain regions}
 #cerebellum
-cere_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
-cere_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
-cere_tpm <- cere_tpm[rowSums(cere_tpm[,-1]) != 0,]
+cere_counts <- subset(merged_counts_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
+cere_cpm <- subset(cpm_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
+cere_cpm <- cere_cpm[rowSums(cere_cpm[,-1]) != 0,]
 
 #cortex
-ctx_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
-ctx_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
-ctx_tpm <- ctx_tpm[rowSums(ctx_tpm[,-1]) != 0,]
+ctx_counts <- subset(merged_counts_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
+ctx_cpm <- subset(cpm_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cortex"]))
+ctx_cpm <- ctx_cpm[rowSums(ctx_cpm[,-1]) != 0,]
 
 #hippocampus 
-hip_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
-hip_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
-hip_tpm <- hip_tpm[rowSums(hip_tpm[,-1]) != 0,]
+hip_counts <- subset(merged_counts_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
+hip_cpm <- subset(cpm_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "hippocampus"]))
+hip_cpm <- hip_cpm[rowSums(hip_cpm[,-1]) != 0,]
 
 #striatum 
-stm_raw_counts <- subset(merged_raw_counts, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
-stm_tpm <- subset(tpm, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
-stm_tpm <- stm_tpm[rowSums(stm_tpm[,-1]) != 0,]
+stm_counts <- subset(merged_counts_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
+stm_cpm <- subset(cpm_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "striatum"]))
+stm_cpm <- stm_cpm[rowSums(stm_cpm[,-1]) != 0,]
 ```
 
 Now that the data is split out, I can make SwitchLists objects for analysis.
@@ -94,8 +94,8 @@ cere_sex_design <- data.frame(
     condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "cerebellum"])
 
 cere_sex_switchlist <- importRdata(
-    isoformCountMatrix   = cere_raw_counts,
-    isoformRepExpression = cere_tpm,
+    isoformCountMatrix   = cere_counts,
+    isoformRepExpression = cere_cpm,
     designMatrix         = cere_sex_design,
     isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
     isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
@@ -107,8 +107,8 @@ ctx_sex_design <- data.frame(
   condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "cortex"])
 
 ctx_sex_switchlist <- importRdata(
-  isoformCountMatrix   = ctx_raw_counts,
-  isoformRepExpression = ctx_tpm,
+  isoformCountMatrix   = ctx_counts,
+  isoformRepExpression = ctx_cpm,
   designMatrix         = ctx_sex_design,
   isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
   isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
@@ -120,8 +120,8 @@ hip_sex_design <- data.frame(
   condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "hippocampus"])
 
 hip_sex_switchlist <- importRdata(
-  isoformCountMatrix   = hip_raw_counts,
-  isoformRepExpression = hip_tpm,
+  isoformCountMatrix   = hip_counts,
+  isoformRepExpression = hip_cpm,
   designMatrix         = hip_sex_design,
   isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
   isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
@@ -133,8 +133,8 @@ stm_sex_design <- data.frame(
   condition = sample_collection_metadata$sex[sample_collection_metadata$tissue == "striatum"])
 
 stm_sex_switchlist <- importRdata(
-  isoformCountMatrix   = stm_raw_counts,
-  isoformRepExpression = stm_tpm,
+  isoformCountMatrix   = stm_counts,
+  isoformRepExpression = stm_cpm,
   designMatrix         = stm_sex_design,
   isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
   isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
@@ -450,7 +450,6 @@ hip_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=hip_sex_sig_gen
 stm_sex_sig_genes
 stm_sex_sig_genes_df <- AnnotationDbi::select(org.Mm.eg.db, keys=stm_sex_sig_genes, columns=c("SYMBOL","GENENAME", "ENSEMBL"), keytype="ENSEMBL")
 ```
-
 
 #### Software versions
 
