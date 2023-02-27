@@ -63,6 +63,8 @@ No genes were considered switching, so I will try splitting by brain region.
 
 ### Get sex DTU for each brain region
 
+Before analysis, I need to subset the data for each brain region.
+
 ```{r split out brain regions}
 #cerebellum
 cere_counts <- subset(merged_counts_iso, select = c("isoform_id", sample_collection_metadata$sample_id[sample_collection_metadata$tissue == "cerebellum"]))
@@ -141,7 +143,9 @@ stm_sex_switchlist <- importRdata(
   showProgress = FALSE)
 ```
 
-Finally, I can run DEXSeq.
+Once these are made, I can run DEXSeq.
+
+#### Run DEXSeq
 
 ```{r DEXSeq by sex and brain region}
 #cerebellum
@@ -177,7 +181,9 @@ stm_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
 extractSwitchSummary(stm_sex_switchlist_analyzed)
 ```
 
-Alright, now I have some differential used isoforms/genes. Let visualize them with a volcano plot, although not including background genes in the analysis might be a bit much.
+Alright, now I have some differential used isoforms/genes. Let's visualize them with a volcano plot, although not including background genes in the analysis might be a bit much.
+
+#### Make volcano plots
 
 ```{r volcano plots for sex split by brain region}
 #cerebellum
@@ -330,7 +336,7 @@ ggplot(data = stm_sex_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log
   ggtitle("Striatum Differentially Used Isoforms - by sex")
 ```
 
-There are very few genes, but I'll still make an UpSet plot to compare them.
+This is slightly better, I guess. There are very few genes, but I'll still make an UpSet plot to compare them.
 
 ```{r sex upset}
 #cerebellum
@@ -361,6 +367,8 @@ draw(upset_sex_isoform, column_title = "Overlap of sex-DTU isoforms by brain reg
 ```
 
 There is no overlap! I find this interesting since that means they are brain-region specific sex differences. So what are they? Are they enriched for anything?
+
+#### GO Analysis using gprofiler2
 
 ```{r go analysis}
 #cerebellum
@@ -409,7 +417,7 @@ hip_sexgostres <- gost(query = hip_sex_sig_genes,
                         custom_bg = str_extract(unique(hip_sex_switchlist_analyzed$isoformFeatures$gene_id), pattern = "ENSMUSG..........."), 
                         numeric_ns = "", sources = NULL, as_short_link = FALSE)
 
-gostplot(hip_sexgostres, capped = TRUE, interactive = FALSE)
+#gostplot(hip_sexgostres, capped = TRUE, interactive = FALSE) not significant
 
 #striatum
 stm_sex_sig_genes <- unique(dplyr::filter(stm_sex_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id)
