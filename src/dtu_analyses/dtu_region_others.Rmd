@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
+## Differential Transcript Usage (DTU) Analysis by Region in Mouse Brain lrRNA-Seq Data
 
 #### Load in packages
 
@@ -53,7 +53,7 @@ stm_design <- data.frame(
     condition = sample_collection_metadata$tissue == "striatum")
 ```
 
-Now, I can make a new switch list object.
+Now, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with DEXSeq.
 
 ```{r make region vs all objects}
 #cerebellum
@@ -92,6 +92,10 @@ stm_switchlist <- importRdata(
     isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 ```
+
+Once switchAnalyzeRlists are made, you can run DEXSeq. You also need to prefilter the data.
+
+#### Run DEXSeq
 
 ```{r run DEXSeq on region:all comparisons}
 ##cerebellum
@@ -173,7 +177,9 @@ stm_sig_genes <- unique(stm_sig_features$gene_id)
 all_gene_list <- list(cerebellum = cere_sig_genes, cortex = ctx_sig_genes, hippocampus = hip_sig_genes, striatum = stm_sig_genes)
 ```
 
-Now, with the list created I can create a complexheatmap UpSet plot.
+Now, with the list created I can create a ComplexHeatmap UpSet plot.
+
+#### Make UpSet plots
 
 ```{r complexheatmap tissue:all UpSet genes}
 #make UpSet plot (ComplexHeatmap)

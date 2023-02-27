@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
+## Differential Transcript Usage (DTU) Analysis across Sex in Mouse Brain lrRNA-Seq Data
 
 #### Load in packages
 
@@ -32,7 +32,7 @@ source("calculate_cpm.R", local = knitr::knit_global())
 
 ### Get DTU by sex
 
-Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new isoformswitchanalyzer object with metadata for sex.
+Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new switchAnalyzeRlist object with metadata for sex.
 
 ```{r create metadata and create object for sex}
 sex_design <- data.frame(
@@ -87,7 +87,7 @@ stm_cpm <- subset(cpm_iso, select = c("isoform_id", sample_collection_metadata$s
 stm_cpm <- stm_cpm[rowSums(stm_cpm[,-1]) != 0,]
 ```
 
-Now that the data is split out, I can make SwitchLists objects for analysis.
+Now that the data is split out, I can make switchAnalyzeRlist objects for analysis.
 
 ```{r make design and switchlists}
 #cerebellum
