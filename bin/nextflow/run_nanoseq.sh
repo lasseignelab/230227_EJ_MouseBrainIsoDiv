@@ -12,4 +12,5 @@ nextflow run nf-core/nanoseq -r 2.0.1 \
     --skip_demultiplexing \
     --skip_differential_analysis \
     -profile cheaha \
+    --outdir ../../data/nextflow/ \
     -c custom.config
