@@ -61,8 +61,8 @@ cere_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = cere_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 
 #cortex
@@ -70,8 +70,8 @@ ctx_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = ctx_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 
 #hippocampus
@@ -79,8 +79,8 @@ hip_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = hip_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 
 #striatum
@@ -88,8 +88,8 @@ stm_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = stm_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 ```
 

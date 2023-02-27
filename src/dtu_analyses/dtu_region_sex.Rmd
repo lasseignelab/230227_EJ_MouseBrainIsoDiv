@@ -43,8 +43,8 @@ sex_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = sex_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 ```
 
@@ -99,8 +99,8 @@ cere_sex_switchlist <- importRdata(
     isoformCountMatrix   = cere_counts,
     isoformRepExpression = cere_cpm,
     designMatrix         = cere_sex_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 
 #cortex
@@ -112,8 +112,8 @@ ctx_sex_switchlist <- importRdata(
   isoformCountMatrix   = ctx_counts,
   isoformRepExpression = ctx_cpm,
   designMatrix         = ctx_sex_design,
-  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
   showProgress = FALSE)
 
 #hippocampus
@@ -125,8 +125,8 @@ hip_sex_switchlist <- importRdata(
   isoformCountMatrix   = hip_counts,
   isoformRepExpression = hip_cpm,
   designMatrix         = hip_sex_design,
-  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
   showProgress = FALSE)
 
 #striatum
@@ -138,8 +138,8 @@ stm_sex_switchlist <- importRdata(
   isoformCountMatrix   = stm_counts,
   isoformRepExpression = stm_cpm,
   designMatrix         = stm_sex_design,
-  isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-  isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+  isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+  isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
   showProgress = FALSE)
 ```
 

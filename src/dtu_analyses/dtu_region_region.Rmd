@@ -48,8 +48,8 @@ cpm_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = exp_design,
-    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
     showProgress = FALSE)
 ```
 
