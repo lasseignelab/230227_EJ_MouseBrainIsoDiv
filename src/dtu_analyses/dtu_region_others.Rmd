@@ -1,0 +1,294 @@
+---
+title: "DTU Analysis (cpm): Brain Region vs All"
+author: "Emma Jones"
+date: "2023-02-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
+
+#### Load in packages
+
+```{r load packages}
+library(tidyverse)
+library(IsoformSwitchAnalyzeR)
+library(ComplexHeatmap)
+library(viridis)
+library(org.Mm.eg.db)
+library(gprofiler2)
+```
+
+#### Load in data
+
+Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be sourced.
+
+```{r read in data and get cpm values}
+source("calculate_cpm.R", local = knitr::knit_global())
+```
+
+## DTU for one region versus all other regions
+
+First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions.
+
+```{r make design matrices}
+#cerebellum
+cere_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id,
+    condition = sample_collection_metadata$tissue == "cerebellum")
+#cortex
+ctx_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id,
+    condition = sample_collection_metadata$tissue == "cortex")
+#hippocampus
+hip_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id, 
+    condition = sample_collection_metadata$tissue == "hippocampus")
+#striatum
+stm_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id, 
+    condition = sample_collection_metadata$tissue == "striatum")
+```
+
+Now, I can make a new switch list object.
+
+```{r make region vs all objects}
+#cerebellum
+cere_switchlist <- importRdata(
+    isoformCountMatrix   = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix         = cere_design,
+    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+
+#cortex
+ctx_switchlist <- importRdata(
+    isoformCountMatrix   = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix         = ctx_design,
+    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+
+#hippocampus
+hip_switchlist <- importRdata(
+    isoformCountMatrix   = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix         = hip_design,
+    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+
+#striatum
+stm_switchlist <- importRdata(
+    isoformCountMatrix   = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix         = stm_design,
+    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    showProgress = FALSE)
+```
+
+```{r run DEXSeq on region:all comparisons}
+##cerebellum
+#filter data
+cere_switchlist <- preFilter(cere_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+cere_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = cere_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(cere_switchlist_analyzed)
+#save
+saveRDS(cere_switchlist_analyzed, "../data/isoformswitch_analyzed/cerebellum_cpm_DEXSeq_object.Rds")
+
+##cortex
+#filter data
+ctx_switchlist <- preFilter(ctx_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+ctx_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = ctx_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(ctx_switchlist_analyzed)
+#save
+saveRDS(ctx_switchlist_analyzed, "../data/isoformswitch_analyzed/cortex_cpm_DEXSeq_object.Rds")
+
+##hippocampus
+#filter data
+hip_switchlist <- preFilter(hip_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+hip_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = hip_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(hip_switchlist_analyzed)
+#save
+saveRDS(hip_switchlist_analyzed, "../data/isoformswitch_analyzed/hippocampus_cpm_DEXSeq_object.Rds")
+
+##striatum
+#filter data
+stm_switchlist <- preFilter(stm_switchlist, geneExpressionCutoff = NULL)
+#run DEXSeq
+stm_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = stm_switchlist,
+    reduceToSwitchingGenes = TRUE)
+extractSwitchSummary(stm_switchlist_analyzed)
+#save
+saveRDS(stm_switchlist_analyzed, "../data/isoformswitch_analyzed/striatum_cpm_DEXSeq_object.Rds")
+```
+
+### Make plots for tissue:all DTU
+
+Now that those objects are saved, I need to make plots for them. To do that, I want to extract the significant genes.
+I will start with UpSet plots (using ComplexHeatmap for color) to show overlap of significant genes.
+
+```{r extract sigificant tissue:all genes}
+###cerebellum
+#get significant genes
+cere_sig_features <- dplyr::filter(cere_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)
+#pull just genes
+cere_sig_genes <- unique(cere_sig_features$gene_id)
+
+###cortex
+#get significant genes
+ctx_sig_features <- dplyr::filter(ctx_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)
+#pull just genes
+ctx_sig_genes <- unique(ctx_sig_features$gene_id)
+
+###hippocampus genes
+#get significant genes
+hip_sig_features <- dplyr::filter(hip_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)
+#pull just genes
+hip_sig_genes <- unique(hip_sig_features$gene_id)
+
+###striatum genes
+#get significant genes
+stm_sig_features <- dplyr::filter(stm_switchlist_analyzed$isoformFeatures, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)
+#pull just genes
+stm_sig_genes <- unique(stm_sig_features$gene_id)
+
+###make all into list
+all_gene_list <- list(cerebellum = cere_sig_genes, cortex = ctx_sig_genes, hippocampus = hip_sig_genes, striatum = stm_sig_genes)
+```
+
+Now, with the list created I can create a complexheatmap UpSet plot.
+
+```{r complexheatmap tissue:all UpSet genes}
+#make UpSet plot (ComplexHeatmap)
+#create matrix
+all_gene_list_mat <- list_to_matrix(all_gene_list)
+
+#generate combination matrix
+all_gene_list_comb_mat <- make_comb_mat(all_gene_list_mat)
+
+#make UpSet plot (ComplexHeatmap)
+UpSet(all_gene_list_comb_mat, pt_size = unit(3, "mm"), comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)])
+
+upset_gene <- UpSet(all_gene_list_comb_mat, comb_order = order(-comb_size(all_gene_list_comb_mat)), comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)], top_annotation = upset_top_annotation(all_gene_list_comb_mat, add_numbers = TRUE), right_annotation = upset_right_annotation(all_gene_list_comb_mat, add_numbers = TRUE))
+
+draw(upset_gene, column_title = "Overlap of DTU genes by brain region")
+```
+
+Cerebellum has most unique genes overall, but what happens when we extend this to isoforms?
+
+```{r extract sigificant tissue:all isoforms}
+#cerebellum isoforms
+cere_sig_isoforms <- unique(cere_sig_features$isoform_id)
+
+#cortex isoforms
+ctx_sig_isoforms <- unique(ctx_sig_features$isoform_id)
+
+#hippocampus isoforms
+hip_sig_isoforms <- unique(hip_sig_features$isoform_id)
+
+#striatum isoforms
+stm_sig_isoforms <- unique(stm_sig_features$isoform_id)
+
+#make all into list
+all_isoform_list <- list(cerebellum = cere_sig_isoforms, cortex = ctx_sig_isoforms, hippocampus = hip_sig_isoforms, striatum = stm_sig_isoforms)
+```
+
+Now list is made, I can make combination matrix and plot using complexheatmap
+
+```{r plot complexheatmap tissue:all UpSet isoforms}
+#make matrix
+all_isoform_list_mat <- list_to_matrix(all_isoform_list)
+
+#create combination matrix
+all_isoform_list_comb_mat <- make_comb_mat(all_isoform_list_mat)
+
+#make UpSet plot (ComplexHeatmap)
+upset_isoform <- UpSet(all_isoform_list_comb_mat, comb_order = order(-comb_size(all_isoform_list_comb_mat)), comb_col = viridis(4)[comb_degree(all_isoform_list_comb_mat)], top_annotation = upset_top_annotation(all_isoform_list_comb_mat, add_numbers = TRUE), right_annotation = upset_right_annotation(all_isoform_list_comb_mat, add_numbers = TRUE))
+
+draw(upset_isoform, column_title = "Overlap of DTU isoforms by brain region")
+```
+
+#### Make volcano plots
+
+I also want to make volcano plots to visualize this.
+
+```{r make volcano plots for region v others}
+#cerebellum
+ggplot(data = cere_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle(paste0("Cerebellum"," vs. Others Differentially Used Isoforms"))
+
+#cortex
+ggplot(data = ctx_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle(paste0("Cortex"," vs. Others Differentially Used Isoforms"))
+
+#hippocampus
+ggplot(data = hip_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle(paste0("Hippocampus"," vs. Others Differentially Used Isoforms"))
+
+#striatum
+ggplot(data = stm_switchlist_analyzed$isoformFeatures, aes(x = dIF, y = -log10(isoform_switch_q_value))) +
+  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05), size = 2, alpha = 0.5, stroke = NA) +
+  geom_hline(yintercept = -log10(0.05), linetype = 'dashed', color = "magenta", linewidth = .7) + 
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = 'dashed', color = "turquoise3", linewidth = .7) + 
+  scale_color_manual('Signficant\nIsoform Switch', 
+                       labels = c('not significant', 'significant'), 
+                       values = c('gray40','limegreen')) +
+  labs(x = 'dIF (Differential Isoform Fraction)', y = '-log10 (Isoform Switch q Value)') +
+  theme_light() +
+  theme(legend.text = element_text(size = 11), axis.text = element_text(size=10)) + 
+  guides(colour = guide_legend(override.aes = list(size = 4))) +
+  ggtitle(paste0("Striatum"," vs. Others Differentially Used Isoforms"))
+```
+
+#### Software versions
+
+```{r versions}
+sessionInfo()
+```
