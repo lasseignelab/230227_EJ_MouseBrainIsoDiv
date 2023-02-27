@@ -10,12 +10,16 @@ The purpose of this project is to analyze Oxford Nanopore RNA sequencing
 from four wildtype mouse brain regions balanced for sex, to assay
 isoform usage differences across brain region and sex.
 
-## Dependencies OR Scripts
+## Dependencies
 
-**\[if project will not be a package\]** - this section should be titled
-“Dependencies” or “Scripts” Include a code chunk (if relevant) on what
-your project depends on. Include a “script tree” on how to reproduce
-your results with descriptions for all scripts
+“Dependencies” Include a code chunk (if relevant) on what your project
+depends on.  
+Currently: nextflow, gffread
+
+## Scripts
+
+“Scripts” Include a “script tree” on how to reproduce your results with
+descriptions for all scripts
 
 ## Authors
 
