@@ -12,7 +12,7 @@ FROM bioconductor/bioconductor_docker:RELEASE_3_14
 RUN R -e 'install.packages(c("tidyverse", "remotes",  "BiocManager", "devtools", "knitr", "lintr", "styler", "here"))'
 
 #### Project Specific CRAN Packages ####
-# RUN R -e 'install.packages(c("# insert CRAN Packages here #"))'
+RUN R -e 'install.packages(c("viridis", "gprofiler2"))'
 
 #### Project Specific GitHub Packages ####
 # RUN R -e 'devtools::install_github("# insert GitHub repos here #")'
@@ -21,7 +21,7 @@ RUN R -e 'install.packages(c("tidyverse", "remotes",  "BiocManager", "devtools",
 
 #### Project Specific Bioconductor Packages ####
 
-# RUN R -e 'BiocManager::install(c("# insert Bioconductor Packages here #""))'
+RUN R -e 'BiocManager::install(c("IsoformSwitchAnalyzeR", "ComplexHeatmap", "AnnotationDbi", "org.Mm.eg.db")'
 
 ##----------------------------------------------------------------------------##
 ## SYSTEM PACKAGES
