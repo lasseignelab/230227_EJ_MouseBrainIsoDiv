@@ -61,8 +61,8 @@ cere_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = cere_design,
-    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
     showProgress = FALSE)
 
 #cortex
@@ -70,8 +70,8 @@ ctx_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = ctx_design,
-    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
     showProgress = FALSE)
 
 #hippocampus
@@ -79,8 +79,8 @@ hip_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = hip_design,
-    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
     showProgress = FALSE)
 
 #striatum
@@ -88,8 +88,8 @@ stm_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = stm_design,
-    isoformExonAnnoation = "../data/merged_fastq_annotation/extended_annotations.gtf",
-    isoformNtFasta       = "../data/merged_fastq_annotation/isoform_sequences.fa",
+    isoformExonAnnoation = "../../data/merged_fastq_annotation/extended_annotations.gtf",
+    isoformNtFasta       = "../../data/merged_fastq_annotation/isoform_sequences.fa",
     showProgress = FALSE)
 ```
 
@@ -103,7 +103,7 @@ cere_switchlist_analyzed <- isoformSwitchTestDEXSeq(
     reduceToSwitchingGenes = TRUE)
 extractSwitchSummary(cere_switchlist_analyzed)
 #save
-saveRDS(cere_switchlist_analyzed, "../data/isoformswitch_analyzed/cerebellum_cpm_DEXSeq_object.Rds")
+#saveRDS(cere_switchlist_analyzed, "../../data/isoformswitch_analyzed/cerebellum_cpm_DEXSeq_object.Rds")
 
 ##cortex
 #filter data
@@ -114,7 +114,7 @@ ctx_switchlist_analyzed <- isoformSwitchTestDEXSeq(
     reduceToSwitchingGenes = TRUE)
 extractSwitchSummary(ctx_switchlist_analyzed)
 #save
-saveRDS(ctx_switchlist_analyzed, "../data/isoformswitch_analyzed/cortex_cpm_DEXSeq_object.Rds")
+#saveRDS(ctx_switchlist_analyzed, "../../data/isoformswitch_analyzed/cortex_cpm_DEXSeq_object.Rds")
 
 ##hippocampus
 #filter data
@@ -125,7 +125,7 @@ hip_switchlist_analyzed <- isoformSwitchTestDEXSeq(
     reduceToSwitchingGenes = TRUE)
 extractSwitchSummary(hip_switchlist_analyzed)
 #save
-saveRDS(hip_switchlist_analyzed, "../data/isoformswitch_analyzed/hippocampus_cpm_DEXSeq_object.Rds")
+#saveRDS(hip_switchlist_analyzed, "../../data/isoformswitch_analyzed/hippocampus_cpm_DEXSeq_object.Rds")
 
 ##striatum
 #filter data
@@ -136,7 +136,7 @@ stm_switchlist_analyzed <- isoformSwitchTestDEXSeq(
     reduceToSwitchingGenes = TRUE)
 extractSwitchSummary(stm_switchlist_analyzed)
 #save
-saveRDS(stm_switchlist_analyzed, "../data/isoformswitch_analyzed/striatum_cpm_DEXSeq_object.Rds")
+#saveRDS(stm_switchlist_analyzed, "../../data/isoformswitch_analyzed/striatum_cpm_DEXSeq_object.Rds")
 ```
 
 ### Make plots for tissue:all DTU
