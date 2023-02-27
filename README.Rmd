@@ -20,7 +20,7 @@ The purpose of this project is to analyze Oxford Nanopore RNA sequencing from fo
 **[if project will not be a package]** - this section should be titled "Dependencies" or "Scripts"
 Include a code chunk (if relevant) on what your project depends on. Include a "script tree" on how to reproduce your results with descriptions for all scripts
 
-## Authors 
+## Authors
 
 Emma Jones, TC Howton, Anisha Haldar, and Brittany Lasseigne. 
 
