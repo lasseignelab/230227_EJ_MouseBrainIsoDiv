@@ -21,6 +21,9 @@ library(ComplexHeatmap)
 library(viridis)
 library(org.Mm.eg.db)
 library(gprofiler2)
+library(styler)
+library(lintr)
+library(here)
 ```
 
 #### Load in data
@@ -48,9 +51,12 @@ cpm_switchlist <- importRdata(
     isoformCountMatrix   = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix         = exp_design,
-    isoformExonAnnoation = "../../data/nextflow/results/bambu/extended_annotations.gtf",
-    isoformNtFasta       = "../../data/gffread/isoform_sequences.fa",
-    showProgress = FALSE)
+  isoformExonAnnoation = here(
+    "data", "nextflow", "results", "bambu",
+    "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  showProgress = FALSE
 ```
 
 Now, I can run DEXSeq. Because my data includes counts of less than 1, I still want to include them in my analysis.
@@ -299,6 +305,13 @@ upset(fromList(cc_overlap_list), order.by = "freq")
 ### Final thoughts
 
 Overall, in this analysis I show that the largest differences in DTU are across cerebellum and the other brain regions.
+
+#### Clean up script
+
+```{r tidy script}
+style_file("dtu_region_region.Rmd")
+lint("dtu_region_region.Rmd")
+```
 
 #### Software versions
 
