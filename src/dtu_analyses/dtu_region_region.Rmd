@@ -81,7 +81,7 @@ The goal of these plots is to show overlap between significantly differentially 
 First, I need to get significant genes and split them out by brain region.
 
 ```{r make upset plots for overlap by brain region}
-# first, get significant genes
+# first, get significant isoform switches
 sig_isoform_features <- cpm_switchlist_dexseq$isoformFeatures
 sig_isoform_features <- dplyr::filter(
   sig_isoform_features, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
@@ -91,37 +91,33 @@ sig_isoform_features <- dplyr::filter(
 sig_isoform_genes <- sig_isoform_features %>%
   distinct(gene_id, condition_1, condition_2, .keep_all = TRUE)
 
-# cerebellum genes
-sig_isoform_genes_cere <- filter(
-  sig_isoform_genes, condition_1 == "cerebellum" | condition_2 == "cerebellum"
-)
-sig_isoform_genes_cere <- unique(sig_isoform_genes_cere$gene_id)
+# make function for filtering genes
+filter_genes <- function(x) {
+  # subset genes of interest
+  sig_genes_subset <- filter(
+    sig_isoform_genes,
+    condition_1 == x | condition_2 == x
+  )
+  sig_genes_subset <- unique(sig_genes_subset$gene_id)
+  # name object
+  name <- substr(x, 1, 4)
+  assign(paste0("sig_isoform_genes_", name),
+    sig_genes_subset,
+    envir = .GlobalEnv
+  )
+}
 
-# cortex genes
-sig_isoform_genes_ctx <- filter(
-  sig_isoform_genes, condition_1 == "cortex" | condition_2 == "cortex"
-)
-sig_isoform_genes_ctx <- unique(sig_isoform_genes_ctx$gene_id)
-
-# hippocampus genes
-sig_isoform_genes_hip <- filter(
-  sig_isoform_genes,
-  condition_1 == "hippocampus" | condition_2 == "hippocampus"
-)
-sig_isoform_genes_hip <- unique(sig_isoform_genes_hip$gene_id)
-
-# striatum genes
-sig_isoform_genes_stm <- filter(
-  sig_isoform_genes, condition_1 == "striatum" | condition_2 == "striatum"
-)
-sig_isoform_genes_stm <- unique(sig_isoform_genes_stm$gene_id)
+filter_genes("cerebellum")
+filter_genes("cortex")
+filter_genes("hippocampus")
+filter_genes("striatum")
 
 # make into list
 sig_isoform_gene_list <- list(
   cerebellum = sig_isoform_genes_cere,
-  cortex = sig_isoform_genes_ctx,
-  hippocampus = sig_isoform_genes_hip,
-  striatum = sig_isoform_genes_stm
+  cortex = sig_isoform_genes_cort,
+  hippocampus = sig_isoform_genes_hipp,
+  striatum = sig_isoform_genes_stri
 )
 ```
 
@@ -130,41 +126,28 @@ I also can indicate not just overlapping, but specifically which genes are DTU a
 I want to get a list of genes for each comparison.
 
 ```{r get list of genes for each comparison}
-# cerebellum and cortex genes
-sig_isoform_genes_cere_ctx <- filter(
-  sig_isoform_genes, condition_1 == "cerebellum" & condition_2 == "cortex"
-)
-sig_isoform_genes_cere_ctx <- unique(sig_isoform_genes_cere_ctx$gene_id)
+filter_genes_comp <- function(x, y) {
+  # subset genes of interest
+  sig_genes_subset <- filter(
+    sig_isoform_genes,
+    condition_1 == x & condition_2 == y
+  )
+  sig_genes_subset <- unique(sig_genes_subset$gene_id)
+  # name object
+  name_1 <- substr(x, 1, 4)
+  name_2 <- substr(y, 1, 4)
+  assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
+    sig_genes_subset,
+    envir = .GlobalEnv
+  )
+}
 
-# cerebellum and hippocampus genes
-sig_isoform_genes_cere_hip <- filter(
-  sig_isoform_genes, condition_1 == "cerebellum" & condition_2 == "hippocampus"
-)
-sig_isoform_genes_cere_hip <- unique(sig_isoform_genes_cere_hip$gene_id)
-
-# cerebellum and striatum genes
-sig_isoform_genes_cere_stm <- filter(
-  sig_isoform_genes, condition_1 == "cerebellum" & condition_2 == "striatum"
-)
-sig_isoform_genes_cere_stm <- unique(sig_isoform_genes_cere_stm$gene_id)
-
-# cortex and hippocampus genes
-sig_isoform_genes_ctx_hip <- filter(
-  sig_isoform_genes, condition_1 == "cortex" & condition_2 == "hippocampus"
-)
-sig_isoform_genes_ctx_hip <- unique(sig_isoform_genes_ctx_hip$gene_id)
-
-# cortex and striatum genes
-sig_isoform_genes_ctx_stm <- filter(
-  sig_isoform_genes, condition_1 == "cortex" & condition_2 == "striatum"
-)
-sig_isoform_genes_ctx_stm <- unique(sig_isoform_genes_ctx_stm$gene_id)
-
-# hippocampus and striatum genes
-sig_isoform_genes_hip_stm <- filter(
-  sig_isoform_genes, condition_1 == "hippocampus" & condition_2 == "striatum"
-)
-sig_isoform_genes_hip_stm <- unique(sig_isoform_genes_hip_stm$gene_id)
+filter_genes_comp("cerebellum", "cortex")
+filter_genes_comp("cerebellum", "hippocampus")
+filter_genes_comp("cerebellum", "striatum")
+filter_genes_comp("cortex", "hippocampus")
+filter_genes_comp("cortex", "striatum")
+filter_genes_comp("hippocampus", "striatum")
 ```
 
 Once I have these, I can combine them into a list for plotting.
@@ -172,12 +155,12 @@ Once I have these, I can combine them into a list for plotting.
 ```{r setup overlap of comparisons}
 # make into list
 sig_overlap_list <- list(
-  cere_ctx = sig_isoform_genes_cere_ctx,
-  cere_hip = sig_isoform_genes_cere_hip,
-  cere_stm = sig_isoform_genes_cere_stm,
-  ctx_hip = sig_isoform_genes_ctx_hip,
-  ctx_stm = sig_isoform_genes_ctx_stm,
-  hip_stm = sig_isoform_genes_hip_stm
+  cere_cort = sig_isoform_genes_cere_cort,
+  cere_hipp = sig_isoform_genes_cere_hipp,
+  cere_stri = sig_isoform_genes_cere_stri,
+  cort_hipp = sig_isoform_genes_cort_hipp,
+  cort_stri = sig_isoform_genes_cort_stri,
+  hipp_stri = sig_isoform_genes_hipp_stri
 )
 ```
 
@@ -192,11 +175,6 @@ sig_overlap_list_mat <- list_to_matrix(sig_overlap_list)
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-UpSet(sig_overlap_list_comb_mat,
-  pt_size = unit(3, "mm"),
-  comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)]
-)
-
 UpSet(sig_overlap_list_comb_mat,
   comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
   comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
@@ -218,14 +196,14 @@ Making volcano plots is a classic way to show the relationship between fold chan
 ```{r make function for volcano plot}
 # create function
 create_volcano_plot <- function(x, y) {
-  # subset
+  # create subset
   analyzed_subset <- dplyr::filter(
-    cpm_switchlist_dexseq$isoformFeatures,
+    cpm_DEXSeq_object$isoformFeatures,
     condition_1 == x & condition_2 == y
   )
   # plot
-  ggplot(
-    data = analyzed_subset$isoformFeatures,
+  volcano <- ggplot(
+    data = analyzed_subset,
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -233,38 +211,30 @@ create_volcano_plot <- function(x, y) {
       alpha = 0.5,
       stroke = NA
     ) +
-    geom_hline(
-      yintercept = -log10(0.05),
-      linetype = "dashed",
-      color = "magenta",
-      linewidth = .7
-    ) +
-    geom_vline(
-      xintercept = c(-0.1, 0.1),
-      linetype = "dashed",
-      color = "turquoise3",
-      linewidth = .7
-    ) +
+    geom_hline(yintercept = -log10(0.05),
+               linetype = "dashed",
+               color = "magenta",
+               linewidth = .7) +
+    geom_vline(xintercept = c(-0.1, 0.1),
+               linetype = "dashed",
+               color = "turquoise3",
+               linewidth = .7) +
     scale_color_manual("Signficant\nIsoform Switch",
-      labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
+                       labels = c("not significant", "significant"),
+                       values = c("gray40", "limegreen")
     ) +
-    labs(
-      x = "dIF (Differential Isoform Fraction)",
-      y = "-log10 (Isoform Switch q Value)"
-    ) +
+    labs(x = "dIF (Differential Isoform Fraction)",
+         y = "-log10 (Isoform Switch q Value)") +
     theme_light() +
-    theme(
-      legend.text = element_text(size = 11),
-      axis.text = element_text(size = 10)
-    ) +
+    theme(legend.text = element_text(size = 11),
+          axis.text = element_text(size = 10)) +
     guides(colour = guide_legend(override.aes = list(size = 4))) +
-    ggtitle(paste0(x, " vs. ", y, " differentially used isoforms"))
+    ggtitle(paste0("cerebellum", " vs. ", "cortex", " differentially used isoforms"))
   # save
-  ggsave(paste0(
-    here("results", "plots", "DEXSeq_volcano"), "/",
-    x, "_vs_", y, "_volcano.png"
-  ), width = 6, height = 4)
+  ggsave(
+    paste0(here("results", "plots", "DEXSeq_volcano"),
+           "/", x, "_", y, "_volcano.png"),
+    plot = volcano, width = 6, height = 4)
 }
 
 # now plot for each comparison
@@ -290,13 +260,39 @@ bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 Now I can run gprofiler.
 
 ```{r gprofiler2}
+# create function
+run_plot_gprofiler <- function(x) {
+  # remove numbers after decimal point
+  genes_remove_decimal <- str_extract(
+    x,
+    "ENSMUSG..........."
+  )
+  # run gprofiler2
+  gostres <- gost(
+    query = genes_remove_decimal,
+    organism = "mmusculus", ordered_query = FALSE,
+    multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
+    measure_underrepresentation = FALSE, evcodes = FALSE,
+    user_threshold = 0.05, correction_method = "g_SCS",
+    domain_scope = "custom", custom_bg = bg_genes,
+    numeric_ns = "", sources = NULL, as_short_link = FALSE
+  )
+  # get names
+  name <- deparse(substitute(x))
+  name <- substr(name, nchar(name) - 7 + 1, nchar(name))
+  # plot
+  gostplot(paste0(name, "_gostres"), capped = TRUE, interactive = FALSE)
+}
+
+run_plot_gprofiler(sig_isoform_genes_cere_cort)
+
 # cerebellum v cortex
-sig_isoform_genes_cere_ctx <- str_extract(
-  sig_isoform_genes_cere_ctx,
+sig_isoform_genes_cere_cort <- str_extract(
+  sig_isoform_genes_cere_cort,
   "ENSMUSG..........."
 )
-cere_ctx_gostres <- gost(
-  query = sig_isoform_genes_cere_ctx,
+cere_cort_gostres <- gost(
+  query = sig_isoform_genes_cere_cort,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -305,19 +301,19 @@ cere_ctx_gostres <- gost(
   numeric_ns = "", sources = NULL, as_short_link = FALSE
 )
 
-gostplot(cere_ctx_gostres, capped = TRUE, interactive = FALSE)
+gostplot(cere_cort_gostres, capped = TRUE, interactive = FALSE)
 
 ggsave(here(
   "results", "plots", "gprofiler_results",
-  "cere_ctx_cpm_gprofiler.png"
+  "cere_cort_cpm_gprofiler.png"
 ), width = 6, height = 4)
 
 # cerebellum v hippocampus
-sig_isoform_genes_cere_hip <- str_extract(
-  sig_isoform_genes_cere_hip,
+sig_isoform_genes_cere_hipp <- str_extract(
+  sig_isoform_genes_cere_hipp,
   "ENSMUSG..........."
 )
-cere_hip_gostres <- gost(
+cere_hipp_gostres <- gost(
   query = sig_isoform_genes_cere_hip,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
@@ -326,20 +322,20 @@ cere_hip_gostres <- gost(
   domain_scope = "custom", custom_bg = bg_genes,
   numeric_ns = "", sources = NULL, as_short_link = FALSE
 )
-gostplot(cere_hip_gostres, capped = TRUE, interactive = FALSE)
+gostplot(cere_hipp_gostres, capped = TRUE, interactive = FALSE)
 
 ggsave(here(
   "results", "plots", "gprofiler_results",
-  "cere_hip_cpm_gprofiler.png"
+  "cere_hipp_cpm_gprofiler.png"
 ), width = 6, height = 4)
 
 # cerebellum v striatum
-sig_isoform_genes_cere_stm <- str_extract(
-  sig_isoform_genes_cere_stm,
+sig_isoform_genes_cere_stri <- str_extract(
+  sig_isoform_genes_cere_stri,
   "ENSMUSG..........."
 )
-cere_stm_gostres <- gost(
-  query = sig_isoform_genes_cere_stm,
+cere_stri_gostres <- gost(
+  query = sig_isoform_genes_cere_stri,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -347,20 +343,20 @@ cere_stm_gostres <- gost(
   domain_scope = "custom", custom_bg = bg_genes,
   numeric_ns = "", sources = NULL, as_short_link = FALSE
 )
-gostplot(cere_stm_gostres, capped = TRUE, interactive = FALSE)
+gostplot(cere_stri_gostres, capped = TRUE, interactive = FALSE)
 
 ggsave(here(
   "results", "plots", "gprofiler_results",
-  "cere_stm_cpm_gprofiler.png"
+  "cere_stri_cpm_gprofiler.png"
 ), width = 6, height = 4)
 
 # cortex v hippocampus
-sig_isoform_genes_ctx_hip <- str_extract(
-  sig_isoform_genes_ctx_hip,
+sig_isoform_genes_cort_hipp <- str_extract(
+  sig_isoform_genes_cort_hipp,
   "ENSMUSG..........."
 )
-ctx_hip_gostres <- gost(
-  query = sig_isoform_genes_ctx_hip,
+cort_hipp_gostres <- gost(
+  query = sig_isoform_genes_cort_hip,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -371,12 +367,12 @@ ctx_hip_gostres <- gost(
 # nothing found significant
 
 # cortex v striatum
-sig_isoform_genes_ctx_stm <- str_extract(
-  sig_isoform_genes_ctx_stm,
+sig_isoform_genes_cort_stri <- str_extract(
+  sig_isoform_genes_cort_stri,
   "ENSMUSG..........."
 )
-ctx_stm_gostres <- gost(
-  query = sig_isoform_genes_ctx_stm,
+cort_stri_gostres <- gost(
+  query = sig_isoform_genes_cort_stri,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -387,12 +383,12 @@ ctx_stm_gostres <- gost(
 # nothing found significant
 
 # hippocampus v striatum
-sig_isoform_genes_hip_stm <- str_extract(
-  sig_isoform_genes_hip_stm,
+sig_isoform_genes_hipp_stri <- str_extract(
+  sig_isoform_genes_hipp_stri,
   "ENSMUSG..........."
 )
-hip_stm_gostres <- gost(
-  query = sig_isoform_genes_hip_stm,
+hipp_stri_gostres <- gost(
+  query = sig_isoform_genes_hipp_stri,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -406,28 +402,28 @@ hip_stm_gostres <- gost(
 There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, even with hundreds of DTU genes. Nevertheless, I will at least compare the lists of CC terms for the 3 that had any results.
 
 ```{r compare lists}
-cere_ctx_cc <- data.frame(
-  source = cere_ctx_gostres[["result"]]$source,
-  term = cere_ctx_gostres[["result"]]$term_name
+cere_cort_cc <- data.frame(
+  source = cere_cort_gostres[["result"]]$source,
+  term = cere_cort_gostres[["result"]]$term_name
 )
-cere_ctx_cc <- filter(cere_ctx_cc, source == "GO:CC")
+cere_cort_cc <- filter(cere_cort_cc, source == "GO:CC")
 
-cere_hip_cc <- data.frame(
-  source = cere_hip_gostres[["result"]]$source,
-  term = cere_hip_gostres[["result"]]$term_name
+cere_hipp_cc <- data.frame(
+  source = cere_hipp_gostres[["result"]]$source,
+  term = cere_hipp_gostres[["result"]]$term_name
 )
-cere_hip_cc <- filter(cere_hip_cc, source == "GO:CC")
+cere_hipp_cc <- filter(cere_hipp_cc, source == "GO:CC")
 
-cere_stm_cc <- data.frame(
-  source = cere_stm_gostres[["result"]]$source,
-  term = cere_stm_gostres[["result"]]$term_name
+cere_stri_cc <- data.frame(
+  source = cere_stri_gostres[["result"]]$source,
+  term = cere_stri_gostres[["result"]]$term_name
 )
-cere_stm_cc <- filter(cere_stm_cc, source == "GO:CC")
+cere_stri_cc <- filter(cere_stri_cc, source == "GO:CC")
 
 cc_overlap_list <- list(
-  cere_ctx_cc = cere_ctx_cc$term,
-  cere_hip_cc = cere_hip_cc$term,
-  cere_stm_cc = cere_stm_cc$term
+  cere_cort_cc = cere_cort_cc$term,
+  cere_hipp_cc = cere_hipp_cc$term,
+  cere_stri_cc = cere_stri_cc$term
 )
 upset(fromList(cc_overlap_list), order.by = "freq")
 ```
