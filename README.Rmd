@@ -26,6 +26,10 @@ Currently: nextflow, gffread
 "Scripts"
 Include a "script tree" on how to reproduce your results with descriptions for all scripts
 
+```{r echo = FALSE}
+fs::dir_tree("src")
+```
+
 ## Authors
 
 Emma Jones, TC Howton, Anisha Haldar, and Brittany Lasseigne. 

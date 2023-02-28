@@ -1,6 +1,6 @@
 README
 ================
-2023-02-27
+2023-02-28
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -20,6 +20,15 @@ Currently: nextflow, gffread
 
 “Scripts” Include a “script tree” on how to reproduce your results with
 descriptions for all scripts
+
+    ## src
+    ## ├── README
+    ## └── dtu_analyses
+    ##     ├── calculate_cpm.R
+    ##     ├── dtu_igv.Rmd
+    ##     ├── dtu_region_others.Rmd
+    ##     ├── dtu_region_region.Rmd
+    ##     └── dtu_region_sex.Rmd
 
 ## Authors
 
