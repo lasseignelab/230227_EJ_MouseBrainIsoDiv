@@ -84,27 +84,27 @@ I will start with UpSet plots (using ComplexHeatmap for color) to show overlap o
 
 ```{r extract sigificant tissue:all genes}
 # make function for extracting significant genes
-get_sig_genes <- function(x){
+get_sig_genes <- function(x) {
   # subset features
   sig_features <- dplyr::filter(
     x$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-    )
+  )
   # get name
   name <- deparse(substitute(x))
   name <- substr(name, 1, 4)
-  #assign object
+  # assign object
   assign(paste0(name, "_sig_features"),
     sig_features,
     envir = .GlobalEnv
-    )
+  )
   # pull genes
   sig_genes <- unique(sig_features$gene_id)
-  #assign object
+  # assign object
   assign(paste0(name, "_sig_genes"),
     sig_genes,
     envir = .GlobalEnv
-    )
+  )
 }
 
 # get significant genes
@@ -253,8 +253,11 @@ create_volcano_plot <- function(x) {
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(name, " differentially used isoforms"))
   # save
-  ggsave(paste0(here("results", "plots", "DEXSeq_volcano"), "/", name, "_all_volcano.png"), 
-       volcano_plot, width = 6, height = 4)
+  ggsave(paste0(here("results", "plots", "DEXSeq_volcano"), 
+                "/", name, "_all_volcano.png"),
+    volcano_plot,
+    width = 6, height = 4
+  )
 }
 
 # plot
