@@ -56,7 +56,7 @@ cpm_switchlist <- importRdata(
     "extended_annotations.gtf"
   ),
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
+  showProgress = FALSE)
 ```
 
 Now, I can run DEXSeq. Because my data includes counts of less than 1, I still want to include them in my analysis.
