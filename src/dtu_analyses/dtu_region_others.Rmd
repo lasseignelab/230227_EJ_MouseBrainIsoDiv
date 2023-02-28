@@ -35,131 +35,46 @@ source("calculate_cpm.R", local = knitr::knit_global())
 
 ## DTU for one region versus all other regions
 
-First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions.
+First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions. Then, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with DEXSeq. I've made this into a function to make it faster.
 
-```{r make design matrices}
-# cerebellum
-cere_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id,
-  condition = sample_collection_metadata$tissue == "cerebellum"
-)
-# cortex
-ctx_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id,
-  condition = sample_collection_metadata$tissue == "cortex"
-)
-# hippocampus
-hip_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id,
-  condition = sample_collection_metadata$tissue == "hippocampus"
-)
-# striatum
-stm_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id,
-  condition = sample_collection_metadata$tissue == "striatum"
-)
-```
-
-Now, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with DEXSeq.
+Once switchAnalyzeRlists are made, you can run the DEXSeq isoform switch test. You also need to prefilter the data before running the test, but I added all that to the my function so all it needs is to run.
 
 ```{r make region vs all objects}
-# cerebellum
-cere_switchlist <- importRdata(
-  isoformCountMatrix = merged_counts_iso,
-  isoformRepExpression = cpm_iso,
-  designMatrix = cere_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
+make_switchlist_run_dexseq <- function(x) {
+  # create design
+  temp_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id,
+    condition = sample_collection_metadata$tissue == x
+  )
+  # create switchlist
+  temp_switchlist <- importRdata(
+    isoformCountMatrix = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix = temp_design,
+    isoformExonAnnoation = here(
+      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+    ),
+    isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+    showProgress = FALSE
+  )
+  # filter switchlist
+  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
+  # run DEXSeq
+  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = temp_switchlist,
+    reduceToSwitchingGenes = TRUE
+  )
+  # rename object
+  assign(paste0(x, "_switchlist_analyzed"),
+    switchlist_analyzed,
+    envir = .GlobalEnv
+  )
+}
 
-# cortex
-ctx_switchlist <- importRdata(
-  isoformCountMatrix = merged_counts_iso,
-  isoformRepExpression = cpm_iso,
-  designMatrix = ctx_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-
-# hippocampus
-hip_switchlist <- importRdata(
-  isoformCountMatrix = merged_counts_iso,
-  isoformRepExpression = cpm_iso,
-  designMatrix = hip_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-
-# striatum
-stm_switchlist <- importRdata(
-  isoformCountMatrix = merged_counts_iso,
-  isoformRepExpression = cpm_iso,
-  designMatrix = stm_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-```
-
-Once switchAnalyzeRlists are made, you can run DEXSeq. You also need to prefilter the data.
-
-#### Run DEXSeq
-
-```{r run DEXSeq on region:all comparisons}
-## cerebellum
-# filter data
-cere_switchlist <- preFilter(cere_switchlist, geneExpressionCutoff = NULL)
-# run DEXSeq
-cere_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = cere_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-extractSwitchSummary(cere_switchlist_analyzed)
-
-## cortex
-# filter data
-ctx_switchlist <- preFilter(ctx_switchlist, geneExpressionCutoff = NULL)
-# run DEXSeq
-ctx_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = ctx_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-extractSwitchSummary(ctx_switchlist_analyzed)
-
-## hippocampus
-# filter data
-hip_switchlist <- preFilter(hip_switchlist, geneExpressionCutoff = NULL)
-# run DEXSeq
-hip_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = hip_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-extractSwitchSummary(hip_switchlist_analyzed)
-
-## striatum
-# filter data
-stm_switchlist <- preFilter(stm_switchlist, geneExpressionCutoff = NULL)
-# run DEXSeq
-stm_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = stm_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-extractSwitchSummary(stm_switchlist_analyzed)
+make_switchlist_run_dexseq("cerebellum")
+make_switchlist_run_dexseq("cortex")
+make_switchlist_run_dexseq("hippocampus")
+make_switchlist_run_dexseq("striatum")
 ```
 
 ### Make plots for tissue:all DTU
@@ -168,48 +83,42 @@ Now that those objects are saved, I need to make plots for them. To do that, I w
 I will start with UpSet plots (using ComplexHeatmap for color) to show overlap of significant genes.
 
 ```{r extract sigificant tissue:all genes}
-### cerebellum
-# get significant genes
-cere_sig_features <- dplyr::filter(
-  cere_switchlist_analyzed$isoformFeatures,
-  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-)
-# pull just genes
-cere_sig_genes <- unique(cere_sig_features$gene_id)
+# make function for extracting significant genes
+get_sig_genes <- function(x){
+  # subset features
+  sig_features <- dplyr::filter(
+    x$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+    )
+  # get name
+  name <- deparse(substitute(x))
+  name <- substr(name, 1, 4)
+  #assign object
+  assign(paste0(name, "_sig_features"),
+    sig_features,
+    envir = .GlobalEnv
+    )
+  # pull genes
+  sig_genes <- unique(sig_features$gene_id)
+  #assign object
+  assign(paste0(name, "_sig_genes"),
+    sig_genes,
+    envir = .GlobalEnv
+    )
+}
 
-### cortex
 # get significant genes
-ctx_sig_features <- dplyr::filter(
-  ctx_switchlist_analyzed$isoformFeatures,
-  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-)
-# pull just genes
-ctx_sig_genes <- unique(ctx_sig_features$gene_id)
+get_sig_genes(cerebellum_switchlist_analyzed)
+get_sig_genes(cortex_switchlist_analyzed)
+get_sig_genes(hippocampus_switchlist_analyzed)
+get_sig_genes(striatum_switchlist_analyzed)
 
-### hippocampus genes
-# get significant genes
-hip_sig_features <- dplyr::filter(
-  hip_switchlist_analyzed$isoformFeatures,
-  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-)
-# pull just genes
-hip_sig_genes <- unique(hip_sig_features$gene_id)
-
-### striatum genes
-# get significant genes
-stm_sig_features <- dplyr::filter(
-  stm_switchlist_analyzed$isoformFeatures,
-  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-)
-# pull just genes
-stm_sig_genes <- unique(stm_sig_features$gene_id)
-
-### make all into list
+# make all into list
 all_gene_list <- list(
   cerebellum = cere_sig_genes,
-  cortex = ctx_sig_genes,
-  hippocampus = hip_sig_genes,
-  striatum = stm_sig_genes
+  cortex = cort_sig_genes,
+  hippocampus = hipp_sig_genes,
+  striatum = stri_sig_genes
 )
 ```
 
@@ -301,157 +210,58 @@ draw(upset_isoform, column_title = "Overlap of DTU isoforms by brain region")
 I also want to make volcano plots to visualize this.
 
 ```{r make volcano plots for region v others}
-# cerebellum
-ggplot(
-  data = cere_switchlist_analyzed$isoformFeatures,
-  aes(x = dIF, y = -log10(isoform_switch_q_value))
-) +
-  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-    size = 2,
-    alpha = 0.5,
-    stroke = NA
+# create function
+create_volcano_plot <- function(x) {
+  # get name
+  name <- deparse(substitute(x))
+  name <- substr(name, 1, 4)
+  # plot
+  volcano_plot <- ggplot(
+    data = x$isoformFeatures,
+    aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
-  geom_hline(
-    yintercept = -log10(0.05),
-    linetype = "dashed",
-    color = "magenta",
-    linewidth = .7
-  ) +
-  geom_vline(
-    xintercept = c(-0.1, 0.1),
-    linetype = "dashed",
-    color = "turquoise3",
-    linewidth = .7
-  ) +
-  scale_color_manual("Signficant\nIsoform Switch",
-    labels = c("not significant", "significant"),
-    values = c("gray40", "limegreen")
-  ) +
-  labs(
-    x = "dIF (Differential Isoform Fraction)",
-    y = "-log10 (Isoform Switch q Value)"
-  ) +
-  theme_light() +
-  theme(
-    legend.text = element_text(size = 11),
-    axis.text = element_text(size = 10)
-  ) +
-  guides(colour = guide_legend(override.aes = list(size = 4))) +
-  ggtitle(paste0("Cerebellum", " vs. Others Differentially Used Isoforms"))
+    geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
+      size = 2,
+      alpha = 0.5,
+      stroke = NA
+    ) +
+    geom_hline(
+      yintercept = -log10(0.05),
+      linetype = "dashed",
+      color = "magenta",
+      linewidth = .7
+    ) +
+    geom_vline(
+      xintercept = c(-0.1, 0.1),
+      linetype = "dashed",
+      color = "turquoise3",
+      linewidth = .7
+    ) +
+    scale_color_manual("Signficant\nIsoform Switch",
+      labels = c("not significant", "significant"),
+      values = c("gray40", "limegreen")
+    ) +
+    labs(
+      x = "dIF (Differential Isoform Fraction)",
+      y = "-log10 (Isoform Switch q Value)"
+    ) +
+    theme_light() +
+    theme(
+      legend.text = element_text(size = 11),
+      axis.text = element_text(size = 10)
+    ) +
+    guides(colour = guide_legend(override.aes = list(size = 4))) +
+    ggtitle(paste0(name, " differentially used isoforms"))
+  # save
+  ggsave(paste0(here("results", "plots", "DEXSeq_volcano"), "/", name, "_all_volcano.png"), 
+       volcano_plot, width = 6, height = 4)
+}
 
-# cortex
-ggplot(
-  data = ctx_switchlist_analyzed$isoformFeatures,
-  aes(x = dIF, y = -log10(isoform_switch_q_value))
-) +
-  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-    size = 2,
-    alpha = 0.5,
-    stroke = NA
-  ) +
-  geom_hline(
-    yintercept = -log10(0.05),
-    linetype = "dashed",
-    color = "magenta",
-    linewidth = .7
-  ) +
-  geom_vline(
-    xintercept = c(-0.1, 0.1),
-    linetype = "dashed",
-    color = "turquoise3",
-    linewidth = .7
-  ) +
-  scale_color_manual("Signficant\nIsoform Switch",
-    labels = c("not significant", "significant"),
-    values = c("gray40", "limegreen")
-  ) +
-  labs(
-    x = "dIF (Differential Isoform Fraction)",
-    y = "-log10 (Isoform Switch q Value)"
-  ) +
-  theme_light() +
-  theme(
-    legend.text = element_text(size = 11),
-    axis.text = element_text(size = 10)
-  ) +
-  guides(colour = guide_legend(override.aes = list(size = 4))) +
-  ggtitle(paste0("Cortex", " vs. Others Differentially Used Isoforms"))
-
-# hippocampus
-ggplot(
-  data = hip_switchlist_analyzed$isoformFeatures,
-  aes(x = dIF, y = -log10(isoform_switch_q_value))
-) +
-  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-    size = 2,
-    alpha = 0.5,
-    stroke = NA
-  ) +
-  geom_hline(
-    yintercept = -log10(0.05),
-    linetype = "dashed",
-    color = "magenta",
-    linewidth = .7
-  ) +
-  geom_vline(
-    xintercept = c(-0.1, 0.1),
-    linetype = "dashed",
-    color = "turquoise3",
-    linewidth = .7
-  ) +
-  scale_color_manual("Signficant\nIsoform Switch",
-    labels = c("not significant", "significant"),
-    values = c("gray40", "limegreen")
-  ) +
-  labs(
-    x = "dIF (Differential Isoform Fraction)",
-    y = "-log10 (Isoform Switch q Value)"
-  ) +
-  theme_light() +
-  theme(
-    legend.text = element_text(size = 11),
-    axis.text = element_text(size = 10)
-  ) +
-  guides(colour = guide_legend(override.aes = list(size = 4))) +
-  ggtitle(paste0("Hippocampus", " vs. Others Differentially Used Isoforms"))
-
-# striatum
-ggplot(
-  data = stm_switchlist_analyzed$isoformFeatures,
-  aes(x = dIF, y = -log10(isoform_switch_q_value))
-) +
-  geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-    size = 2,
-    alpha = 0.5,
-    stroke = NA
-  ) +
-  geom_hline(
-    yintercept = -log10(0.05),
-    linetype = "dashed",
-    color = "magenta",
-    linewidth = .7
-  ) +
-  geom_vline(
-    xintercept = c(-0.1, 0.1),
-    linetype = "dashed",
-    color = "turquoise3",
-    linewidth = .7
-  ) +
-  scale_color_manual("Signficant\nIsoform Switch",
-    labels = c("not significant", "significant"),
-    values = c("gray40", "limegreen")
-  ) +
-  labs(
-    x = "dIF (Differential Isoform Fraction)",
-    y = "-log10 (Isoform Switch q Value)"
-  ) +
-  theme_light() +
-  theme(
-    legend.text = element_text(size = 11),
-    axis.text = element_text(size = 10)
-  ) +
-  guides(colour = guide_legend(override.aes = list(size = 4))) +
-  ggtitle(paste0("Striatum", " vs. Others Differentially Used Isoforms"))
+# plot
+create_volcano_plot(cerebellum_switchlist_analyzed)
+create_volcano_plot(cortex_switchlist_analyzed)
+create_volcano_plot(hippocampus_switchlist_analyzed)
+create_volcano_plot(striatum_switchlist_analyzed)
 ```
 
 #### Clean up script
