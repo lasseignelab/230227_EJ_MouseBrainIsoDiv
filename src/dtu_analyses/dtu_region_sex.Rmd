@@ -75,181 +75,83 @@ No genes were considered switching, so I will try splitting by brain region.
 Before analysis, I need to subset the data for each brain region.
 
 ```{r split out brain regions}
-# cerebellum
-cere_counts <- subset(
-  merged_counts_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "cerebellum"
-    ]
+# make function to split out brain regions
+split_region <- function(x) {
+  # subset counts
+  subset_counts <- subset(
+    merged_counts_iso,
+    select = c(
+      "isoform_id",
+      sample_collection_metadata$sample_id[
+        sample_collection_metadata$tissue == x
+      ]
+    )
   )
-)
-cere_cpm <- subset(
-  cpm_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "cerebellum"
-    ]
+  # subset cpm
+  subset_cpm <- subset(
+    cpm_iso,
+    select = c(
+      "isoform_id",
+      sample_collection_metadata$sample_id[
+        sample_collection_metadata$tissue == x
+      ]
+    )
   )
-)
-cere_cpm <- cere_cpm[rowSums(cere_cpm[, -1]) != 0, ]
+  # drop rows with 0 cpm
+  subset_cpm <- subset_cpm[rowSums(subset_cpm[, -1]) != 0, ]
+  # get name
+  name <- substr(x, 1, 4)
+  # assign objects
+  assign(paste0(name, "_counts"), subset_counts, envir = .GlobalEnv)
+  assign(paste0(name, "_cpm"), subset_cpm, envir = .GlobalEnv)
+}
 
-# cortex
-ctx_counts <- subset(
-  merged_counts_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "cortex"
-    ]
-  )
-)
-ctx_cpm <- subset(
-  cpm_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "cortex"
-    ]
-  )
-)
-ctx_cpm <- ctx_cpm[rowSums(ctx_cpm[, -1]) != 0, ]
-
-# hippocampus
-hip_counts <- subset(
-  merged_counts_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "hippocampus"
-    ]
-  )
-)
-hip_cpm <- subset(
-  cpm_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "hippocampus"
-    ]
-  )
-)
-hip_cpm <- hip_cpm[rowSums(hip_cpm[, -1]) != 0, ]
-
-# striatum
-stm_counts <- subset(
-  merged_counts_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "striatum"
-    ]
-  )
-)
-stm_cpm <- subset(
-  cpm_iso,
-  select = c(
-    "isoform_id",
-    sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == "straitum"
-    ]
-  )
-)
-stm_cpm <- stm_cpm[rowSums(stm_cpm[, -1]) != 0, ]
+# split each region
+split_region("cerebellum")
+split_region("cortex")
+split_region("hippocampus")
+split_region("striatum")
 ```
 
 Now that the data is split out, I can make switchAnalyzeRlist objects for analysis.
 
 ```{r make design and switchlists}
-# cerebellum
-cere_sex_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id[
-    sample_collection_metadata$tissue == "cerebellum"
-  ],
-  condition = sample_collection_metadata$sex[
-    sample_collection_metadata$tissue == "cerebellum"
-  ]
-)
+# make function
+make_switchlist <- function(x) {
+  # get name
+  name <- substr(x, 1, 4)
+  # get objects for function
+  assign("name_counts", get(paste0(name, "_counts")))
+  assign("name_cpm", get(paste0(name, "_cpm")))
+  # make design
+  temp_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id[
+      sample_collection_metadata$tissue == x
+    ],
+    condition = sample_collection_metadata$sex[
+      sample_collection_metadata$tissue == x
+    ]
+  )
+  # make switchlist
+  temp_switchlist <- importRdata(
+    isoformCountMatrix = name_counts,
+    isoformRepExpression = name_cpm,
+    designMatrix = temp_design,
+    isoformExonAnnoation = here(
+      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+    ),
+    isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+    showProgress = FALSE
+  )
+  # assign variable
+  assign(paste0(name, "_sex_switchlist"), temp_switchlist, envir = .GlobalEnv)
+}
 
-cere_sex_switchlist <- importRdata(
-  isoformCountMatrix = cere_counts,
-  isoformRepExpression = cere_cpm,
-  designMatrix = cere_sex_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-
-# cortex
-ctx_sex_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id[
-    sample_collection_metadata$tissue == "cortex"
-  ],
-  condition = sample_collection_metadata$sex[
-    sample_collection_metadata$tissue == "cortex"
-  ]
-)
-
-ctx_sex_switchlist <- importRdata(
-  isoformCountMatrix = ctx_counts,
-  isoformRepExpression = ctx_cpm,
-  designMatrix = ctx_sex_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-
-# hippocampus
-hip_sex_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id[
-    sample_collection_metadata$tissue == "hippocampus"
-  ],
-  condition = sample_collection_metadata$sex[
-    sample_collection_metadata$tissue == "hippocampus"
-  ]
-)
-
-hip_sex_switchlist <- importRdata(
-  isoformCountMatrix = hip_counts,
-  isoformRepExpression = hip_cpm,
-  designMatrix = hip_sex_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
-
-# striatum
-stm_sex_design <- data.frame(
-  sampleID = sample_collection_metadata$sample_id[
-    sample_collection_metadata$tissue == "striatum"
-  ],
-  condition = sample_collection_metadata$sex[
-    sample_collection_metadata$tissue == "striatum"
-  ]
-)
-
-stm_sex_switchlist <- importRdata(
-  isoformCountMatrix = stm_counts,
-  isoformRepExpression = stm_cpm,
-  designMatrix = stm_sex_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
-)
+# use function on brain regions
+make_switchlist("cerebellum")
+make_switchlist("cortex")
+make_switchlist("hippocampus")
+make_switchlist("striatum")
 ```
 
 Once these are made, I can run DEXSeq.
@@ -269,37 +171,37 @@ cere_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
 extractSwitchSummary(cere_sex_switchlist_analyzed)
 
 # cortex
-ctx_sex_switchlist <- preFilter(ctx_sex_switchlist,
+cort_sex_switchlist <- preFilter(cort_sex_switchlist,
   geneExpressionCutoff = NULL
 )
 # run DEXSeq
-ctx_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = ctx_sex_switchlist,
+cort_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = cort_sex_switchlist,
   reduceToSwitchingGenes = TRUE
 )
-extractSwitchSummary(ctx_sex_switchlist_analyzed)
+extractSwitchSummary(cort_sex_switchlist_analyzed)
 
 # hippocampus
-hip_sex_switchlist <- preFilter(hip_sex_switchlist,
+hipp_sex_switchlist <- preFilter(hipp_sex_switchlist,
   geneExpressionCutoff = NULL
 )
 # run DEXSeq
-hip_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = hip_sex_switchlist,
+hipp_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = hipp_sex_switchlist,
   reduceToSwitchingGenes = TRUE
 )
-extractSwitchSummary(hip_sex_switchlist_analyzed)
+extractSwitchSummary(hipp_sex_switchlist_analyzed)
 
 # striatum
-stm_sex_switchlist <- preFilter(stm_sex_switchlist,
+stri_sex_switchlist <- preFilter(stri_sex_switchlist,
   geneExpressionCutoff = NULL
 )
 # run DEXSeq
-stm_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = stm_sex_switchlist,
+stri_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = stri_sex_switchlist,
   reduceToSwitchingGenes = TRUE
 )
-extractSwitchSummary(stm_sex_switchlist_analyzed)
+extractSwitchSummary(stri_sex_switchlist_analyzed)
 ```
 
 Alright, now I have some differential used isoforms/genes. Let's visualize them with a volcano plot, although not including background genes in the analysis might be a bit much.
@@ -347,7 +249,7 @@ ggplot(
 
 # cortex
 ggplot(
-  data = ctx_sex_switchlist_analyzed$isoformFeatures,
+  data = cort_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -385,7 +287,7 @@ ggplot(
 
 # hippocampus
 ggplot(
-  data = hip_sex_switchlist_analyzed$isoformFeatures,
+  data = hipp_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -423,7 +325,7 @@ ggplot(
 
 # striatum
 ggplot(
-  data = stm_sex_switchlist_analyzed$isoformFeatures,
+  data = stri_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -473,27 +375,27 @@ extractSwitchSummary(cere_sex_switchlist_analyzed)
 
 # cortex
 # run DEXSeq
-ctx_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = ctx_sex_switchlist,
+cort_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = cort_sex_switchlist,
   reduceToSwitchingGenes = FALSE
 )
-extractSwitchSummary(ctx_sex_switchlist_analyzed)
+extractSwitchSummary(cort_sex_switchlist_analyzed)
 
 # hippocampus
 # run DEXSeq
-hip_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = hip_sex_switchlist,
+hipp_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = hipp_sex_switchlist,
   reduceToSwitchingGenes = FALSE
 )
-extractSwitchSummary(hip_sex_switchlist_analyzed)
+extractSwitchSummary(hipp_sex_switchlist_analyzed)
 
 # striatum
 # run DEXSeq
-stm_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = stm_sex_switchlist,
+stri_sex_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = stri_sex_switchlist,
   reduceToSwitchingGenes = FALSE
 )
-extractSwitchSummary(stm_sex_switchlist_analyzed)
+extractSwitchSummary(stri_sex_switchlist_analyzed)
 ```
 
 Okay, now time to plot again.
@@ -539,7 +441,7 @@ ggplot(
 
 # cortex
 ggplot(
-  data = ctx_sex_switchlist_analyzed$isoformFeatures,
+  data = cort_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -577,7 +479,7 @@ ggplot(
 
 # hippocampus
 ggplot(
-  data = hip_sex_switchlist_analyzed$isoformFeatures,
+  data = hipp_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -615,7 +517,7 @@ ggplot(
 
 # striatum
 ggplot(
-  data = stm_sex_switchlist_analyzed$isoformFeatures,
+  data = stri_sex_switchlist_analyzed$isoformFeatures,
   aes(x = dIF, y = -log10(isoform_switch_q_value))
 ) +
   geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -665,25 +567,25 @@ cere_sex_sig_isoforms <- unique(
 )
 
 # cortex
-ctx_sex_sig_isoforms <- unique(
+cort_sex_sig_isoforms <- unique(
   dplyr::filter(
-    ctx_sex_switchlist_analyzed$isoformFeatures,
+    cort_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$isoform_id
 )
 
 # hippocampus isoforms
-hip_sex_sig_isoforms <- unique(
+hipp_sex_sig_isoforms <- unique(
   dplyr::filter(
-    hip_sex_switchlist_analyzed$isoformFeatures,
+    hipp_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$isoform_id
 )
 
 # striatum isoforms
-stm_sex_sig_isoforms <- unique(
+stri_sex_sig_isoforms <- unique(
   dplyr::filter(
-    stm_sex_switchlist_analyzed$isoformFeatures,
+    stri_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$isoform_id
 )
@@ -691,9 +593,9 @@ stm_sex_sig_isoforms <- unique(
 # make all into list
 all_sex_isoform_list <- list(
   cerebellum = cere_sex_sig_isoforms,
-  cortex = ctx_sex_sig_isoforms,
-  hippocampus = hip_sex_sig_isoforms,
-  striatum = stm_sex_sig_isoforms
+  cortex = cort_sex_sig_isoforms,
+  hippocampus = hipp_sex_sig_isoforms,
+  striatum = stri_sex_sig_isoforms
 )
 
 # make matrix
@@ -752,16 +654,16 @@ cere_sexgostres <- gost(
 gostplot(cere_sexgostres, capped = TRUE, interactive = FALSE)
 
 # cortex
-ctx_sex_sig_genes <- unique(
+cort_sex_sig_genes <- unique(
   dplyr::filter(
-    ctx_sex_switchlist_analyzed$isoformFeatures,
+    cort_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$gene_id
 )
 
-ctx_sex_sig_genes <- str_extract(ctx_sex_sig_genes, "ENSMUSG...........")
+cort_sex_sig_genes <- str_extract(cort_sex_sig_genes, "ENSMUSG...........")
 
-ctx_sexgostres <- gost(
+cort_sexgostres <- gost(
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -774,20 +676,20 @@ ctx_sexgostres <- gost(
   numeric_ns = "", sources = NULL, as_short_link = FALSE
 )
 
-gostplot(ctx_sexgostres, capped = TRUE, interactive = FALSE)
+gostplot(cort_sexgostres, capped = TRUE, interactive = FALSE)
 
 # hippocampus
-hip_sex_sig_genes <- unique(
+hipp_sex_sig_genes <- unique(
   dplyr::filter(
-    hip_sex_switchlist_analyzed$isoformFeatures,
+    hipp_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$gene_id
 )
 
-hip_sex_sig_genes <- str_extract(hip_sex_sig_genes, "ENSMUSG...........")
+hipp_sex_sig_genes <- str_extract(hipp_sex_sig_genes, "ENSMUSG...........")
 
-hip_sexgostres <- gost(
-  query = hip_sex_sig_genes,
+hipp_sexgostres <- gost(
+  query = hipp_sex_sig_genes,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -803,17 +705,17 @@ hip_sexgostres <- gost(
 # not significant
 
 # striatum
-stm_sex_sig_genes <- unique(
+stri_sex_sig_genes <- unique(
   dplyr::filter(
-    stm_sex_switchlist_analyzed$isoformFeatures,
+    stri_sex_switchlist_analyzed$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )$gene_id
 )
 
-stm_sex_sig_genes <- str_extract(stm_sex_sig_genes, "ENSMUSG...........")
+stri_sex_sig_genes <- str_extract(stri_sex_sig_genes, "ENSMUSG...........")
 
-stm_sexgostres <- gost(
-  query = stm_sex_sig_genes,
+stri_sexgostres <- gost(
+  query = stri_sex_sig_genes,
   organism = "mmusculus", ordered_query = FALSE,
   multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
   measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -844,26 +746,26 @@ cere_sex_sig_genes_df <- AnnotationDbi::select(
 )
 
 # cortex
-ctx_sex_sig_genes
-ctx_sex_sig_genes_df <- AnnotationDbi::select(
+cort_sex_sig_genes
+cort_sex_sig_genes_df <- AnnotationDbi::select(
   org.Mm.eg.db,
-  keys = ctx_sex_sig_genes,
+  keys = cort_sex_sig_genes,
   columns = c("SYMBOL", "GENENAME", "ENSEMBL"), keytype = "ENSEMBL"
 )
 
 # hippocampus
-hip_sex_sig_genes
-hip_sex_sig_genes_df <- AnnotationDbi::select(
+hipp_sex_sig_genes
+hipp_sex_sig_genes_df <- AnnotationDbi::select(
   org.Mm.eg.db,
-  keys = hip_sex_sig_genes,
+  keys = hipp_sex_sig_genes,
   columns = c("SYMBOL", "GENENAME", "ENSEMBL"), keytype = "ENSEMBL"
 )
 
 # striatum
-stm_sex_sig_genes
-stm_sex_sig_genes_df <- AnnotationDbi::select(
+stri_sex_sig_genes
+stri_sex_sig_genes_df <- AnnotationDbi::select(
   org.Mm.eg.db,
-  keys = stm_sex_sig_genes,
+  keys = stri_sex_sig_genes,
   columns = c("SYMBOL", "GENENAME", "ENSEMBL"), keytype = "ENSEMBL"
 )
 ```
