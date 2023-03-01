@@ -81,6 +81,8 @@ The goal of these plots is to show overlap between significantly differentially 
 First, I need to get significant genes and split them out by brain region.
 
 ```{r make upset plots for overlap by brain region}
+# make vector of brain regions
+all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 # first, get significant isoform switches
 sig_isoform_features <- cpm_switchlist_dexseq$isoformFeatures
 sig_isoform_features <- dplyr::filter(
@@ -106,11 +108,8 @@ filter_genes <- function(x) {
     envir = .GlobalEnv
   )
 }
-
-filter_genes("cerebellum")
-filter_genes("cortex")
-filter_genes("hippocampus")
-filter_genes("striatum")
+# use function to filter genes
+lapply(all_regions, filter_genes)
 
 # make into list
 sig_isoform_gene_list <- list(
@@ -126,6 +125,10 @@ I also can indicate not just overlapping, but specifically which genes are DTU a
 I want to get a list of genes for each comparison.
 
 ```{r get list of genes for each comparison}
+# make vector of comparisons
+comparison_arg_1 <- c(rep("cerebellum", 3), rep("cortex", 2), "hippocampus")
+comparison_arg_2 <- c("cortex", "hippocampus", "striatum", "hippocampus", "striatum", "striatum")
+# make function to get list of genes for each comparison
 filter_genes_comp <- function(x, y) {
   # subset genes of interest
   sig_genes_subset <- filter(
@@ -141,13 +144,8 @@ filter_genes_comp <- function(x, y) {
     envir = .GlobalEnv
   )
 }
-
-filter_genes_comp("cerebellum", "cortex")
-filter_genes_comp("cerebellum", "hippocampus")
-filter_genes_comp("cerebellum", "striatum")
-filter_genes_comp("cortex", "hippocampus")
-filter_genes_comp("cortex", "striatum")
-filter_genes_comp("hippocampus", "striatum")
+# use function on all comparisons
+mapply(filter_genes_comp, comparison_arg_1, comparison_arg_2)
 ```
 
 Once I have these, I can combine them into a list for plotting.
@@ -250,14 +248,8 @@ create_volcano_plot <- function(x, y) {
     plot = volcano, width = 6, height = 4
   )
 }
-
-# now plot for each comparison
-create_volcano_plot("cerebellum", "cortex")
-create_volcano_plot("cerebellum", "hippocampus")
-create_volcano_plot("cerebellum", "striatum")
-create_volcano_plot("cortex", "hippocampus")
-create_volcano_plot("cortex", "striatum")
-create_volcano_plot("hippocampus", "striatum")
+# use function on all comparisons
+mapply(create_volcano_plot, comparison_arg_1, comparison_arg_2)
 ```
 
 ## GO Anlaysis of Gene Sets
@@ -305,7 +297,7 @@ run_plot_gprofiler <- function(x) {
 run_plot_gprofiler(sig_isoform_genes_cere_cort)
 run_plot_gprofiler(sig_isoform_genes_cere_hipp)
 run_plot_gprofiler(sig_isoform_genes_cere_stri)
-run_plot_gprofiler(sig_isoform_genes_cort_hipp) # not significant
+run_plot_gprofiler(sig_isoform_genes_cort_hipp) # not significant, may need to skip
 run_plot_gprofiler(sig_isoform_genes_cort_stri)
 run_plot_gprofiler(sig_isoform_genes_hipp_stri)
 ```
