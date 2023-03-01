@@ -39,6 +39,9 @@ First, I need to update my design matrix because I need to make pairwise compari
 Once switchAnalyzeRlists are made, you can run the DEXSeq isoform switch test. You also need to prefilter the data before running the test, but I added all that to the my function so all it needs is to run.
 
 ```{r make region vs all objects}
+# make vector of brain regions
+all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
+# create function for making switchlists and running dexseq
 make_switchlist_run_dexseq <- function(x) {
   # create design
   temp_design <- data.frame(
@@ -69,11 +72,8 @@ make_switchlist_run_dexseq <- function(x) {
     envir = .GlobalEnv
   )
 }
-
-make_switchlist_run_dexseq("cerebellum")
-make_switchlist_run_dexseq("cortex")
-make_switchlist_run_dexseq("hippocampus")
-make_switchlist_run_dexseq("striatum")
+# run function on all brain regions
+lapply(all_regions, make_switchlist_run_dexseq)
 ```
 
 ### Make plots for tissue:all DTU
