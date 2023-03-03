@@ -71,6 +71,10 @@ make_switchlist_run_dexseq <- function(x) {
     switchlist_analyzed,
     envir = .GlobalEnv
   )
+  # save object
+  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
+                                    paste0(x, "_switchlist_analyzed.Rds"))
+        )
 }
 # run function on all brain regions
 lapply(all_regions, make_switchlist_run_dexseq)

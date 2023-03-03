@@ -73,6 +73,10 @@ cpm_switchlist_dexseq <- isoformSwitchTestDEXSeq(
 )
 
 extractSwitchSummary(cpm_switchlist_dexseq)
+# save object for further analyses
+saveRDS(cpm_switchlist_dexseq, here("data", "switchlist_objects",
+                                    "region_region_switchlist_analyzed.Rds")
+        )
 ```
 
 ### Make UpSet Plots

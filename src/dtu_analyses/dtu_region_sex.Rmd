@@ -175,6 +175,10 @@ filter_run_dexseq <- function(x) {
     switchlist_analyzed,
     envir = .GlobalEnv
   )
+  # save object
+  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
+                                    paste0(x, "_sex_switchlist_analyzed.Rds"))
+        )  
 }
 # use function on all brain regions
 lapply(all_regions, filter_run_dexseq)
@@ -265,6 +269,10 @@ filter_run_dexseq_noreduce <- function(x) {
     switchlist_analyzed,
     envir = .GlobalEnv
   )
+  # save object
+  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
+                                    paste0(x, "_sex_switchlist_analyzed.Rds"))
+        )  
 }
 # run new function on all regions
 lapply(all_regions, filter_run_dexseq_noreduce)
@@ -345,7 +353,7 @@ get_sig_isoforms <- function(x) {
     "temp_sex_switchlist_analyzed",
     get(paste0(name, "_sex_switchlist_analyzed"))
   )
-  # get unqiue isoforms for that gene
+  # get unique isoforms for that gene
   temp_sex_sig_isoforms <- unique(
     dplyr::filter(
       temp_sex_switchlist_analyzed$isoformFeatures,
@@ -432,6 +440,8 @@ get_cut_sig_genes <- function(x) {
 lapply(all_regions, get_cut_sig_genes)
 ```
 
+Now, perform go analysis with gprofiler2.
+
 ```{r go analysis}
 # make go analysis function
 run_gprofiler <- function(x) {
@@ -471,7 +481,7 @@ lapply(all_regions, run_gprofiler)
 
 It does not look like there is a lot of enrichment here. There are only a few genes so it makes sense to me that there is very little enrichment.
 
-Now, I want to get the gene symbols.
+Lastly, I want to get the gene symbols.
 
 ```{r get top sex gene symbols}
 # write function to get symbols for each list
