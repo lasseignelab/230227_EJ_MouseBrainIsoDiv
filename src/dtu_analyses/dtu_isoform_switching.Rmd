@@ -1,0 +1,65 @@
+---
+title: "View DTU Isoform Consequences"
+author: "Emma Jones"
+date: "2023-03-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This script depends on the dtu_region_sex script, which identified a few signifnicantly switched genes.
+
+For these few genes, we can look at individual isoform switches.
+
+```{r examine isoform switch events}
+# make function to examine isoform switch events
+add_save_orfs <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_sex_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+  switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_sex_switchlist_orf.Rds"
+      )
+    )
+    )
+  # assign object
+  assign(paste0(name, "_sex_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
+}
+# apply new function
+all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
+lapply(all_regions[2:4], add_save_orfs)
+```
+
+
+```{r plot isoform switch events}
+switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000024758.16')
+switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000053819.17')
+switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000072501.6')
+
+switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000020056.17')
+switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000035212.15')
+switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000061479.16')
+
+switchPlot(hippocampus_sex_switchlist_analyzed, gene = 'ENSMUSG00000025264.13')
+
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000002107.19')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000022210.8')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000029128.13')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000034544.18')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000038365.9')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000040591.19')
+switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000057914.16')
+```
+For plotting, want to add gene names and make function. Also want to to the analyzeDeepHMHMM.
