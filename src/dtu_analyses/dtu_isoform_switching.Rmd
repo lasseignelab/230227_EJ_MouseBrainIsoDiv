@@ -44,22 +44,128 @@ lapply(all_regions[2:4], add_save_orfs)
 
 
 ```{r plot isoform switch events}
-switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000024758.16')
-switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000053819.17')
-switchPlot(cerebellum_sex_switchlist_analyzed, gene = 'ENSMUSG00000072501.6')
+switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000024758.16')
+switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000053819.17')
+switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000072501.6')
 
-switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000020056.17')
-switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000035212.15')
-switchPlot(cortex_sex_switchlist_analyzed, gene = 'ENSMUSG00000061479.16')
+switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000020056.17')
+switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000035212.15')
+switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000061479.16')
 
-switchPlot(hippocampus_sex_switchlist_analyzed, gene = 'ENSMUSG00000025264.13')
+switchPlot(hippocampus_sex_switchlist_orf, gene = 'ENSMUSG00000025264.13')
 
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000002107.19')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000022210.8')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000029128.13')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000034544.18')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000038365.9')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000040591.19')
-switchPlot(striatum_sex_switchlist_analyzed, gene = 'ENSMUSG00000057914.16')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000002107.19')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000022210.8')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000029128.13')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000034544.18')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000038365.9')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000040591.19')
+switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000057914.16')
 ```
 For plotting, want to add gene names and make function. Also want to to the analyzeDeepHMHMM.
+
+First I am going to analyze isoform switching by brain region
+
+```{r edit function for orf}
+add_save_orfs <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+  switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_switchlist_orf.Rds"
+      )
+    )
+    )
+  # assign object
+  assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
+}
+# apply new function
+all_regions <- c("cortex", "cerebellum", "hippocampus", "striatum")
+
+lapply(all_regions, add_save_orfs)
+
+```
+
+Great, now we have all the orfs annotated for these objects.
+
+
+```{r plot sig orfs}
+
+gene_for_plotting <- dplyr::filter(cerebellum_switchlist_analyzed$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id
+
+for(i in gene_for_plotting[1:50]) {
+  switchPlot(cerebellum_switchlist_analyzed, gene = i)
+}
+
+
+cerebellum_switchlist_analyzed[["isoformFeatures"]]$condition_1 <- "other_regions"
+cerebellum_switchlist_analyzed[["isoformFeatures"]]$condition_2 <- "cerebellum"
+
+switchPlot(cerebellum_switchlist_orf, gene = "ENSMUSG00000004892.14", 
+           localTheme = theme_bw(base_size = 10))
+
+```
+
+## Use External Tools
+
+Now, I want to try using external tools for analysis. To do this I need to extract nucleotide and amino acid sequences. Isoform SwitchAnalyzeR has a function for this.
+
+```{r extract sequences}
+
+striatum_sex_switchlist_orf <- extractSequence(
+  striatum_sex_switchlist_orf,
+  pathToOutput = here("data", "switchlist_fasta"),
+  writeToFile = TRUE
+)
+
+```
+add external data
+
+```{r add external sequence analysis}
+
+striatum_sex_switchlist_more <- analyzeCPC2(
+  switchAnalyzeRlist = striatum_sex_switchlist_orf,
+  pathToCPC2resultFile = here("data", "CPC2", "result_cpc2.txt"),
+  removeNoncodinORFs = TRUE
+)
+
+striatum_sex_switchlist_more <- analyzeSignalP(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToSignalPresultFile = here("data", "SignalP6", "prediction_results.txt")
+)
+
+striatum_sex_switchlist_more <- analyzeDeepLoc2(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToDeepLoc2resultFile = here("data", "DeepLoc2", "results_640660B000004A492D07E377.csv")
+)
+
+striatum_sex_switchlist_more <- analyzeDeepTMHMM(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToDeepTMHMMresultFile = here("data", "DeepTMHMM", "TMRs.gff3")
+)
+
+striatum_sex_switchlist_more
+
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000002107.19')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000022210.8')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000029128.13')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000034544.18')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000038365.9')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000040591.19')
+switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000057914.16')
+```
+
+
+
+
