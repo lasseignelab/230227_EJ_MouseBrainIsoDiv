@@ -155,6 +155,11 @@ striatum_sex_switchlist_more <- analyzeDeepTMHMM(
   pathToDeepTMHMMresultFile = here("data", "DeepTMHMM", "TMRs.gff3")
 )
 
+striatum_sex_switchlist_more <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToPFAMresultFile = here("data", "Pfam", "pfam_results.txt")
+)
+
 striatum_sex_switchlist_more
 
 switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000002107.19')
@@ -167,5 +172,40 @@ switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000057914.16')
 ```
 
 
+```{r predict alternative splicing}
 
+striatum_sex_switchlist_more <- analyzeAlternativeSplicing(
+    switchAnalyzeRlist = striatum_sex_switchlist_more,
+    quiet = TRUE
+)
+
+table(striatum_sex_switchlist_more$AlternativeSplicingAnalysis$IR)
+
+consequencesOfInterest <- c('intron_retention','coding_potential','NMD_status','domains_identified','ORF_seq_similarity')
+
+striatum_sex_switchlist_more <- analyzeSwitchConsequences(
+    striatum_sex_switchlist_more,
+    consequencesToAnalyze = consequencesOfInterest, 
+    dIFcutoff = 0.1,
+    showProgress = FALSE
+)
+
+extractSwitchSummary(striatum_sex_switchlist_more, dIFcutoff = 0.1, filterForConsequences = TRUE)
+
+#this is cool and I want to show for all brain regions I think
+extractSplicingSummary(
+    striatum_sex_switchlist_more,
+    asFractionTotal = FALSE,
+    plotGenes=FALSE
+)
+
+splicingEnrichment <- extractSplicingEnrichment(
+    striatum_sex_switchlist_more,
+    splicingToAnalyze='all',
+    returnResult=TRUE,
+    returnSummary=TRUE
+)
+
+
+```
 
