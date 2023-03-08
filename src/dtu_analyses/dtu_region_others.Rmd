@@ -48,7 +48,7 @@ make_switchlist_run_dexseq <- function(x) {
     sampleID = sample_collection_metadata$sample_id,
     condition = sample_collection_metadata$tissue == x
   )
-  
+
   temp_design["condition"][temp_design["condition"] == TRUE] <- x
   temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
   # create switchlist
@@ -75,12 +75,59 @@ make_switchlist_run_dexseq <- function(x) {
     envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
-                                    paste0(x, "_switchlist_analyzed.Rds"))
-        )
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects",
+    paste0(x, "_switchlist_analyzed.Rds")
+  ))
 }
 # run function on all brain regions
 lapply(all_regions, make_switchlist_run_dexseq)
+```
+
+These switchlists are fine, but I'm going to write a function for adding gene names to make downstream analysis better and more interpretable. This can be added to the last function
+
+```{r add gene names}
+get_gene_symbols <- function(x) {
+  # assign name
+  assign("temp_switchlist", get(paste0(x, "_switchlist_analyzed")))
+  # pull shorter gene IDs
+  temp_switchlist[["isoformFeatures"]]$shorter <-
+    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
+      pattern = "ENSMUSG..........."
+    )
+  # get gene symbols from annotation dbi
+  temp_gene_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  )
+  # add symbols and biotypes to object
+  temp_switchlist[["isoformFeatures"]] <-
+    left_join(temp_switchlist[["isoformFeatures"]],
+      temp_gene_symbols,
+      by = c("shorter" = "ENSEMBL")
+    )
+  # add to correct columns
+  temp_switchlist[["isoformFeatures"]]$gene_name <-
+    temp_switchlist[["isoformFeatures"]]$SYMBOL
+  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
+    temp_switchlist[["isoformFeatures"]]$GENETYPE
+  # remove extra columns
+  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
+  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
+  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
+  # rename object
+  assign(paste0(x, "_switchlist_analyzed"),
+    temp_switchlist,
+    envir = .GlobalEnv
+  )
+  saveRDS(temp_switchlist, here(
+    "data", "switchlist_objects",
+    paste0(x, "_switchlist_analyzed.Rds")
+  ))
+}
+# run function on all brain regions
+lapply(all_regions, get_gene_symbols)
 ```
 
 ### Make plots for tissue:all DTU
@@ -259,8 +306,11 @@ create_volcano_plot <- function(x) {
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(name, " differentially used isoforms"))
   # save
-  ggsave(paste0(here("results", "plots", "DEXSeq_volcano"), 
-                "/", name, "_all_volcano.png"),
+  ggsave(
+    paste0(
+      here("results", "plots", "DEXSeq_volcano"),
+      "/", name, "_all_volcano.png"
+    ),
     volcano_plot,
     width = 6, height = 4
   )
