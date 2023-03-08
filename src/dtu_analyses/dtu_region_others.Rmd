@@ -48,6 +48,9 @@ make_switchlist_run_dexseq <- function(x) {
     sampleID = sample_collection_metadata$sample_id,
     condition = sample_collection_metadata$tissue == x
   )
+  
+  temp_design["condition"][temp_design["condition"] == TRUE] <- x
+  temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
   # create switchlist
   temp_switchlist <- importRdata(
     isoformCountMatrix = merged_counts_iso,
@@ -64,7 +67,7 @@ make_switchlist_run_dexseq <- function(x) {
   # run DEXSeq
   switchlist_analyzed <- isoformSwitchTestDEXSeq(
     switchAnalyzeRlist = temp_switchlist,
-    reduceToSwitchingGenes = TRUE
+    reduceToSwitchingGenes = FALSE
   )
   # rename object
   assign(paste0(x, "_switchlist_analyzed"),
