@@ -1,4 +1,4 @@
-# the purpose of this script is to include all functions used in the dtu analyses
+# the purpose of this script is to include all functions used in analyses
 
 ##################### dtu_region_region script #####################
 
@@ -13,12 +13,13 @@ filter_genes_or <- function(x) {
   # name object
   name <- substr(x, 1, 4)
   assign(paste0("sig_isoform_genes_", name),
-         sig_genes_subset,
-         envir = .GlobalEnv
+    sig_genes_subset,
+    envir = .GlobalEnv
   )
 }
 
-# filtering genes for each comparison, specifying tissue x for condition 1 and tissue y in condition 2
+# filtering genes for each comparison
+# specifying tissue x for condition 1 and tissue y in condition 2
 filter_genes_comp <- function(x, y) {
   # subset genes of interest
   sig_genes_subset <- filter(
@@ -30,12 +31,13 @@ filter_genes_comp <- function(x, y) {
   name_1 <- substr(x, 1, 4)
   name_2 <- substr(y, 1, 4)
   assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
-         sig_genes_subset,
-         envir = .GlobalEnv
+    sig_genes_subset,
+    envir = .GlobalEnv
   )
 }
 
-# create volcano plot function, specifying tissue x for condition 1 and tissue y in condition 2
+# create volcano plot function
+# specifying tissue x for condition 1 and tissue y in condition 2
 create_volcano_plot_comp <- function(x, y) {
   # create subset
   analyzed_subset <- dplyr::filter(
@@ -48,9 +50,9 @@ create_volcano_plot_comp <- function(x, y) {
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-               size = 2,
-               alpha = 0.5,
-               stroke = NA
+      size = 2,
+      alpha = 0.5,
+      stroke = NA
     ) +
     geom_hline(
       yintercept = -log10(0.05),
@@ -65,8 +67,8 @@ create_volcano_plot_comp <- function(x, y) {
       linewidth = .7
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
-                       labels = c("not significant", "significant"),
-                       values = c("gray40", "limegreen")
+      labels = c("not significant", "significant"),
+      values = c("gray40", "limegreen")
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -129,7 +131,7 @@ make_switchlist_run_dexseq <- function(x) {
     sampleID = sample_collection_metadata$sample_id,
     condition = sample_collection_metadata$tissue == x
   )
-  
+
   temp_design["condition"][temp_design["condition"] == TRUE] <- x
   temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
   # create switchlist
@@ -152,8 +154,8 @@ make_switchlist_run_dexseq <- function(x) {
   )
   # rename object
   assign(paste0(x, "_switchlist_analyzed"),
-         switchlist_analyzed,
-         envir = .GlobalEnv
+    switchlist_analyzed,
+    envir = .GlobalEnv
   )
   # save object
   saveRDS(switchlist_analyzed, here(
@@ -168,7 +170,7 @@ get_gene_symbols <- function(x) {
   # pull shorter gene IDs
   temp_switchlist[["isoformFeatures"]]$shorter <-
     str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
-                pattern = "ENSMUSG..........."
+      pattern = "ENSMUSG..........."
     )
   # get gene symbols from annotation dbi
   temp_gene_symbols <- AnnotationDbi::select(
@@ -179,8 +181,8 @@ get_gene_symbols <- function(x) {
   # add symbols and biotypes to object
   temp_switchlist[["isoformFeatures"]] <-
     left_join(temp_switchlist[["isoformFeatures"]],
-              temp_gene_symbols,
-              by = c("shorter" = "ENSEMBL")
+      temp_gene_symbols,
+      by = c("shorter" = "ENSEMBL")
     )
   # add to correct columns
   temp_switchlist[["isoformFeatures"]]$gene_name <-
@@ -193,8 +195,8 @@ get_gene_symbols <- function(x) {
   temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
   # rename object
   assign(paste0(x, "_switchlist_analyzed"),
-         temp_switchlist,
-         envir = .GlobalEnv
+    temp_switchlist,
+    envir = .GlobalEnv
   )
   saveRDS(temp_switchlist, here(
     "data", "switchlist_objects",
@@ -213,15 +215,15 @@ get_sig_genes <- function(x) {
   name <- substr(name, 1, 4)
   # assign object
   assign(paste0(name, "_sig_features"),
-         sig_features,
-         envir = .GlobalEnv
+    sig_features,
+    envir = .GlobalEnv
   )
   # pull genes
   sig_genes <- unique(sig_features$gene_id)
   # assign object
   assign(paste0(name, "_sig_genes"),
-         sig_genes,
-         envir = .GlobalEnv
+    sig_genes,
+    envir = .GlobalEnv
   )
 }
 
@@ -236,9 +238,9 @@ create_volcano_plot_region <- function(x) {
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-               size = 2,
-               alpha = 0.5,
-               stroke = NA
+      size = 2,
+      alpha = 0.5,
+      stroke = NA
     ) +
     geom_hline(
       yintercept = -log10(0.05),
@@ -253,8 +255,8 @@ create_volcano_plot_region <- function(x) {
       linewidth = .7
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
-                       labels = c("not significant", "significant"),
-                       values = c("gray40", "limegreen")
+      labels = c("not significant", "significant"),
+      values = c("gray40", "limegreen")
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -357,13 +359,14 @@ filter_run_dexseq <- function(x) {
   )
   # rename object
   assign(paste0(name, "_sex_switchlist_analyzed"),
-         switchlist_analyzed,
-         envir = .GlobalEnv
+    switchlist_analyzed,
+    envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
-                                    paste0(x, "_sex_switchlist_analyzed.Rds"))
-  )  
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects",
+    paste0(x, "_sex_switchlist_analyzed.Rds")
+  ))
 }
 # create function for sex split volcano plot for each brain region x
 create_sex_volcano_plot <- function(x) {
@@ -376,9 +379,9 @@ create_sex_volcano_plot <- function(x) {
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-               size = 2,
-               alpha = 0.5,
-               stroke = NA
+      size = 2,
+      alpha = 0.5,
+      stroke = NA
     ) +
     geom_hline(
       yintercept = -log10(0.05),
@@ -393,8 +396,8 @@ create_sex_volcano_plot <- function(x) {
       linewidth = .7
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
-                       labels = c("not significant", "significant"),
-                       values = c("gray40", "limegreen")
+      labels = c("not significant", "significant"),
+      values = c("gray40", "limegreen")
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -432,13 +435,14 @@ filter_run_dexseq_noreduce <- function(x) {
   )
   # rename object
   assign(paste0(name, "_sex_switchlist_analyzed"),
-         switchlist_analyzed,
-         envir = .GlobalEnv
+    switchlist_analyzed,
+    envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
-                                    paste0(x, "_sex_switchlist_analyzed.Rds"))
-  )  
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects",
+    paste0(x, "_sex_switchlist_analyzed.Rds")
+  ))
 }
 
 # make volcano plot function, but remove NAs
@@ -452,9 +456,9 @@ create_sex_volcano_plot_rm <- function(x) {
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-               size = 2,
-               alpha = 0.5,
-               stroke = NA
+      size = 2,
+      alpha = 0.5,
+      stroke = NA
     ) +
     geom_hline(
       yintercept = -log10(0.05),
@@ -469,9 +473,9 @@ create_sex_volcano_plot_rm <- function(x) {
       linewidth = .7
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
-                       labels = c("not significant", "significant"),
-                       values = c("gray40", "limegreen"),
-                       na.translate = FALSE
+      labels = c("not significant", "significant"),
+      values = c("gray40", "limegreen"),
+      na.translate = FALSE
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -513,8 +517,8 @@ get_sig_isoforms <- function(x) {
   )
   # rename object
   assign(paste0(name, "_sex_sig_isoforms"),
-         temp_sex_sig_isoforms,
-         envir = .GlobalEnv
+    temp_sex_sig_isoforms,
+    envir = .GlobalEnv
   )
 }
 
@@ -534,16 +538,16 @@ get_cut_sig_genes <- function(x) {
   )
   # assign object
   assign(paste0(name, "_sig_features"),
-         temp_sex_sig_features,
-         envir = .GlobalEnv
+    temp_sex_sig_features,
+    envir = .GlobalEnv
   )
   # pull genes
   sig_genes <- unique(temp_sex_sig_features$gene_id)
   sig_genes <- str_extract(sig_genes, "ENSMUSG...........")
   # assign object
   assign(paste0(name, "_sex_sig_genes"),
-         sig_genes,
-         envir = .GlobalEnv
+    sig_genes,
+    envir = .GlobalEnv
   )
 }
 # make go analysis function that skips plotting if no result returned
@@ -571,8 +575,8 @@ run_gprofiler <- function(x) {
   if (!is.null(temp_sex_gostres)) {
     # save object
     assign(paste0(name, "_sex_gostres"),
-           temp_sex_gostres,
-           envir = .GlobalEnv
+      temp_sex_gostres,
+      envir = .GlobalEnv
     )
     # plot object
     gostplot(temp_sex_gostres, capped = TRUE, interactive = FALSE)
@@ -592,7 +596,7 @@ get_gene_symbols_sex <- function(x) {
   )
   # rename object
   assign(paste0(name, "_sex_sig_gene_symbols"),
-         temp_sex_sig_gene_symbols,
-         envir = .GlobalEnv
+    temp_sex_sig_gene_symbols,
+    envir = .GlobalEnv
   )
 }

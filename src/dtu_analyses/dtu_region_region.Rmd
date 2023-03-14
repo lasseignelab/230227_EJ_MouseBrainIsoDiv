@@ -75,9 +75,10 @@ cpm_switchlist_dexseq <- isoformSwitchTestDEXSeq(
 
 extractSwitchSummary(cpm_switchlist_dexseq)
 # save object for further analyses
-saveRDS(cpm_switchlist_dexseq, here("data", "switchlist_objects",
-                                    "region_region_switchlist_analyzed.Rds")
-        )
+saveRDS(cpm_switchlist_dexseq, here(
+  "data", "switchlist_objects",
+  "region_region_switchlist_analyzed.Rds"
+))
 ```
 
 ### Make UpSet Plots
@@ -117,7 +118,10 @@ I want to get a list of genes for each comparison.
 ```{r get list of genes for each comparison}
 # make vector of comparisons
 comparison_arg_1 <- c(rep("cerebellum", 3), rep("cortex", 2), "hippocampus")
-comparison_arg_2 <- c("cortex", "hippocampus", "striatum", "hippocampus", "striatum", "striatum")
+comparison_arg_2 <- c(
+  "cortex", "hippocampus", "striatum", "hippocampus",
+  "striatum", "striatum"
+)
 # use function to get list of genes for each comparison
 mapply(filter_genes_comp, comparison_arg_1, comparison_arg_2)
 ```
@@ -187,7 +191,7 @@ Now I can run gprofiler.
 run_plot_gprofiler(sig_isoform_genes_cere_cort)
 run_plot_gprofiler(sig_isoform_genes_cere_hipp)
 run_plot_gprofiler(sig_isoform_genes_cere_stri)
-run_plot_gprofiler(sig_isoform_genes_cort_hipp) # not significant, may need to skip
+run_plot_gprofiler(sig_isoform_genes_cort_hipp) # may need to skip
 run_plot_gprofiler(sig_isoform_genes_cort_stri)
 run_plot_gprofiler(sig_isoform_genes_hipp_stri)
 ```
