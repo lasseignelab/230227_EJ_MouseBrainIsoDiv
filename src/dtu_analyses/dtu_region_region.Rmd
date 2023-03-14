@@ -28,10 +28,11 @@ library(here)
 
 #### Load in data
 
-Next, I want to read in data and get tpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be sourced.
+Next, I want to read in data and get tpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be sourced. I will also source all of the functions I wrote.
 
 ```{r read in data and get tpm values}
 source("calculate_cpm.R", local = knitr::knit_global())
+source("functions.R", local = knitr::knit_global())
 ```
 
 ## Begin DTU analysis for pairwise brain region comparisons
@@ -97,23 +98,8 @@ sig_isoform_features <- dplyr::filter(
 sig_isoform_genes <- sig_isoform_features %>%
   distinct(gene_id, condition_1, condition_2, .keep_all = TRUE)
 
-# make function for filtering genes
-filter_genes <- function(x) {
-  # subset genes of interest
-  sig_genes_subset <- filter(
-    sig_isoform_genes,
-    condition_1 == x | condition_2 == x
-  )
-  sig_genes_subset <- unique(sig_genes_subset$gene_id)
-  # name object
-  name <- substr(x, 1, 4)
-  assign(paste0("sig_isoform_genes_", name),
-    sig_genes_subset,
-    envir = .GlobalEnv
-  )
-}
-# use function to filter genes
-lapply(all_regions, filter_genes)
+# use function to filter genes in condition 1 OR condition 2
+lapply(all_regions, filter_genes_or)
 
 # make into list
 sig_isoform_gene_list <- list(
@@ -132,23 +118,7 @@ I want to get a list of genes for each comparison.
 # make vector of comparisons
 comparison_arg_1 <- c(rep("cerebellum", 3), rep("cortex", 2), "hippocampus")
 comparison_arg_2 <- c("cortex", "hippocampus", "striatum", "hippocampus", "striatum", "striatum")
-# make function to get list of genes for each comparison
-filter_genes_comp <- function(x, y) {
-  # subset genes of interest
-  sig_genes_subset <- filter(
-    sig_isoform_genes,
-    condition_1 == x & condition_2 == y
-  )
-  sig_genes_subset <- unique(sig_genes_subset$gene_id)
-  # name object
-  name_1 <- substr(x, 1, 4)
-  name_2 <- substr(y, 1, 4)
-  assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
-    sig_genes_subset,
-    envir = .GlobalEnv
-  )
-}
-# use function on all comparisons
+# use function to get list of genes for each comparison
 mapply(filter_genes_comp, comparison_arg_1, comparison_arg_2)
 ```
 
@@ -195,65 +165,9 @@ I think this is the most informative use of an UpSet plot. There are a lot of ov
 
 Making volcano plots is a classic way to show the relationship between fold changes and p values. I will make some here with the differential isoform fraction, instead of the more common differential expression (log2foldchange) seen in DE experiments.
 
-```{r make function for volcano plot}
-# create function
-create_volcano_plot <- function(x, y) {
-  # create subset
-  analyzed_subset <- dplyr::filter(
-    cpm_switchlist_dexseq$isoformFeatures,
-    condition_1 == x & condition_2 == y
-  )
-  # plot
-  volcano <- ggplot(
-    data = analyzed_subset,
-    aes(x = dIF, y = -log10(isoform_switch_q_value))
-  ) +
-    geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-      size = 2,
-      alpha = 0.5,
-      stroke = NA
-    ) +
-    geom_hline(
-      yintercept = -log10(0.05),
-      linetype = "dashed",
-      color = "magenta",
-      linewidth = .7
-    ) +
-    geom_vline(
-      xintercept = c(-0.1, 0.1),
-      linetype = "dashed",
-      color = "turquoise3",
-      linewidth = .7
-    ) +
-    scale_color_manual("Signficant\nIsoform Switch",
-      labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
-    ) +
-    labs(
-      x = "dIF (Differential Isoform Fraction)",
-      y = "-log10 (Isoform Switch q Value)"
-    ) +
-    theme_light() +
-    theme(
-      legend.text = element_text(size = 11),
-      axis.text = element_text(size = 10)
-    ) +
-    guides(colour = guide_legend(override.aes = list(size = 4))) +
-    ggtitle(paste0(
-      "cerebellum", " vs. ", "cortex",
-      " differentially used isoforms"
-    ))
-  # save
-  ggsave(
-    paste0(
-      here("results", "plots", "DEXSeq_volcano"),
-      "/", x, "_", y, "_volcano.png"
-    ),
-    plot = volcano, width = 6, height = 4
-  )
-}
+```{r volcano plot}
 # use function on all comparisons
-mapply(create_volcano_plot, comparison_arg_1, comparison_arg_2)
+mapply(create_volcano_plot_comp, comparison_arg_1, comparison_arg_2)
 ```
 
 ## GO Anlaysis of Gene Sets
@@ -270,34 +184,6 @@ bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 Now I can run gprofiler.
 
 ```{r gprofiler2}
-# create function
-run_plot_gprofiler <- function(x) {
-  # get names
-  name <- deparse(substitute(x))
-  name <- substr(name, nchar(name) - 9 + 1, nchar(name))
-  # remove numbers after decimal point
-  genes_remove_decimal <- str_extract(
-    x, "ENSMUSG..........."
-  )
-  # run gprofiler2
-  gostres <- gost(
-    query = genes_remove_decimal,
-    organism = "mmusculus", ordered_query = FALSE,
-    multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
-    measure_underrepresentation = FALSE, evcodes = FALSE,
-    user_threshold = 0.05, correction_method = "g_SCS",
-    domain_scope = "custom", custom_bg = bg_genes,
-    numeric_ns = "", sources = NULL, as_short_link = FALSE
-  )
-  # plot
-  gostplot(gostres, capped = TRUE, interactive = FALSE)
-  # save
-  ggsave(paste0(
-    here("results", "plots", "gprofiler2"),
-    "/", name, "_gostres.png"
-  ), width = 6, height = 4)
-}
-
 run_plot_gprofiler(sig_isoform_genes_cere_cort)
 run_plot_gprofiler(sig_isoform_genes_cere_hipp)
 run_plot_gprofiler(sig_isoform_genes_cere_stri)
