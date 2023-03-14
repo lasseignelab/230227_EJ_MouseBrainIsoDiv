@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This script depends on the dtu_region_sex script, which identified a few signifnicantly switched genes.
+This script depends on the dtu_region_sex script, which identified a few significantly switched genes.
 
 For these few genes, we can look at individual isoform switches.
 
