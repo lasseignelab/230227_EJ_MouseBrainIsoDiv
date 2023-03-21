@@ -31,15 +31,15 @@ Load in switchlist object. it needs to have the orf added, if not already.
 ```{r load in switchlist objects}
 # load object comparing all regions to each other
 region_region_switchlist_analyzed <- readRDS(
-  here("data","switchlist_objects","region_region_switchlist_analyzed.Rds")
+  here("data","switchlist_objects", "orf_added", "region_region_switchlist_orf.Rds")
   )
-
-add_save_orfs("region_region")
 
 region_region_switchlist_analyzed <- analyzePFAM(
   switchAnalyzeRlist = region_region_switchlist_analyzed,
   pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
 )
+
+
 ```
 
 Load in AD gene set
@@ -70,7 +70,7 @@ mood_genes <- read.xlsx("https://ars.els-cdn.com/content/image/1-s2.0-S009286741
 
 colnames(mood_genes) <- "symbol"
 
-new_col <- mood_genes %>% separate_wider_delim(mood, ";", names = paste0("gene", 1:36), too_many = "debug", too_few = "debug")
+new_col <- mood_genes %>% separate_wider_delim(symbol, ";", names = paste0("gene", 1:36), too_many = "debug", too_few = "debug")
 
 vals <- unlist(new_col[,1:36], use.names = FALSE)
 
@@ -80,14 +80,12 @@ vals <- vals[!vals == "" & !vals == "-"]
 
 vals <- gsub("\\s*\\([^\\)]+\\)", "", vals)
 
-mood_genes$symbol <- vals
+mood_genes <- vals
 ```
 
 #### Visualize!
 
 ```{r visualize}
-
-mouse_AD <- convertHumanGeneList(copy)
 
 switchPlot(region_region_switchlist_analyzed, gene = 'ENSMUSG00000068747')
 ```
