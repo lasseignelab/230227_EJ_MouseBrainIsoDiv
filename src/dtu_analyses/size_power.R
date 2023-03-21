@@ -58,8 +58,6 @@ full_switchlist <- importRdata(
     showProgress = FALSE
   )
 
-
-
 # repeat
 # split counts - reduced
 # subset counts
@@ -120,3 +118,50 @@ length(unique(full_switchlist_analyzed[["isoformFeatures"]]$gene_id))
 length(unique(reduced_switchlist_analyzed[["isoformFeatures"]]$gene_id))
 
 # having 3 samples does seem to show less features
+
+# do this again for 4 samples
+
+cort_cere_females_four <- cort_cere_females %>% filter(mouse_id != "mouse14")
+
+four_subset_counts <- subset(
+  merged_counts_iso,
+  select = c(
+    "isoform_id", cort_cere_females_four$sample_id
+  )
+)
+# subset cpm
+four_subset_cpm <- subset(
+  cpm_iso,
+  select = c(
+    "isoform_id", cort_cere_females_four$sample_id
+  )
+)
+# drop rows with 0 cpm
+four_subset_cpm <- four_subset_cpm[rowSums(four_subset_cpm[, -1]) != 0, ]
+
+# make design - reduced
+four_design <- data.frame(
+  sampleID = cort_cere_females_four$sample_id,
+  condition = cort_cere_females_four$tissue
+)
+# make switchlist - reduced
+four_switchlist <- importRdata(
+  isoformCountMatrix = four_subset_counts,
+  isoformRepExpression = four_subset_cpm,
+  designMatrix = four_design,
+  isoformExonAnnoation = here(
+    "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  showProgress = FALSE
+)
+
+# filter switchlist
+four_switchlist <- preFilter(four_switchlist, geneExpressionCutoff = NULL)
+# run DEXSeq
+four_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = four_switchlist,
+  reduceToSwitchingGenes = TRUE)
+
+length(unique(four_switchlist_analyzed[["isoformFeatures"]]$gene_id))
+
