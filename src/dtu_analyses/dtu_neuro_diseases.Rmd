@@ -39,6 +39,9 @@ region_region_switchlist_analyzed <- analyzePFAM(
   pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
 )
 
+# get gene symbols
+
+get_gene_symbols("region_region")
 
 ```
 
@@ -52,14 +55,14 @@ colnames(AD_genes) <- "symbol"
 
 AD_genes <- unique(AD_genes)
 
-AD_ensembl <- AnnotationDbi::select(org.Hs.eg.db,
-    keys = AD_genes$symbol,
-    columns = c("SYMBOL", "ENSEMBL"), keytype = "SYMBOL"
-  )
+mapped_ad_genes <- convert_human_to_mouse(AD_genes)
 
-AD_ensembl <- AD_ensembl[!is.na(AD_ensembl$ENSEMBL),]
+ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
 
-copy <- AD_ensembl[,2]
+dtu_ad_genes <- intersect(dtu_genes, ad_mouse)
+dtu_ad_genes
+
+dtu_ad_genes <- names$decimal[names$short %in% dtu_ad_genes]
 ```
 
 Load in mood disorders gene set. This table does not have individual genes split out, so I need to do that.
@@ -69,25 +72,89 @@ Load in mood disorders gene set. This table does not have individual genes split
 mood_genes <- read.xlsx("https://ars.els-cdn.com/content/image/1-s2.0-S0092867419312760-mmc4.xlsx", sheet = 1, rows = 4:149, cols = 8, colNames = FALSE)
 
 colnames(mood_genes) <- "symbol"
-
+# separate out the columns
 new_col <- mood_genes %>% separate_wider_delim(symbol, ";", names = paste0("gene", 1:36), too_many = "debug", too_few = "debug")
 
+# clear up formatting
 vals <- unlist(new_col[,1:36], use.names = FALSE)
-
 vals <- vals[!is.na(vals)]
-
 vals <- vals[!vals == "" & !vals == "-"]
-
 vals <- gsub("\\s*\\([^\\)]+\\)", "", vals)
 
 mood_genes <- vals
+
+mapped_genes <- convert_human_to_mouse(mood_genes)
+
+psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
+
+# check for any overlap
+region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
+
+dtu_genes <- unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
+
+dtu_psych_genes <- intersect(dtu_genes, psychiatric_mouse)
+dtu_psych_genes
+
+# I need to pull the correct decimal points
+names <- data.frame(short = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id),
+                    decimal = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id))
+
+dtu_psych_genes <- names$decimal[names$short %in% dtu_psych_genes]
+```
+
+Here I am going to try and make a function for plotting all genes
+
+```{r function}
+make_all_switchplots <- function(x) {
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "cortex")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "hippocampus", condition2 = "striatum")
+}
+
+lapply(dtu_psych_genes, make_all_switchplots)
+
+lapply(dtu_ad_genes, make_all_switchplots)
 ```
 
 #### Visualize!
 
 ```{r visualize}
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000006522.18", condition1 = "cerebellum", condition2 = "striatum")
 
-switchPlot(region_region_switchlist_analyzed, gene = 'ENSMUSG00000068747')
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000015747.6", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000015747.6", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000015747.6", condition1 = "cerebellum", condition2 = "hippocampus")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000022403.16", condition1 = "cerebellum", condition2 = "hippocampus")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000022403.16", condition1 = "hippocampus", condition2 = "striatum")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000022474.16", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000022474.16", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000022474.16", condition1 = "cerebellum", condition2 = "hippocampus")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000023345.18", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000023345.18", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000023345.18", condition1 = "cerebellum", condition2 = "hippocampus")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000023345.18", condition1 = "cortex", condition2 = "striatum")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000026259.15", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000026259.15", condition1 = "cortex", condition2 = "hippocampus")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028108.17", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028108.17", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028108.17", condition1 = "cerebellum", condition2 = "hippocampus")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028525.17", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028525.17", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000028525.17", condition1 = "cerebellum", condition2 = "hippocampus")
+
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000030685.6", condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000030685.6", condition1 = "cerebellum", condition2 = "cortex")
+switchPlot(region_region_switchlist_analyzed, gene = "ENSMUSG00000030685.6", condition1 = "cerebellum", condition2 = "hippocampus")
 ```
 
 #### Clean up script
