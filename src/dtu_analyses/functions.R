@@ -600,3 +600,19 @@ get_gene_symbols_sex <- function(x) {
     envir = .GlobalEnv
   )
 }
+
+###### dtu_neuro_diseases script #######
+# write function to convert human to mouse gene names
+convert_human_to_mouse <- function(x){
+  require("biomaRt")
+  human <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl", 
+                   host = "https://dec2021.archive.ensembl.org")
+  mouse <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "mmusculus_gene_ensembl", 
+                   host = "https://dec2021.archive.ensembl.org")
+  # use biomaRt to get homologous genes
+  genes <- getLDS(attributes = c("hgnc_symbol",'ensembl_gene_id'), 
+                  filters = "hgnc_symbol", values = x , mart = human, 
+                  attributesL = c("mgi_symbol",'ensembl_gene_id'), 
+                  martL = mouse, uniqueRows = TRUE)
+  return(genes)
+}
