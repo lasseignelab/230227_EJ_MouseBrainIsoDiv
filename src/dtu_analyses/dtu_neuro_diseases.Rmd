@@ -38,11 +38,6 @@ region_region_switchlist_analyzed <- analyzePFAM(
   switchAnalyzeRlist = region_region_switchlist_analyzed,
   pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
 )
-
-# get gene symbols
-
-get_gene_symbols("region_region")
-
 ```
 
 Load in AD gene set
