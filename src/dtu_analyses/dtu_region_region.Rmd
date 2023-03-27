@@ -74,6 +74,10 @@ cpm_switchlist_dexseq <- isoformSwitchTestDEXSeq(
 )
 
 extractSwitchSummary(cpm_switchlist_dexseq)
+
+# get gene symbols
+get_gene_symbols("region_region")
+
 # save object for further analyses
 saveRDS(cpm_switchlist_dexseq, here(
   "data", "switchlist_objects",
