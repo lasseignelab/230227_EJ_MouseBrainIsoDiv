@@ -172,7 +172,7 @@ There is no overlap! An UpSet plot might not be the best visualization if there 
 
 #### GO Analysis using gprofiler2
 
-Before doing GO analysis, I need to pull out signficant genes. GO analysis does not surrently work at the isoform level (at least for gprofiler2).
+Before doing GO analysis, I need to pull out significant genes. GO analysis does not currently work at the isoform level (at least for gprofiler2).
 
 ```{r pull out signficant genes}
 # run  on all brain regions
