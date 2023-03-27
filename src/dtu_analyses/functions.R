@@ -26,14 +26,19 @@ filter_genes_comp <- function(x, y) {
     sig_isoform_genes,
     condition_1 == x & condition_2 == y
   )
-  sig_genes_subset <- unique(sig_genes_subset$gene_id)
+  sig_genes_subset <- unique(sig_genes_subset$gene_name)
   # name object
   name_1 <- substr(x, 1, 4)
   name_2 <- substr(y, 1, 4)
   assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
-    sig_genes_subset,
-    envir = .GlobalEnv
+         sig_genes_subset,
+         envir = .GlobalEnv
   )
+  write.table(sig_genes_subset, 
+              file = here("results", "dtu_genes", 
+                          paste0(name_1, "_", name_2, ".txt")
+              ), 
+              row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
 # create volcano plot function
@@ -219,12 +224,18 @@ get_sig_genes <- function(x) {
     envir = .GlobalEnv
   )
   # pull genes
-  sig_genes <- unique(sig_features$gene_id)
+  sig_genes <- unique(sig_features$gene_name)
   # assign object
   assign(paste0(name, "_sig_genes"),
     sig_genes,
     envir = .GlobalEnv
   )
+  # save result
+  write.table(sig_genes, 
+              file = here("results", "dtu_genes", 
+                          paste0(name, "_others.txt")
+              ), 
+              row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
 # create function
@@ -594,6 +605,12 @@ get_gene_symbols_sex <- function(x) {
     keys = temp_sex_sig_genes,
     columns = c("SYMBOL", "GENENAME", "ENSEMBL"), keytype = "ENSEMBL"
   )
+  # save results
+  write.table(temp_sex_sig_gene_symbols$SYMBOL, 
+              file = here("results", "dtu_genes", 
+                          paste0(name, "_sex.txt")
+              ), 
+              row.names = FALSE, col.names = FALSE, quote = FALSE)
   # rename object
   assign(paste0(name, "_sex_sig_gene_symbols"),
     temp_sex_sig_gene_symbols,
