@@ -86,7 +86,7 @@ create_volcano_plot_comp <- function(x, y) {
     ) +
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(
-      "cerebellum", " vs. ", "cortex",
+      x, " vs. ", y,
       " differentially used isoforms"
     ))
   # save
