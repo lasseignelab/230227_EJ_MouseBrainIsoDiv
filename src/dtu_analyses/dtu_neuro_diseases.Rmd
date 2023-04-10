@@ -23,6 +23,7 @@ library(here)
 library(openxlsx)
 library(org.Hs.eg.db)
 library(org.Mm.eg.db)
+library(readxl)
 ```
 Get metadata and functions into your environment
 
@@ -64,14 +65,6 @@ Load in AD gene set
 ```{r read AD gene set}
 # read in from web
 AD_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx", sheet = 6, rows = 5:87, cols = 4, colNames = FALSE)
-
-colnames(AD_genes) <- "symbol"
-
-AD_genes <- unique(AD_genes)
-
-mapped_ad_genes <- convert_human_to_mouse(AD_genes)
-
-ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
 
 colnames(AD_genes) <- "symbol"
 
@@ -156,6 +149,17 @@ lapply(dtu_psych_genes, make_all_switchplots)
 lapply(dtu_ad_genes, make_all_switchplots)
 
 lapply(dtu_cpam_genes, make_all_switchplots)
+
+```
+
+```{r do switchplot for striatum gene}
+
+striatum_sex_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "striatum", "pfam_results.txt")
+)
+
+switchPlot(striatum_sex_switchlist_analyzed, gene = "Dhrs4")
 ```
 
 #### Clean up script
