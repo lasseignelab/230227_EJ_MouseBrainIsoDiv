@@ -1,5 +1,5 @@
 ---
-title: "DTU Analysis (cpm): Brain Region vs All"
+title: "DTU Analysis: Brain Region vs All"
 author: "Emma Jones"
 date: "2023-02-24"
 output: html_document
@@ -30,6 +30,7 @@ Next, I want to read in data and get cpm values. Since I'll be doing this for al
 
 ```{r read in data and get cpm values}
 source("calculate_cpm.R", local = knitr::knit_global())
+source("functions.R", local = knitr::knit_global())
 ```
 
 ## DTU for one region versus all other regions
@@ -41,43 +42,15 @@ Once switchAnalyzeRlists are made, you can run the DEXSeq isoform switch test. Y
 ```{r make region vs all objects}
 # make vector of brain regions
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-# create function for making switchlists and running dexseq
-make_switchlist_run_dexseq <- function(x) {
-  # create design
-  temp_design <- data.frame(
-    sampleID = sample_collection_metadata$sample_id,
-    condition = sample_collection_metadata$tissue == x
-  )
-  # create switchlist
-  temp_switchlist <- importRdata(
-    isoformCountMatrix = merged_counts_iso,
-    isoformRepExpression = cpm_iso,
-    designMatrix = temp_design,
-    isoformExonAnnoation = here(
-      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
-    ),
-    isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-    showProgress = FALSE
-  )
-  # filter switchlist
-  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
-    switchAnalyzeRlist = temp_switchlist,
-    reduceToSwitchingGenes = TRUE
-  )
-  # rename object
-  assign(paste0(x, "_switchlist_analyzed"),
-    switchlist_analyzed,
-    envir = .GlobalEnv
-  )
-  # save object
-  saveRDS(switchlist_analyzed, here("data", "switchlist_objects",
-                                    paste0(x, "_switchlist_analyzed.Rds"))
-        )
-}
 # run function on all brain regions
 lapply(all_regions, make_switchlist_run_dexseq)
+```
+
+These switchlists are fine, but I'm going to write a function for adding gene names to make downstream analysis better and more interpretable. This can be added to the last function
+
+```{r add gene names}
+# run function on all brain regions
+lapply(all_regions, get_gene_symbols)
 ```
 
 ### Make plots for tissue:all DTU
@@ -86,30 +59,6 @@ Now that those objects are saved, I need to make plots for them. To do that, I w
 I will start with UpSet plots (using ComplexHeatmap for color) to show overlap of significant genes.
 
 ```{r extract sigificant tissue:all genes}
-# make function for extracting significant genes
-get_sig_genes <- function(x) {
-  # subset features
-  sig_features <- dplyr::filter(
-    x$isoformFeatures,
-    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-  )
-  # get name
-  name <- deparse(substitute(x))
-  name <- substr(name, 1, 4)
-  # assign object
-  assign(paste0(name, "_sig_features"),
-    sig_features,
-    envir = .GlobalEnv
-  )
-  # pull genes
-  sig_genes <- unique(sig_features$gene_id)
-  # assign object
-  assign(paste0(name, "_sig_genes"),
-    sig_genes,
-    envir = .GlobalEnv
-  )
-}
-
 # get significant genes
 get_sig_genes(cerebellum_switchlist_analyzed)
 get_sig_genes(cortex_switchlist_analyzed)
@@ -213,61 +162,11 @@ draw(upset_isoform, column_title = "Overlap of DTU isoforms by brain region")
 I also want to make volcano plots to visualize this.
 
 ```{r make volcano plots for region v others}
-# create function
-create_volcano_plot <- function(x) {
-  # get name
-  name <- deparse(substitute(x))
-  name <- substr(name, 1, 4)
-  # plot
-  volcano_plot <- ggplot(
-    data = x$isoformFeatures,
-    aes(x = dIF, y = -log10(isoform_switch_q_value))
-  ) +
-    geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-      size = 2,
-      alpha = 0.5,
-      stroke = NA
-    ) +
-    geom_hline(
-      yintercept = -log10(0.05),
-      linetype = "dashed",
-      color = "magenta",
-      linewidth = .7
-    ) +
-    geom_vline(
-      xintercept = c(-0.1, 0.1),
-      linetype = "dashed",
-      color = "turquoise3",
-      linewidth = .7
-    ) +
-    scale_color_manual("Signficant\nIsoform Switch",
-      labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
-    ) +
-    labs(
-      x = "dIF (Differential Isoform Fraction)",
-      y = "-log10 (Isoform Switch q Value)"
-    ) +
-    theme_light() +
-    theme(
-      legend.text = element_text(size = 11),
-      axis.text = element_text(size = 10)
-    ) +
-    guides(colour = guide_legend(override.aes = list(size = 4))) +
-    ggtitle(paste0(name, " differentially used isoforms"))
-  # save
-  ggsave(paste0(here("results", "plots", "DEXSeq_volcano"), 
-                "/", name, "_all_volcano.png"),
-    volcano_plot,
-    width = 6, height = 4
-  )
-}
-
 # plot
-create_volcano_plot(cerebellum_switchlist_analyzed)
-create_volcano_plot(cortex_switchlist_analyzed)
-create_volcano_plot(hippocampus_switchlist_analyzed)
-create_volcano_plot(striatum_switchlist_analyzed)
+create_volcano_plot_region(cerebellum_switchlist_analyzed)
+create_volcano_plot_region(cortex_switchlist_analyzed)
+create_volcano_plot_region(hippocampus_switchlist_analyzed)
+create_volcano_plot_region(striatum_switchlist_analyzed)
 ```
 
 #### Clean up script

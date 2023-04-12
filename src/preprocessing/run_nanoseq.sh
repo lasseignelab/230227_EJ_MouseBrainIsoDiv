@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ../../bin/nextflow
+
 module load Nextflow
 module load Singularity
 

@@ -1,0 +1,180 @@
+---
+title: "Neurological Disease Gene Enrichment"
+author: "Emma Jones"
+date: "2023-03-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Differential Transcript Usage (DTU) Analysis across Sex in Mouse Brain lrRNA-Seq Data
+
+#### Load in packages
+
+```{r load packages}
+library(tidyverse)
+library(IsoformSwitchAnalyzeR)
+library(viridis)
+library(styler)
+library(lintr)
+library(here)
+library(openxlsx)
+library(org.Hs.eg.db)
+library(org.Mm.eg.db)
+library(readxl)
+```
+Get metadata and functions into your environment
+
+```{r read in data and get cpm values}
+source("calculate_cpm.R", local = knitr::knit_global())
+source("functions.R", local = knitr::knit_global())
+```
+
+#### Load in data
+
+Load in switchlist object. it needs to have the orf added, if not already.
+
+```{r load in switchlist objects}
+# load object comparing all regions to each other
+region_region_switchlist_analyzed <- readRDS(
+  here("data","switchlist_objects", "orf_added", "region_region_switchlist_orf.Rds")
+  )
+
+region_region_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = region_region_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
+)
+```
+
+```{r prep dtu genes}
+# prep dtu genes
+region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
+
+dtu_genes <- unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
+
+# I need to pull the correct decimal points
+names <- data.frame(short = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id),
+                    decimal = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id))
+```
+
+#### AD Genes
+Load in AD gene set
+
+```{r read AD gene set}
+# read in from web
+AD_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx", sheet = 6, rows = 5:87, cols = 4, colNames = FALSE)
+
+colnames(AD_genes) <- "symbol"
+
+AD_genes <- unique(AD_genes)
+
+mapped_ad_genes <- convert_human_to_mouse(AD_genes)
+
+ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
+
+dtu_ad_genes <- intersect(dtu_genes, ad_mouse)
+
+dtu_ad_genes
+```
+
+Load in mood disorders gene set. This table does not have individual genes split out, so I need to do that.
+
+#### Psych Genes
+
+```{r read in mood disorders gene sets}
+# read in from web
+mood_genes <- read.xlsx("https://ars.els-cdn.com/content/image/1-s2.0-S0092867419312760-mmc4.xlsx", sheet = 1, rows = 4:149, cols = 8, colNames = FALSE)
+
+colnames(mood_genes) <- "symbol"
+# separate out the columns
+new_col <- mood_genes %>% separate_wider_delim(symbol, ";", names = paste0("gene", 1:36), too_many = "debug", too_few = "debug")
+
+# clear up formatting
+vals <- unlist(new_col[,1:36], use.names = FALSE)
+vals <- vals[!is.na(vals)]
+vals <- vals[!vals == "" & !vals == "-"]
+vals <- gsub("\\s*\\([^\\)]+\\)", "", vals)
+
+mood_genes <- vals
+
+mapped_genes <- convert_human_to_mouse(mood_genes)
+
+psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
+
+# check for any overlap
+region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
+
+dtu_genes <- unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
+
+dtu_psych_genes <- intersect(dtu_genes, psychiatric_mouse)
+dtu_psych_genes
+
+dtu_psych_genes <- names$decimal[names$short %in% dtu_psych_genes]
+```
+
+#### CPAM genes
+
+Now, I am going to pull in CPAM case genes from Lizzy
+```{r pull in cpam genes}
+cpam_cases <- read_excel(here("data", "CPAM", "CPAM_Cases.xlsx"))
+cpam_genes <- cpam_cases$Gene[-c(1,length(cpam_cases))]
+
+mapped_genes <- convert_human_to_mouse(cpam_genes)
+
+cpam_mouse <- mapped_genes$Gene.stable.ID.1
+
+dtu_cpam_genes <- intersect(dtu_genes, cpam_mouse)
+dtu_cpam_genes <- names$decimal[names$short %in% dtu_cpam_genes]
+```
+
+
+
+
+Here I am going to try and make a function for plotting all genes to visualize! I NEED TO ADD TO THIS FUNCTION TO SAVE PLOTS
+
+```{r function}
+make_all_switchplots <- function(x) {
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "cortex")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "hippocampus", condition2 = "striatum")
+}
+
+lapply(dtu_psych_genes, make_all_switchplots)
+
+lapply(dtu_ad_genes, make_all_switchplots)
+
+lapply(dtu_cpam_genes, make_all_switchplots)
+
+```
+
+```{r do switchplot for striatum gene}
+
+striatum_sex_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "striatum", "pfam_results.txt")
+)
+
+switchPlot(striatum_sex_switchlist_analyzed, gene = "Dhrs4")
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("dtu_neuro_disease.Rmd")
+lint("dtu_neuro_disease.Rmd", linters = linters_with_defaults(
+  object_length_linter = NULL,
+  object_name_linter = NULL,
+  object_usage_linter = NULL
+))
+```
+
+#### Software versions
+
+```{r versions}
+sessionInfo()
+```
