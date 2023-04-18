@@ -1,0 +1,6 @@
+Warning! This preprocessing step, by nature, is not fully reproducible. 
+The assignment of novel transcript IDs by Bambu (run with the nf-core nanoseq 
+pipeline) may result in different tx.***** IDs being created and assigned, so 
+read counts for these transcripts may differ between runs. If you wish to 
+reproduce this analysis exactly, please use the provided transcript counts 
+files as a starting place, instead of the the preprocessing.
