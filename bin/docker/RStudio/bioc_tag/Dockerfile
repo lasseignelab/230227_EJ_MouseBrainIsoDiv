@@ -58,4 +58,9 @@ RUN apt-get install --yes \
 # RUN pip3 install #pythonPackageHere
 
 
+##----------------------------------------------------------------------------##
+## INSTALL GFFREAD
+##----------------------------------------------------------------------------##
+
+conda install -c bioconda gffread
 
