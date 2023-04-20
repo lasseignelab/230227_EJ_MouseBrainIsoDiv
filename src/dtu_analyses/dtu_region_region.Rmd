@@ -12,6 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
 
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+First, we need to load in all packages.
+
 #### Load in packages
 
 ```{r load packages}
@@ -28,10 +36,10 @@ library(here)
 
 #### Load in data
 
-Next, I want to read in data and get tpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be sourced. I will also source all of the functions I wrote.
+Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be run beforehand and saves the data to an RData file. I will also source all of the functions I wrote.
 
 ```{r read in data and get tpm values}
-source("calculate_cpm.R", local = knitr::knit_global())
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 source("functions.R", local = knitr::knit_global())
 ```
 
@@ -54,7 +62,7 @@ cpm_switchlist <- importRdata(
   isoformRepExpression = cpm_iso,
   designMatrix = exp_design,
   isoformExonAnnoation = here(
-    "data", "nextflow", "results", "bambu",
+    "data", "nextflow", "bambu",
     "extended_annotations.gtf"
   ),
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
@@ -219,7 +227,16 @@ lint("dtu_region_region.Rmd",
 )
 ```
 
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3]/60
+```
+
 #### Software versions
+
+My software versions will be commented below.
 
 ```{r versions}
 sessionInfo()
