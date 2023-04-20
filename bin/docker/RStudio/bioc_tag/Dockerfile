@@ -62,5 +62,5 @@ RUN apt-get install --yes \
 ## INSTALL GFFREAD
 ##----------------------------------------------------------------------------##
 
-conda install -c bioconda gffread
+RUN conda install -c bioconda gffread
 
