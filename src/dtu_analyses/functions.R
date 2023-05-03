@@ -104,13 +104,9 @@ run_plot_gprofiler <- function(x) {
   # get names
   name <- deparse(substitute(x))
   name <- substr(name, nchar(name) - 9 + 1, nchar(name))
-  # remove numbers after decimal point
-  genes_remove_decimal <- str_extract(
-    x, "ENSMUSG..........."
-  )
   # run gprofiler2
   gostres <- gost(
-    query = genes_remove_decimal,
+    query = x,
     organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
     measure_underrepresentation = FALSE, evcodes = FALSE,
