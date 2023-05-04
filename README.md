@@ -72,7 +72,12 @@ script 02. It is a single command but needs to be run in a docker
 (either RStudio docker I made has gffread) or on a local machine with
 gffread.
 
-*Script 04: dtu_analyses/dtu_region_region.R* - This script depends on
+*Script 04: dtu_analyses/pca_eda.* This script is for exploratory data
+analysis and PCA. It depends on script 01. If data looks bad, do not
+proceed to script 05, but it is technically independent. This script
+takes 3 minutes to run.
+
+*Script 05: dtu_analyses/dtu_region_region.R* - This script depends on
 the outputs from script 01 which are read as an RDS file. This script
 also depends on script 03 - the gffread script. Run in github.1.2 docker
 so you have the most up-to-date version of the package. This script
