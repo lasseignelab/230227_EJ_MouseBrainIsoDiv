@@ -61,7 +61,7 @@ filter_genes_comp <- function(x, y) {
 create_volcano_plot_comp <- function(x, y) {
   # create subset
   analyzed_subset <- dplyr::filter(
-    cpm_switchlist_dexseq$isoformFeatures,
+    region_region_switchlist_analyzed$isoformFeatures,
     condition_1 == x & condition_2 == y
   )
   # plot

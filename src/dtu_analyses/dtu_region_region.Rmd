@@ -59,7 +59,8 @@ exp_design <- data.frame(
 Make a switchlist, which is an object required for running isoformswitchanalyzer.
 
 ```{r add fasta of transcripts to object}
-cpm_switchlist <- importRdata(
+# make switchlist with sva
+region_region_switchlist <- importRdata(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
   designMatrix = exp_design,
@@ -70,6 +71,19 @@ cpm_switchlist <- importRdata(
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
   showProgress = FALSE
 )
+# or without sva
+region_region_switchlist_nobatch <- importRdata(
+  isoformCountMatrix = merged_counts_iso,
+  isoformRepExpression = cpm_iso,
+  designMatrix = exp_design,
+  isoformExonAnnoation = here(
+    "data", "nextflow", "bambu",
+    "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  showProgress = FALSE,
+  detectUnwantedEffects = FALSE
+)
 ```
 
 Now, I can run DEXSeq. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
@@ -77,42 +91,76 @@ Now, I can run DEXSeq. Because my data includes counts of less than 1, I still w
 ```{r run dexseq}
 # filter data and disabling gene expression cutoff
 # this results in 44386 isoforms left
-cpm_switchlist <- preFilter(cpm_switchlist, geneExpressionCutoff = NULL)
+region_region_switchlist <- preFilter(region_region_switchlist, geneExpressionCutoff = NULL)
+
+# save switchlist
+saveRDS(region_region_switchlist, here(
+  "data", "switchlist_objects",
+  "region_region_switchlist_NOT_analyzed.Rds"
+))
 
 # now run DEXSeq
-cpm_switchlist_analyzed <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = cpm_switchlist,
-  reduceToSwitchingGenes = TRUE,
-  reduceFurtherToGenesWithConsequencePotential = FALSE
+region_region_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = region_region_switchlist,
+  reduceToSwitchingGenes = TRUE
 )
 
-extractSwitchSummary(cpm_switchlist_analyzed)
+extractSwitchSummary(region_region_switchlist_analyzed)
 
 # save object for further analyses
-saveRDS(cpm_switchlist_analyzed, here(
+saveRDS(region_region_switchlist_analyzed, here(
   "data", "switchlist_objects",
   "region_region_switchlist_analyzed.Rds"
 ))
 
-# get gene symbols
-get_gene_symbols("cpm")
+# or run satuRn
+region_region_switchlist_saturn <- isoformSwitchTestSatuRn(
+  switchAnalyzeRlist = region_region_switchlist,
+  reduceToSwitchingGenes = TRUE
+)
 
-# save object with gene symbols for further analyses
-saveRDS(cpm_switchlist_analyzed, here(
+extractSwitchSummary(region_region_switchlist_saturn)
+
+# save object for further analyses
+saveRDS(region_region_switchlist_saturn, here(
   "data", "switchlist_objects",
-  "region_region_switchlist_analyzed.Rds"
+  "region_region_switchlist_saturn.Rds"
 ))
+
+# get gene symbols and save object with gene symbols within function
+get_gene_symbols("region_region")
+
+# no batch effects DEXSeq
+region_region_switchlist_nobatch <- preFilter(region_region_switchlist_nobatch, geneExpressionCutoff = NULL)
+
+# now run DEXSeq on no batch effects
+region_region_switchlist_analyzed_nobatch <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = region_region_switchlist_nobatch,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_analyzed_nobatch)
+
+# now run saturn on no batch effects
+region_region_switchlist_saturn_nobatch <- isoformSwitchTestSatuRn(
+  switchAnalyzeRlist = region_region_switchlist_nobatch,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_saturn_nobatch)
 ```
+Expected DEXSeq output:
 
-Expected output:
 
-cerebellum vs cortex	1	1	1	
-cerebellum vs hippocampus	13	10	9	
-cerebellum vs striatum	2	1	1	
-cortex vs hippocampus	59	46	39	
-cortex vs striatum	0	0	0	
-hippocampus vs striatum	39	35	28	
-Combined	98	90	66	
+Expected saturn output:
+
+cerebellum vs cortex	444	331	288	
+cerebellum vs hippocampus	169	129	114	
+cerebellum vs striatum	514	419	321	
+cortex vs hippocampus	40	32	30	
+cortex vs striatum	253	182	167	
+hippocampus vs striatum	70	67	48	
+Combined	924	819	570	
 
 ### Make UpSet Plots
 
@@ -123,7 +171,7 @@ First, I need to get significant genes and split them out by brain region.
 # make vector of brain regions
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 # first, get significant isoform switches
-sig_isoform_features <- cpm_switchlist_analyzed$isoformFeatures
+sig_isoform_features <- region_region_switchlist_analyzed$isoformFeatures
 sig_isoform_features <- dplyr::filter(
   sig_isoform_features, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
 )
@@ -203,9 +251,6 @@ I think this is the most informative use of an UpSet plot.
 Making volcano plots is a classic way to show the relationship between fold changes and p values. I will make some here with the differential isoform fraction, instead of the more common differential expression (log2foldchange) seen in DE experiments.
 
 ```{r volcano plot}
-# rename so function gets expected input. go back and change if needed.
-cpm_switchlist_dexseq <- cpm_switchlist_analyzed
-
 # use function on all comparisons
 mapply(create_volcano_plot_comp, comparison_arg_1, comparison_arg_2)
 ```
@@ -226,10 +271,10 @@ Now I can run gprofiler.
 ```{r gprofiler2}
 run_plot_gprofiler(sig_isoform_genes_cere_cort)
 run_plot_gprofiler(sig_isoform_genes_cere_hipp)
-run_plot_gprofiler(sig_isoform_genes_cere_stri) # skip
+run_plot_gprofiler(sig_isoform_genes_cere_stri)
 run_plot_gprofiler(sig_isoform_genes_cort_hipp)
-run_plot_gprofiler(sig_isoform_genes_cort_stri) # skip
-run_plot_gprofiler(sig_isoform_genes_hipp_stri) # skip
+run_plot_gprofiler(sig_isoform_genes_cort_stri)
+run_plot_gprofiler(sig_isoform_genes_hipp_stri)
 ```
 
 There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
