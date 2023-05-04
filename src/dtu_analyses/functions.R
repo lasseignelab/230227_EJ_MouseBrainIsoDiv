@@ -1,5 +1,20 @@
 # the purpose of this script is to include all functions used in analyses
 
+##################### pca_eda script ########################
+
+# make plot function where color is x and shape is y
+plot_pca <- function(x, y) {
+  pca_metadata %>%
+    ggplot(aes(x = PC1, y = PC2)) +
+    geom_point(aes(color = {{ x }}, shape = {{ y }}), size = 3) +
+    theme_bw(base_size = 12) +
+    labs(
+      x = paste0("PC1: ", round(var_explained[1] * 100, 1), "%"),
+      y = paste0("PC2: ", round(var_explained[2] * 100, 1), "%")
+    ) +
+    theme(legend.position = "top")
+}
+
 ##################### dtu_region_region script #####################
 
 # this function is for filtering genes that are tissue x in condition 1 or 2
