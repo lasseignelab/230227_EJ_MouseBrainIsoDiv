@@ -54,7 +54,6 @@ exp_design <- data.frame(
   sampleID = sample_collection_metadata$sample_id,
   condition = sample_collection_metadata$tissue
 )
-
 ```
 
 Make a switchlist, which is an object required for running isoformswitchanalyzer.
@@ -77,7 +76,7 @@ Now, I can run DEXSeq. Because my data includes counts of less than 1, I still w
 
 ```{r run dexseq}
 # filter data and disabling gene expression cutoff
-# this results in 44024 isoforms left
+# this results in 44386 isoforms left
 cpm_switchlist <- preFilter(cpm_switchlist, geneExpressionCutoff = NULL)
 
 # now run DEXSeq
