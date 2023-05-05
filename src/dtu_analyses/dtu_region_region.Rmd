@@ -94,10 +94,10 @@ Now, I can run DEXSeq. Because my data includes counts of less than 1, I still w
 region_region_switchlist <- preFilter(region_region_switchlist, geneExpressionCutoff = NULL)
 
 # save switchlist
-saveRDS(region_region_switchlist, here(
-  "data", "switchlist_objects",
-  "region_region_switchlist_NOT_analyzed.Rds"
-))
+# saveRDS(region_region_switchlist, here(
+#   "data", "switchlist_objects",
+#   "region_region_switchlist_NOT_analyzed.Rds"
+# ))
 
 # now run DEXSeq
 region_region_switchlist_analyzed <- isoformSwitchTestDEXSeq(
@@ -130,7 +130,7 @@ saveRDS(region_region_switchlist_saturn, here(
 # get gene symbols and save object with gene symbols within function
 get_gene_symbols("region_region")
 
-# no batch effects DEXSeq
+# no batch effects prefiltering, 42277 isoforms left
 region_region_switchlist_nobatch <- preFilter(region_region_switchlist_nobatch, geneExpressionCutoff = NULL)
 
 # now run DEXSeq on no batch effects
@@ -149,10 +149,19 @@ region_region_switchlist_saturn_nobatch <- isoformSwitchTestSatuRn(
 
 extractSwitchSummary(region_region_switchlist_saturn_nobatch)
 ```
-Expected DEXSeq output:
+Expected DEXSeq output with sva:
 
+cerebellum vs cortex	71	48	45	
+cerebellum vs hippocampus	23	24	18	
+cerebellum vs striatum	141	101	86	
+cortex vs hippocampus	22	16	14	
+cortex vs striatum	18	15	13	
+hippocampus vs striatum	5	4	3	
+Combined	193	153	125	
 
-Expected saturn output:
+Expected DEXSeq output without sva:
+
+Expected saturn output without sva:
 
 cerebellum vs cortex	444	331	288	
 cerebellum vs hippocampus	169	129	114	
@@ -161,6 +170,23 @@ cortex vs hippocampus	40	32	30
 cortex vs striatum	253	182	167	
 hippocampus vs striatum	70	67	48	
 Combined	924	819	570	
+
+Expected saturn output without sva:
+
+cerebellum vs cortex	214	166	140	
+cerebellum vs hippocampus	150	120	105	
+cerebellum vs striatum	272	226	180	
+cortex vs hippocampus	46	37	33	
+cortex vs striatum	157	124	100	
+hippocampus vs striatum	99	83	65	
+Combined	539	504	345	
+
+```{r save image}
+# save all switchlist objects for later analysis
+save.image(file = here("data", "dtu_versions", "switchlists.RData"))
+
+```
+
 
 ### Make UpSet Plots
 

@@ -1,0 +1,35 @@
+---
+title: "compare results"
+author: "Emma Jones"
+date: "2023-05-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Comparing results of satuRn and DEXSeq
+
+This script is for comparing the results of isoform switch tests with satuRn and DEXSeq (with and without SVA)
+
+```{r load in packages}
+library(tidyverse)
+library(IsoformSwitchAnalyzeR)
+library(ComplexHeatmap)
+library(viridis)
+library(org.Mm.eg.db)
+library(gprofiler2)
+library(styler)
+library(lintr)
+library(here)
+```
+
+
+
+```{r load in data}
+
+load(file = here("data", "dtu_versions", "switchlists.RData"))
+
+```
+
