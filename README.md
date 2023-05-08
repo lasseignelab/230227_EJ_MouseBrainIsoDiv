@@ -1,6 +1,6 @@
 README
 ================
-2023-05-04
+2023-05-08
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -24,22 +24,23 @@ descriptions for all scripts
     ## src
     ## ├── README
     ## ├── dtu_analyses
-    ## │   ├── calculate_cpm.R
+    ## │   ├── 01_calculate_cpm.R
+    ## │   ├── 04_pca_eda.Rmd
+    ## │   ├── 05_dtu_region_region.Rmd
+    ## │   ├── compare_results.Rmd
     ## │   ├── dtu_isoform_switching.Rmd
     ## │   ├── dtu_neuro_diseases.Rmd
     ## │   ├── dtu_region_others.Rmd
-    ## │   ├── dtu_region_region.Rmd
     ## │   ├── dtu_region_sex.Rmd
     ## │   ├── functions.R
-    ## │   ├── pca_eda.Rmd
     ## │   └── size_power.R
     ## └── preprocessing
+    ##     ├── 00_run_nanoseq.sh
+    ##     ├── 02_get_genome_annotations.sh
+    ##     ├── 03_create_isoform_fa.sh
     ##     ├── 20010631.c0158.err.txt
     ##     ├── 20010631.c0158.out.txt
-    ##     ├── README
-    ##     ├── create_isoform_fa.sh
-    ##     ├── get_genome_annotations.sh
-    ##     └── run_nanoseq.sh
+    ##     └── README
 
 ### Reproducibility
 
