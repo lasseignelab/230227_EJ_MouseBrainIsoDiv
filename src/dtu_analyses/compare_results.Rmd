@@ -28,28 +28,28 @@ library(here)
 
 
 ```{r load in data}
-
+# load in switchlist comparisons
 load(file = here("data", "dtu_versions", "switchlists.RData"))
-
 ```
 
 Since I want to make dfs 4 times, I'm going to make a function that creates the df for me
 
 
 ```{r make dfs for dtu with pvalues}
-
+# make function for creating dataframes that extract the DTUs
 make_sig_df <- function(object = x, name = y) {
-  
+  # pull features
   sig_features_temp <- object$isoformFeatures
-  
+  # filter for signifciant events
   sig_features_temp <- dplyr::filter(
     sig_features_temp, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
     )
+  # get cols of interest
   temp_subset <- 
     sig_features_temp[,c("isoform_id", "gene_id", "condition_1", "condition_2",
                          "gene_name", "isoform_switch_q_value",
                          "gene_switch_q_value")]
-  
+  # export subset to global environment
   assign(paste0(name, "_results"), temp_subset, envir = .GlobalEnv)
 }
 
@@ -134,3 +134,78 @@ cor(log(saturn_joined$isoform_switch_q_value_sva),
 ```
 
 Overall, with spearman correlation, SVA helps satuRn and DEXSeq results to correlate more, and satuRn is more correlated with itself than DEXSeq. DEXSeq seems to have the biggest fluctuations in pvalue, suggesting that it was possibly previously inflated. (like e-279).
+
+Because each list contains results for all 6 comparisons, I'm going to filter down so that the DTU genes are only from one of those comparisons (some repeat, avoiding problems there)
+
+```{r filter down to one region region comparison}
+
+dexseq_sva_results_small <- filter(dexseq_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+dexseq_no_sva_results_small <- filter(dexseq_no_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+saturn_sva_results_small <- filter(saturn_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+saturn_no_sva_results_small <- filter(saturn_no_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+```
+
+
+I installed the ggvenn package to make a Venn diagram.
+
+```{r plot venn diagrams}
+# install potnential package; need to add to docker later if used in paper
+if (!require(devtools)) install.packages("devtools")
+devtools::install_github("yanlinlin82/ggvenn")
+library(ggvenn)
+
+# get colors
+install.packages("rcartocolor")
+my_colors <- carto_pal(7, "Vivid")
+my_colors
+
+# make results into a list
+for_plot <- list(dexseq_sva = dexseq_sva_results_small$isoform_id,
+           saturn_sva = saturn_sva_results_small$isoform_id,
+           dexseq_no_sva = dexseq_sva_no_results_small$isoform_id,
+           saturn_no_sva = saturn_sva_no_results_small$isoform_id)
+# plot venn diagram
+ggvenn(for_plot,
+       fill_color = c("#E58606", "#5D69B1", "#52BCA3", "#99C945"),
+       stroke_size = 0.5, set_name_size = 4
+       )
+
+```
+
+
+Another way to visualize this is an upset plot. I'll use the complexheatmap version so it can have numbers on the plot.
+
+```{r make upsetplot}
+
+# create matrix
+for_plot_mat <- list_to_matrix(for_plot)
+
+# generate combination matrix
+for_plot_comb_mat <- make_comb_mat(for_plot_mat)
+
+# make UpSet plot (ComplexHeatmap)
+UpSet(for_plot_comb_mat,
+  comb_order = order(-comb_size(for_plot_comb_mat)),
+  comb_col = c("#E58606", "#5D69B1", "#52BCA3", "#99C945")[comb_degree(for_plot_comb_mat)],
+  top_annotation = upset_top_annotation(for_plot_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(for_plot_comb_mat,
+    add_numbers = TRUE
+  )
+)
+
+```
+
+
+
+
+
