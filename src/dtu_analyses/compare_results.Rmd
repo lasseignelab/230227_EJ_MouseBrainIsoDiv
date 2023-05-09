@@ -24,7 +24,7 @@ library(styler)
 library(lintr)
 library(here)
 ```
-
+### Load in data
 
 
 ```{r load in data}
@@ -33,3 +33,104 @@ load(file = here("data", "dtu_versions", "switchlists.RData"))
 
 ```
 
+Since I want to make dfs 4 times, I'm going to make a function that creates the df for me
+
+
+```{r make dfs for dtu with pvalues}
+
+make_sig_df <- function(object = x, name = y) {
+  
+  sig_features_temp <- object$isoformFeatures
+  
+  sig_features_temp <- dplyr::filter(
+    sig_features_temp, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+    )
+  temp_subset <- 
+    sig_features_temp[,c("isoform_id", "gene_id", "condition_1", "condition_2",
+                         "gene_name", "isoform_switch_q_value",
+                         "gene_switch_q_value")]
+  
+  assign(paste0(name, "_results"), temp_subset, envir = .GlobalEnv)
+}
+
+# apply function 
+make_sig_df(object = region_region_switchlist_analyzed, name = "dexseq_sva") 
+make_sig_df(object = region_region_switchlist_saturn, name = "saturn_sva")
+make_sig_df(object = region_region_switchlist_analyzed_nobatch, name = "dexseq_no_sva")
+make_sig_df(object = region_region_switchlist_saturn_nobatch, name = "saturn_no_sva")
+
+```
+
+Now that I have separate data frames for each condition, I need to keep the DTUs that actually overlap. I think that the best way to do this is to add suffixes to the columns so it is clear which qvalue comes from where with inner_join.
+
+```{r inner join}
+# do dexseq vs saturn for sva
+sva_joined <- inner_join(dexseq_sva_results, saturn_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_dexseq", "_saturn"))
+# do dexseq vs saturn for no sva
+no_sva_joined <- inner_join(dexseq_no_sva_results, saturn_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_dexseq", "_saturn"))
+
+# compare dexseq with and without sva
+dexseq_joined <- inner_join(dexseq_sva_results, dexseq_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_sva", "_no"))
+# compare saturn with and without sva
+saturn_joined <- inner_join(saturn_sva_results, saturn_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_sva", "_no"))
+
+```
+
+
+```{r plot and get cor}
+
+# plot log because so many values are very low
+plot(log(sva_joined$isoform_switch_q_value_dexseq),
+     log(sva_joined$isoform_switch_q_value_saturn)
+     )
+# get pearson correlation - .6859
+cor(log(sva_joined$isoform_switch_q_value_dexseq),
+    log(sva_joined$isoform_switch_q_value_saturn)
+    )
+# get spearman correlation - .6271
+cor(log(sva_joined$isoform_switch_q_value_dexseq),
+    log(sva_joined$isoform_switch_q_value_saturn), method = "spearman"
+    )
+
+# plot the log because so many values are very low
+plot(log(no_sva_joined$isoform_switch_q_value_dexseq),
+     log(no_sva_joined$isoform_switch_q_value_saturn)
+     )
+# get pearson correlation - .6711
+cor(log(no_sva_joined$isoform_switch_q_value_dexseq),
+    log(no_sva_joined$isoform_switch_q_value_saturn)
+    )
+# get spearman correlation - .5796
+cor(log(no_sva_joined$isoform_switch_q_value_dexseq),
+    log(no_sva_joined$isoform_switch_q_value_saturn), method = "spearman"
+    )
+
+#do for dexseq
+# plot log because so many values are very low
+plot(log(dexseq_joined$isoform_switch_q_value_sva),
+     log(dexseq_joined$isoform_switch_q_value_no)
+     )
+# get pearson correlation - .8888
+cor(log(dexseq_joined$isoform_switch_q_value_sva),
+    log(dexseq_joined$isoform_switch_q_value_no)
+    )
+# get spearman correlation - .6524
+cor(log(dexseq_joined$isoform_switch_q_value_sva),
+    log(dexseq_joined$isoform_switch_q_value_no), method = "spearman"
+    )
+
+## plot log because so many values are very low
+plot(log(saturn_joined$isoform_switch_q_value_sva),
+     log(saturn_joined$isoform_switch_q_value_no)
+     )
+# get pearson correlation - .8877
+cor(log(saturn_joined$isoform_switch_q_value_sva),
+    log(saturn_joined$isoform_switch_q_value_no)
+    )
+# get spearman correlation -.7598
+cor(log(saturn_joined$isoform_switch_q_value_sva),
+    log(saturn_joined$isoform_switch_q_value_no), method = "spearman"
+    )
+```
+
+Overall, with spearman correlation, SVA helps satuRn and DEXSeq results to correlate more, and satuRn is more correlated with itself than DEXSeq. DEXSeq seems to have the biggest fluctuations in pvalue, suggesting that it was possibly previously inflated. (like e-279).

@@ -161,6 +161,14 @@ Combined	193	153	125
 
 Expected DEXSeq output without sva:
 
+cerebellum vs cortex	447	343	285	
+cerebellum vs hippocampus	268	188	165	
+cerebellum vs striatum	411	309	250	
+cortex vs hippocampus	27	19	17	
+cortex vs striatum	59	47	36	
+hippocampus vs striatum	60	50	38	
+Combined	752	637	458	
+
 Expected saturn output without sva:
 
 cerebellum vs cortex	444	331	288	
