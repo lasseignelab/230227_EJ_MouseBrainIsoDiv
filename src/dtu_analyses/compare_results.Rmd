@@ -207,7 +207,7 @@ UpSet(for_plot_comb_mat,
 
 Next, I going to make some switchplots. I want to get the most unqiue saturn genes, aka not overlapping with dexseq.
 
-```{r narrow}
+```{r narrow transcript lists}
 shared_results <- intersect(dexseq_sva_results_small$isoform_id,
                         saturn_sva_results_small$isoform_id)
 
@@ -219,12 +219,22 @@ unique_results_ordered <- unique_results[order(unique_results$isoform_switch_q_v
 
 top_saturn_genes <- unique(head(unique_results_ordered$gene_id, 20))
 
+# do the same for dexseq
+unique_dexseq_transcripts <- dexseq_sva_results_small$isoform_id[!dexseq_sva_results_small$isoform_id %in% shared_results]
+
+dexseq_unique_results <- dexseq_sva_results[dexseq_sva_results$isoform_id %in% unique_dexseq_transcripts,]
+
+dexseq_unique_results_ordered <- dexseq_unique_results[order(dexseq_unique_results$isoform_switch_q_value),]
+
+top_dexseq_genes <- unique(head(dexseq_unique_results_ordered$gene_id, 20))
+
+
 ```
 
 Now that I have my top_saturn_genes, I will make some switch plots. Actually, I dont have the orfs anotated so it will just be that bottom portion.
 
 ```{r plot plot plot}
-
+# plot saturn
 plot_iso_expression <- function(gene_id){
   plot <- switchPlotIsoUsage(
     region_region_switchlist_saturn,
@@ -235,17 +245,20 @@ plot_iso_expression <- function(gene_id){
   plot + ggtitle(gene_id)
 }
 
-plot_iso_expression(top_saturn_genes[1])
-plot_iso_expression(top_saturn_genes[2])
-plot_iso_expression(top_saturn_genes[3])
-plot_iso_expression(top_saturn_genes[4])
-plot_iso_expression(top_saturn_genes[5])
-plot_iso_expression(top_saturn_genes[6])
-plot_iso_expression(top_saturn_genes[7])
-plot_iso_expression(top_saturn_genes[8])
-plot_iso_expression(top_saturn_genes[9])
-plot_iso_expression(top_saturn_genes[10])
+mapply(plot_iso_expression, top_saturn_genes, SIMPLIFY = FALSE)
 
+# plot dexseq
+plot_iso_expression <- function(gene_id){
+  plot <- switchPlotIsoUsage(
+    region_region_switchlist_analyzed,
+    gene = gene_id,
+    condition1 = "cerebellum",
+    condition2 = "striatum"
+    )
+  plot + ggtitle(gene_id)
+}
+
+mapply(plot_iso_expression, top_dexseq_genes, SIMPLIFY = FALSE)
 
 ```
 
