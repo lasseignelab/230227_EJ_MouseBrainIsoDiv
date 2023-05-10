@@ -86,21 +86,15 @@ region_region_switchlist_nobatch <- importRdata(
 )
 ```
 
-Now, I can run DEXSeq. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
+Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
 
-```{r run dexseq}
+```{r run saturn}
 # filter data and disabling gene expression cutoff
 # this results in 44386 isoforms left
 region_region_switchlist <- preFilter(region_region_switchlist, geneExpressionCutoff = NULL)
 
-# save switchlist
-# saveRDS(region_region_switchlist, here(
-#   "data", "switchlist_objects",
-#   "region_region_switchlist_NOT_analyzed.Rds"
-# ))
-
-# now run DEXSeq
-region_region_switchlist_analyzed <- isoformSwitchTestDEXSeq(
+# run satuRn
+region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
   switchAnalyzeRlist = region_region_switchlist,
   reduceToSwitchingGenes = TRUE
 )
@@ -110,66 +104,15 @@ extractSwitchSummary(region_region_switchlist_analyzed)
 # save object for further analyses
 saveRDS(region_region_switchlist_analyzed, here(
   "data", "switchlist_objects",
-  "region_region_switchlist_analyzed.Rds"
-))
-
-# or run satuRn
-region_region_switchlist_saturn <- isoformSwitchTestSatuRn(
-  switchAnalyzeRlist = region_region_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-
-extractSwitchSummary(region_region_switchlist_saturn)
-
-# save object for further analyses
-saveRDS(region_region_switchlist_saturn, here(
-  "data", "switchlist_objects",
   "region_region_switchlist_saturn.Rds"
 ))
 
 # get gene symbols and save object with gene symbols within function
 get_gene_symbols("region_region")
 
-# no batch effects prefiltering, 42277 isoforms left
-region_region_switchlist_nobatch <- preFilter(region_region_switchlist_nobatch, geneExpressionCutoff = NULL)
-
-# now run DEXSeq on no batch effects
-region_region_switchlist_analyzed_nobatch <- isoformSwitchTestDEXSeq(
-  switchAnalyzeRlist = region_region_switchlist_nobatch,
-  reduceToSwitchingGenes = TRUE
-)
-
-extractSwitchSummary(region_region_switchlist_analyzed_nobatch)
-
-# now run saturn on no batch effects
-region_region_switchlist_saturn_nobatch <- isoformSwitchTestSatuRn(
-  switchAnalyzeRlist = region_region_switchlist_nobatch,
-  reduceToSwitchingGenes = TRUE
-)
-
-extractSwitchSummary(region_region_switchlist_saturn_nobatch)
 ```
-Expected DEXSeq output with sva:
 
-cerebellum vs cortex	71	48	45	
-cerebellum vs hippocampus	23	24	18	
-cerebellum vs striatum	141	101	86	
-cortex vs hippocampus	22	16	14	
-cortex vs striatum	18	15	13	
-hippocampus vs striatum	5	4	3	
-Combined	193	153	125	
-
-Expected DEXSeq output without sva:
-
-cerebellum vs cortex	447	343	285	
-cerebellum vs hippocampus	268	188	165	
-cerebellum vs striatum	411	309	250	
-cortex vs hippocampus	27	19	17	
-cortex vs striatum	59	47	36	
-hippocampus vs striatum	60	50	38	
-Combined	752	637	458	
-
-Expected saturn output without sva:
+Expected saturn output with sva:
 
 cerebellum vs cortex	444	331	288	
 cerebellum vs hippocampus	169	129	114	
@@ -178,23 +121,6 @@ cortex vs hippocampus	40	32	30
 cortex vs striatum	253	182	167	
 hippocampus vs striatum	70	67	48	
 Combined	924	819	570	
-
-Expected saturn output without sva:
-
-cerebellum vs cortex	214	166	140	
-cerebellum vs hippocampus	150	120	105	
-cerebellum vs striatum	272	226	180	
-cortex vs hippocampus	46	37	33	
-cortex vs striatum	157	124	100	
-hippocampus vs striatum	99	83	65	
-Combined	539	504	345	
-
-```{r save image}
-# save all switchlist objects for later analysis
-save.image(file = here("data", "dtu_versions", "switchlists.RData"))
-
-```
-
 
 ### Make UpSet Plots
 
