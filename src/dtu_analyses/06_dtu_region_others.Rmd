@@ -29,6 +29,8 @@ library(org.Mm.eg.db)
 library(styler)
 library(lintr)
 library(here)
+
+set.seed(123)
 ```
 
 #### Load in data
