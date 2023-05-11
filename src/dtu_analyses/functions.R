@@ -381,16 +381,23 @@ filter_run_saturn <- function(x) {
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = TRUE
   )
+if (!is.null(switchlist_analyzed)) {
+  
+  # examine summary
+  extractSwitchSummary(switchlist_analyzed)
+  
   # rename object
   assign(paste0(name, "_sex_switchlist_analyzed"),
-    switchlist_analyzed,
-    envir = .GlobalEnv
+         switchlist_analyzed,
+         envir = .GlobalEnv
   )
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
     paste0(x, "_sex_switchlist_saturn.Rds")
   ))
+}
+    
 }
 # create function for sex split volcano plot for each brain region x
 create_sex_volcano_plot <- function(x) {
@@ -583,7 +590,7 @@ run_gprofiler <- function(x) {
     "temp_sex_sig_genes",
     get(paste0(name, "_sex_sig_genes"))
   )
-  # run gpfrofiler
+  # run gprofiler
   temp_sex_gostres <- gost(
     query = temp_sex_sig_genes, organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
