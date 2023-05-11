@@ -107,7 +107,7 @@ create_volcano_plot_comp <- function(x, y) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", x, "_", y, "_volcano.png"
     ),
     plot = volcano, width = 6, height = 4
@@ -140,8 +140,8 @@ run_plot_gprofiler <- function(x) {
 
 ##################### dtu_region_others script #####################
 
-# create function for making switchlists and running dexseq on tissue x
-make_switchlist_run_dexseq <- function(x) {
+# create function for making switchlists and running saturn on tissue x
+make_switchlist_run_saturn <- function(x) {
   # create design
   temp_design <- data.frame(
     sampleID = sample_collection_metadata$sample_id,
@@ -163,8 +163,8 @@ make_switchlist_run_dexseq <- function(x) {
   )
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = FALSE
   )
@@ -176,7 +176,7 @@ make_switchlist_run_dexseq <- function(x) {
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_switchlist_analyzed.Rds")
+    paste0(x, "_switchlist_saturn.Rds")
   ))
 }
 # create function to get gene symbols for all genes of a tissue x
@@ -216,7 +216,7 @@ get_gene_symbols <- function(x) {
   )
   saveRDS(temp_switchlist, here(
     "data", "switchlist_objects",
-    paste0(x, "_switchlist_analyzed.Rds")
+    paste0(x, "_switchlist_saturn.Rds")
   ))
 }
 # make function for extracting significant genes
@@ -294,7 +294,7 @@ create_volcano_plot_region <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_all_volcano.png"
     ),
     volcano_plot,
@@ -366,16 +366,16 @@ make_switchlist <- function(x) {
   assign(paste0(name, "_sex_switchlist"), temp_switchlist, envir = .GlobalEnv)
 }
 
-# make function to filter and run DEXSeq
-filter_run_dexseq <- function(x) {
+# make function to filter and run satuRn
+filter_run_saturn <- function(x) {
   # get name
   name <- substr(x, 1, 4)
   # assign name
   assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = TRUE
   )
@@ -387,7 +387,7 @@ filter_run_dexseq <- function(x) {
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_analyzed.Rds")
+    paste0(x, "_sex_switchlist_saturn.Rds")
   ))
 }
 # create function for sex split volcano plot for each brain region x
@@ -435,7 +435,7 @@ create_sex_volcano_plot <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_sex_volcano.png"
     ),
     volcano_plot,
@@ -443,15 +443,15 @@ create_sex_volcano_plot <- function(x) {
   )
 }
 # make different function without reducing argument
-filter_run_dexseq_noreduce <- function(x) {
+filter_run_saturn_noreduce <- function(x) {
   # get name
   name <- substr(x, 1, 4)
   # assign name
   assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run saturn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = FALSE
   )
@@ -463,7 +463,7 @@ filter_run_dexseq_noreduce <- function(x) {
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_analyzed.Rds")
+    paste0(x, "_sex_switchlist_saturn.Rds")
   ))
 }
 
@@ -513,7 +513,7 @@ create_sex_volcano_plot_rm <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_sex_volcano.png"
     ),
     volcano_plot,
