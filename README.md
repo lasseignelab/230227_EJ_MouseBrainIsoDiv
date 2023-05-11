@@ -1,6 +1,6 @@
 README
 ================
-2023-05-08
+2023-05-11
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -82,7 +82,7 @@ takes 3 minutes to run.
 the outputs from script 01 which are read as an RDS file. This script
 also depends on script 03 - the gffread script. Run in github.1.2 docker
 so you have the most up-to-date version of the package. This script
-takes about an hour to run.
+takes about 10 minutes to run.
 
 ## Authors
 
