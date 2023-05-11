@@ -71,19 +71,6 @@ region_region_switchlist <- importRdata(
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
   showProgress = FALSE
 )
-# or without sva
-region_region_switchlist_nobatch <- importRdata(
-  isoformCountMatrix = merged_counts_iso,
-  isoformRepExpression = cpm_iso,
-  designMatrix = exp_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "bambu",
-    "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE,
-  detectUnwantedEffects = FALSE
-)
 ```
 
 Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
@@ -91,7 +78,9 @@ Now, I can run satuRn. Because my data includes counts of less than 1, I still w
 ```{r run saturn}
 # filter data and disabling gene expression cutoff
 # this results in 44386 isoforms left
-region_region_switchlist <- preFilter(region_region_switchlist, geneExpressionCutoff = NULL)
+region_region_switchlist <- preFilter(region_region_switchlist,
+  geneExpressionCutoff = NULL
+)
 
 # run satuRn
 region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
@@ -101,26 +90,19 @@ region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
 
 extractSwitchSummary(region_region_switchlist_analyzed)
 
-# save object for further analyses
-saveRDS(region_region_switchlist_analyzed, here(
-  "data", "switchlist_objects",
-  "region_region_switchlist_saturn.Rds"
-))
-
 # get gene symbols and save object with gene symbols within function
 get_gene_symbols("region_region")
-
 ```
 
 Expected saturn output with sva:
 
-cerebellum vs cortex	444	331	288	
+cerebellum vs cortex	446	332	289	
 cerebellum vs hippocampus	169	129	114	
 cerebellum vs striatum	514	419	321	
 cortex vs hippocampus	40	32	30	
 cortex vs striatum	253	182	167	
 hippocampus vs striatum	70	67	48	
-Combined	924	819	570	
+Combined	925	820	570	
 
 ### Make UpSet Plots
 
@@ -170,14 +152,14 @@ mapply(filter_genes_comp, comparison_arg_1, comparison_arg_2)
 Once I have these, I can combine them into a list for plotting.
 
 ```{r setup overlap of comparisons}
-# make into list
+# make into list - needed to remove NAs which are genes with no gene names
 sig_overlap_list <- list(
-  cere_cort = sig_isoform_genes_cere_cort,
-  cere_hipp = sig_isoform_genes_cere_hipp,
-  cere_stri = sig_isoform_genes_cere_stri,
-  cort_hipp = sig_isoform_genes_cort_hipp,
-  cort_stri = sig_isoform_genes_cort_stri,
-  hipp_stri = sig_isoform_genes_hipp_stri
+  cere_cort = na.omit(sig_isoform_genes_cere_cort),
+  cere_hipp = na.omit(sig_isoform_genes_cere_hipp),
+  cere_stri = na.omit(sig_isoform_genes_cere_stri),
+  cort_hipp = na.omit(sig_isoform_genes_cort_hipp),
+  cort_stri = na.omit(sig_isoform_genes_cort_stri),
+  hipp_stri = na.omit(sig_isoform_genes_hipp_stri)
 )
 ```
 
@@ -186,13 +168,14 @@ Now that the data is prepped, I can plot a complexheatmap UpSet plot. Here, colo
 ```{r make complexheatmap UpSet plot for all comparisons}
 # make UpSet plot (ComplexHeatmap)
 # create matrix
-sig_overlap_list_mat <- list_to_matrix(sig_overlap_list)
+sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 
 # generate combination matrix
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-UpSet(sig_overlap_list_comb_mat,
+png(here("results", "plots", "upset_plots", "region_region_upset.png"))
+upset_plot <- UpSet(sig_overlap_list_comb_mat,
   comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
   comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
   top_annotation = upset_top_annotation(sig_overlap_list_comb_mat,
@@ -202,6 +185,8 @@ UpSet(sig_overlap_list_comb_mat,
     add_numbers = TRUE
   )
 )
+draw(upset_plot)
+dev.off()
 ```
 
 I think this is the most informative use of an UpSet plot.
@@ -222,7 +207,7 @@ The nest step of doing DTU is a GO analysis with my gene sets. I am going to use
 I need to get the correct number of background genes, so this is all genes that were tested for significance, whether significant or not.
 
 ```{r get correct list of background genes}
-bg_genes <- unique(cpm_switchlist$isoformFeatures$gene_id)
+bg_genes <- unique(region_region_switchlist$isoformFeatures$gene_id)
 bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 ```
 
@@ -242,8 +227,8 @@ There are not a lot of results, and most things are not significant. This amount
 #### Clean up script
 
 ```{r tidy script}
-style_file("dtu_region_region.Rmd")
-lint("dtu_region_region.Rmd",
+style_file("05_dtu_region_region.Rmd")
+lint("05_dtu_region_region.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
     object_name_linter = NULL,
@@ -259,7 +244,7 @@ fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
 
-I was able to run everything in 50 minutes.
+I was able to run everything in 10 minutes, but this included some debugging so it will likely be less.
 
 #### Software versions
 
