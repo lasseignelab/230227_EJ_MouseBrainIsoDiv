@@ -88,7 +88,8 @@ create_volcano_plot_comp <- function(x, y) {
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
       labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
+      values = c("gray40", "limegreen"),
+      na.translate = FALSE
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -156,7 +157,7 @@ make_switchlist_run_saturn <- function(x) {
     isoformRepExpression = cpm_iso,
     designMatrix = temp_design,
     isoformExonAnnoation = here(
-      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+      "data", "nextflow", "bambu", "extended_annotations.gtf"
     ),
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     showProgress = FALSE
@@ -278,7 +279,8 @@ create_volcano_plot_region <- function(x) {
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
       labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
+      values = c("gray40", "limegreen"),
+      na.translate = FALSE
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -357,7 +359,7 @@ make_switchlist <- function(x) {
     isoformRepExpression = name_cpm,
     designMatrix = temp_design,
     isoformExonAnnoation = here(
-      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+      "data", "nextflow", "bambu", "extended_annotations.gtf"
     ),
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     showProgress = FALSE
