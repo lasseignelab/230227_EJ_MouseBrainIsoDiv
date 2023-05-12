@@ -1,6 +1,6 @@
 README
 ================
-2023-05-11
+2023-05-12
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -27,11 +27,11 @@ descriptions for all scripts
     ## │   ├── 01_calculate_cpm.R
     ## │   ├── 04_pca_eda.Rmd
     ## │   ├── 05_dtu_region_region.Rmd
+    ## │   ├── 06_dtu_region_others.Rmd
+    ## │   ├── 07_dtu_region_sex.Rmd
     ## │   ├── compare_results.Rmd
     ## │   ├── dtu_isoform_switching.Rmd
     ## │   ├── dtu_neuro_diseases.Rmd
-    ## │   ├── dtu_region_others.Rmd
-    ## │   ├── dtu_region_sex.Rmd
     ## │   ├── functions.R
     ## │   └── size_power.R
     ## └── preprocessing
@@ -73,7 +73,7 @@ script 02. It is a single command but needs to be run in a docker
 (either RStudio docker I made has gffread) or on a local machine with
 gffread.
 
-*Script 04: dtu_analyses/pca_eda.* This script is for exploratory data
+*Script 04: dtu_analyses/pca_eda.* - This script is for exploratory data
 analysis and PCA. It depends on script 01. If data looks bad, do not
 proceed to script 05, but it is technically independent. This script
 takes 3 minutes to run.
@@ -83,6 +83,16 @@ the outputs from script 01 which are read as an RDS file. This script
 also depends on script 03 - the gffread script. Run in github.1.2 docker
 so you have the most up-to-date version of the package. This script
 takes about 10 minutes to run.
+
+*Script 06: dtu_analyses/dtu_region_others.R* - This script is meant for
+DTU analysis comparing one brain region to all others. This script
+depends on scripts 01-03. Run this in the github.1.2 docker. Takes about
+10 minutes to run.
+
+*Script 07: dtu_analyses/dtu_region_sex.R* - This script is meant for
+DTU analysis across sexes within brain regions. This script depends on
+scripts 01-03. Run this in the github.1.2 docker. Takes about 20 minutes
+to run (I think).
 
 ## Authors
 
