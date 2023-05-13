@@ -60,38 +60,95 @@ I expect the outputs from variance explained to be 0.06121201 0.03620078 0.03448
 
 Now that the PCA has been run, we can plot. The plots can be colored by different aspects to see what is driving the principal components. My plot pca function is derived from the functions script.
 
-```{r plot PCA}
+```{r plot PCA, warning=FALSE}
+if(! dir.exists(
+  here(
+    "results",
+    "plots",
+    "pca"
+  )
+)) {
+  dir.create(
+    here(
+      "results",
+      "plots",
+      "pca"
+    )
+  )
+}
+pdf(
+  here(
+    "results",
+    "plots",
+    "pca",
+    "pca_plots.pdf"
+  )
+)
 # color by tissue and sex
-plot_pca(tissue, sex)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = tissue, 
+  shape = sex
+)
 
 # color by sample
-plot_pca(sample_id)
-# add legend so that sample number can be visualized
-plot_pca(sample_id) +
-  theme(legend.position = "none") +
-  geom_text(
-    label = pca_metadata$sample_id,
-    nudge_x = 0.25, nudge_y = 0.25,
-    check_overlap = TRUE
-  )
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = sample_id
+)
 
 # color by batch
-plot_pca(batch)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = batch
+)
 
 # color by rin score
-plot_pca(RIN)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = RIN
+)
 
 # color by median length
-plot_pca(med_len)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = med_len
+)
 
 # color by median quality
-plot_pca(med_qual)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = med_qual
+)
 
 # color by total reads
-plot_pca(total_reads)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = total_reads
+)
 
 # color by mouse id
-plot_pca(mouse_id)
+plot_pca(
+  metadata = pca_metadata, 
+  firstPC = PC1, 
+  secondPC = PC2, 
+  color = mouse_id
+)
+dev.off()
 ```
 #### Clean up script
 
