@@ -4,16 +4,45 @@
 ##################### pca_eda script ########################
 
 # make plot function where color is x and shape is y
-plot_pca <- function(x, y) {
-  pca_metadata %>%
-    ggplot(aes(x = PC1, y = PC2)) +
-    geom_point(aes(color = {{ x }}, shape = {{ y }}), size = 3) +
+plot_pca <- function(metadata,firstPC, secondPC, color, shape) {
+  color_len <- deparse(substitute(color))
+  shape_len <- deparse(substitute(shape))
+  color_class <- class(select(metadata, color_len)[[1]])
+  p <- ggplot(metadata, aes(x = {{ firstPC }}, y = {{ secondPC }})) +
+    geom_point(aes(color = {{ color }}, shape = {{ shape }}), size = 3) +
     theme_bw(base_size = 12) +
     labs(
-      x = paste0("PC1: ", round(var_explained[1] * 100, 1), "%"),
-      y = paste0("PC2: ", round(var_explained[2] * 100, 1), "%")
-    ) +
-    theme(legend.position = "top")
+      x = paste0(
+        deparse(substitute(firstPC)),
+        ": ", 
+        round(var_explained[
+          as.numeric(substr(deparse(substitute(firstPC)), 3, 4))
+        ] * 100, 1), 
+        "%"),
+      y = paste0(
+        deparse(substitute(secondPC)),
+        ": ", 
+        round(var_explained[
+          as.numeric(substr(deparse(substitute(secondPC)), 3, 4))
+        ] * 100, 1), 
+        "%")
+    ) 
+    
+  if (length(unique(metadata[[color_len]])) > 10
+      && color_class == "character"
+      | length(unique(metadata[[shape_len]])) > 10) {
+    p +
+      geom_text(
+        data = metadata,
+        label = metadata[[color_len]],
+        nudge_x = 0.25, nudge_y = 0.25,
+        check_overlap = TRUE
+      ) +
+      theme(legend.position = "none") 
+  } else {  
+    p +
+      theme(legend.position = "top")
+  }
 }
 
 ##################### dtu_region_region script #####################
