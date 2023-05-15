@@ -1,0 +1,53 @@
+---
+title: "Protein Domain Information"
+author: "Emma Jones"
+date: "2023-05-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This script depends on run_pfam.sh.
+
+## R Markdown
+
+```{r analyze pfam results}
+# pull in pfam data
+region_region_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = region_region_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
+)
+
+```
+
+Here I am going to try and make a function for plotting all genes to visualize! I NEED TO ADD TO THIS FUNCTION TO SAVE PLOTS
+
+```{r function}
+make_all_switchplots <- function(x) {
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "cortex")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "hippocampus", condition2 = "striatum")
+}
+
+lapply(dtu_psych_genes, make_all_switchplots)
+
+lapply(dtu_ad_genes, make_all_switchplots)
+
+lapply(dtu_cpam_genes, make_all_switchplots)
+
+```
+
+```{r do switchplot for striatum gene}
+
+striatum_sex_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "striatum", "pfam_results.txt")
+)
+
+switchPlot(striatum_sex_switchlist_analyzed, gene = "Dhrs4")
+```

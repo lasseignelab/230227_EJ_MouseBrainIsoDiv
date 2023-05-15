@@ -1,4 +1,5 @@
-# the purpose of this script is to include all functions used in analyses
+# the purpose of this script is to include all functions used in dtu analyses
+# in all functions, the input x is a character vector denoting brain region 
 
 ##################### pca_eda script ########################
 
@@ -652,4 +653,52 @@ convert_human_to_mouse <- function(x){
                   attributesL = c("mgi_symbol",'ensembl_gene_id'), 
                   martL = mouse, uniqueRows = TRUE)
   return(genes)
+}
+
+########## dtu_isoform_switching script #################
+# function for adding and saving orfs for brain region x (when you run x vs others)
+add_save_orfs <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+    switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_switchlist_orf.Rds"
+    )
+  )
+  )
+  # assign object
+  assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
+}
+# function for adding and saving orfs for brain region x (sex-specific)
+add_save_orfs_sex <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_sex_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+    switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_sex_switchlist_orf.Rds"
+    )
+  )
+  )
+  # assign object
+  assign(paste0(name, "_sex_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
 }
