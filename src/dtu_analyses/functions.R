@@ -1,4 +1,49 @@
-# the purpose of this script is to include all functions used in analyses
+# the purpose of this script is to include all functions used in dtu analyses
+# in all functions, the input x is a character vector denoting brain region 
+
+##################### pca_eda script ########################
+
+# make plot function where color is x and shape is y
+plot_pca <- function(metadata,firstPC, secondPC, color, shape) {
+  color_len <- deparse(substitute(color))
+  shape_len <- deparse(substitute(shape))
+  color_class <- class(select(metadata, color_len)[[1]])
+  p <- ggplot(metadata, aes(x = {{ firstPC }}, y = {{ secondPC }})) +
+    geom_point(aes(color = {{ color }}, shape = {{ shape }}), size = 3) +
+    theme_bw(base_size = 12) +
+    labs(
+      x = paste0(
+        deparse(substitute(firstPC)),
+        ": ", 
+        round(var_explained[
+          as.numeric(substr(deparse(substitute(firstPC)), 3, 4))
+        ] * 100, 1), 
+        "%"),
+      y = paste0(
+        deparse(substitute(secondPC)),
+        ": ", 
+        round(var_explained[
+          as.numeric(substr(deparse(substitute(secondPC)), 3, 4))
+        ] * 100, 1), 
+        "%")
+    ) 
+    
+  if (length(unique(metadata[[color_len]])) > 10
+      && color_class == "character"
+      | length(unique(metadata[[shape_len]])) > 10) {
+    p +
+      geom_text(
+        data = metadata,
+        label = metadata[[color_len]],
+        nudge_x = 0.25, nudge_y = 0.25,
+        check_overlap = TRUE
+      ) +
+      theme(legend.position = "none") 
+  } else {  
+    p +
+      theme(legend.position = "top")
+  }
+}
 
 ##################### dtu_region_region script #####################
 
@@ -46,7 +91,7 @@ filter_genes_comp <- function(x, y) {
 create_volcano_plot_comp <- function(x, y) {
   # create subset
   analyzed_subset <- dplyr::filter(
-    cpm_switchlist_dexseq$isoformFeatures,
+    region_region_switchlist_analyzed$isoformFeatures,
     condition_1 == x & condition_2 == y
   )
   # plot
@@ -73,7 +118,8 @@ create_volcano_plot_comp <- function(x, y) {
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
       labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
+      values = c("gray40", "limegreen"),
+      na.translate = FALSE
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -92,7 +138,7 @@ create_volcano_plot_comp <- function(x, y) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", x, "_", y, "_volcano.png"
     ),
     plot = volcano, width = 6, height = 4
@@ -104,13 +150,9 @@ run_plot_gprofiler <- function(x) {
   # get names
   name <- deparse(substitute(x))
   name <- substr(name, nchar(name) - 9 + 1, nchar(name))
-  # remove numbers after decimal point
-  genes_remove_decimal <- str_extract(
-    x, "ENSMUSG..........."
-  )
   # run gprofiler2
   gostres <- gost(
-    query = genes_remove_decimal,
+    query = x,
     organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
     measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -129,8 +171,8 @@ run_plot_gprofiler <- function(x) {
 
 ##################### dtu_region_others script #####################
 
-# create function for making switchlists and running dexseq on tissue x
-make_switchlist_run_dexseq <- function(x) {
+# create function for making switchlists and running saturn on tissue x
+make_switchlist_run_saturn <- function(x) {
   # create design
   temp_design <- data.frame(
     sampleID = sample_collection_metadata$sample_id,
@@ -145,15 +187,15 @@ make_switchlist_run_dexseq <- function(x) {
     isoformRepExpression = cpm_iso,
     designMatrix = temp_design,
     isoformExonAnnoation = here(
-      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+      "data", "nextflow", "bambu", "extended_annotations.gtf"
     ),
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     showProgress = FALSE
   )
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = FALSE
   )
@@ -165,7 +207,7 @@ make_switchlist_run_dexseq <- function(x) {
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_switchlist_analyzed.Rds")
+    paste0(x, "_switchlist_saturn.Rds")
   ))
 }
 # create function to get gene symbols for all genes of a tissue x
@@ -205,7 +247,7 @@ get_gene_symbols <- function(x) {
   )
   saveRDS(temp_switchlist, here(
     "data", "switchlist_objects",
-    paste0(x, "_switchlist_analyzed.Rds")
+    paste0(x, "_switchlist_saturn.Rds")
   ))
 }
 # make function for extracting significant genes
@@ -267,7 +309,8 @@ create_volcano_plot_region <- function(x) {
     ) +
     scale_color_manual("Signficant\nIsoform Switch",
       labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen")
+      values = c("gray40", "limegreen"),
+      na.translate = FALSE
     ) +
     labs(
       x = "dIF (Differential Isoform Fraction)",
@@ -283,7 +326,7 @@ create_volcano_plot_region <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_all_volcano.png"
     ),
     volcano_plot,
@@ -346,7 +389,7 @@ make_switchlist <- function(x) {
     isoformRepExpression = name_cpm,
     designMatrix = temp_design,
     isoformExonAnnoation = here(
-      "data", "nextflow", "results", "bambu", "extended_annotations.gtf"
+      "data", "nextflow", "bambu", "extended_annotations.gtf"
     ),
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     showProgress = FALSE
@@ -355,29 +398,36 @@ make_switchlist <- function(x) {
   assign(paste0(name, "_sex_switchlist"), temp_switchlist, envir = .GlobalEnv)
 }
 
-# make function to filter and run DEXSeq
-filter_run_dexseq <- function(x) {
+# make function to filter and run satuRn
+filter_run_saturn <- function(x) {
   # get name
   name <- substr(x, 1, 4)
   # assign name
   assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = TRUE
   )
+if (!is.null(switchlist_analyzed)) {
+  
+  # examine summary
+  extractSwitchSummary(switchlist_analyzed)
+  
   # rename object
   assign(paste0(name, "_sex_switchlist_analyzed"),
-    switchlist_analyzed,
-    envir = .GlobalEnv
+         switchlist_analyzed,
+         envir = .GlobalEnv
   )
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_analyzed.Rds")
+    paste0(x, "_sex_switchlist_saturn.Rds")
   ))
+}
+    
 }
 # create function for sex split volcano plot for each brain region x
 create_sex_volcano_plot <- function(x) {
@@ -424,7 +474,7 @@ create_sex_volcano_plot <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_sex_volcano.png"
     ),
     volcano_plot,
@@ -432,15 +482,15 @@ create_sex_volcano_plot <- function(x) {
   )
 }
 # make different function without reducing argument
-filter_run_dexseq_noreduce <- function(x) {
+filter_run_saturn_noreduce <- function(x) {
   # get name
   name <- substr(x, 1, 4)
   # assign name
   assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
   # filter switchlist
   temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run DEXSeq
-  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+  # run saturn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
     reduceToSwitchingGenes = FALSE
   )
@@ -452,7 +502,7 @@ filter_run_dexseq_noreduce <- function(x) {
   # save object
   saveRDS(switchlist_analyzed, here(
     "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_analyzed.Rds")
+    paste0(x, "_sex_switchlist_saturn.Rds")
   ))
 }
 
@@ -502,7 +552,7 @@ create_sex_volcano_plot_rm <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "DEXSeq_volcano"),
+      here("results", "plots", "satuRn_volcano"),
       "/", name, "_sex_volcano.png"
     ),
     volcano_plot,
@@ -570,7 +620,7 @@ run_gprofiler <- function(x) {
     "temp_sex_sig_genes",
     get(paste0(name, "_sex_sig_genes"))
   )
-  # run gpfrofiler
+  # run gprofiler
   temp_sex_gostres <- gost(
     query = temp_sex_sig_genes, organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
@@ -632,4 +682,52 @@ convert_human_to_mouse <- function(x){
                   attributesL = c("mgi_symbol",'ensembl_gene_id'), 
                   martL = mouse, uniqueRows = TRUE)
   return(genes)
+}
+
+########## dtu_isoform_switching script #################
+# function for adding and saving orfs for brain region x (when you run x vs others)
+add_save_orfs <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+    switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_switchlist_orf.Rds"
+    )
+  )
+  )
+  # assign object
+  assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
+}
+# function for adding and saving orfs for brain region x (sex-specific)
+add_save_orfs_sex <- function(x) {
+  # pull in switchlist
+  assign("switchlist_analyzed", get(paste0(x, "_sex_switchlist_analyzed")))
+  # add open reading frames
+  switchlist_analyzed <- addORFfromGTF(
+    switchAnalyzeRlist = switchlist_analyzed,
+    pathToGTF = here("data", "gencode_annotations",
+                     "gencode.vM31.primary_assembly.annotation.gtf"))
+  # add novel isoform orfs
+  switchlist_analyzed <- analyzeNovelIsoformORF(
+    switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
+  # save
+  saveRDS(switchlist_analyzed, here(
+    "data", "switchlist_objects","orf_added", paste0(
+      x,"_sex_switchlist_orf.Rds"
+    )
+  )
+  )
+  # assign object
+  assign(paste0(name, "_sex_switchlist_analyzed"), switchlist_analyzed,
+         envir = .GlobalEnv)
 }

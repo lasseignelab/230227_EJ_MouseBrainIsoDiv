@@ -1,0 +1,419 @@
+---
+title: "compare results"
+author: "Emma Jones"
+date: "2023-05-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Comparing results of satuRn and DEXSeq
+
+This script is for comparing the results of isoform switch tests with satuRn and DEXSeq (with and without SVA)
+
+```{r load in packages}
+library(tidyverse)
+library(IsoformSwitchAnalyzeR)
+library(ComplexHeatmap)
+library(viridis)
+library(org.Mm.eg.db)
+library(gprofiler2)
+library(styler)
+library(lintr)
+library(here)
+
+set.seed(123)
+```
+
+#### Load in data
+
+Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be run beforehand and saves the data to an RData file. I will also source all of the functions I wrote.
+
+```{r read in data and get tpm values}
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+source("functions.R", local = knitr::knit_global())
+```
+
+## Begin DTU analysis for pairwise brain region comparisons
+
+The package requires a design matrix in specific format.
+
+```{r make design matrix}
+exp_design <- data.frame(
+  sampleID = sample_collection_metadata$sample_id,
+  condition = sample_collection_metadata$tissue
+)
+```
+
+Make a switchlist, which is an object required for running isoformswitchanalyzer.
+
+```{r add fasta of transcripts to object}
+# make switchlist with sva
+region_region_switchlist <- importRdata(
+  isoformCountMatrix = merged_counts_iso,
+  isoformRepExpression = cpm_iso,
+  designMatrix = exp_design,
+  isoformExonAnnoation = here(
+    "data", "nextflow", "bambu",
+    "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  showProgress = FALSE
+)
+# or without sva
+region_region_switchlist_nobatch <- importRdata(
+  isoformCountMatrix = merged_counts_iso,
+  isoformRepExpression = cpm_iso,
+  designMatrix = exp_design,
+  isoformExonAnnoation = here(
+    "data", "nextflow", "bambu",
+    "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  showProgress = FALSE,
+  detectUnwantedEffects = FALSE
+)
+```
+
+Now, I can run DEXSeq. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
+
+```{r run switchtests}
+# filter data and disabling gene expression cutoff
+# this results in 44386 isoforms left
+region_region_switchlist <- preFilter(region_region_switchlist, geneExpressionCutoff = NULL)
+
+# save switchlist
+# saveRDS(region_region_switchlist, here(
+#   "data", "switchlist_objects",
+#   "region_region_switchlist_NOT_analyzed.Rds"
+# ))
+
+# now run DEXSeq
+region_region_switchlist_dexseq <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = region_region_switchlist,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_dexseq)
+
+# save object for further analyses
+saveRDS(region_region_switchlist_dexseq, here(
+  "data", "switchlist_objects",
+  "region_region_switchlist_dexseq.Rds"
+))
+
+# or run satuRn
+region_region_switchlist_saturn <- isoformSwitchTestSatuRn(
+  switchAnalyzeRlist = region_region_switchlist,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_saturn)
+
+# save object for further analyses
+saveRDS(region_region_switchlist_saturn, here(
+  "data", "switchlist_objects",
+  "region_region_switchlist_saturn.Rds"
+))
+
+# get gene symbols and save object with gene symbols within function
+get_gene_symbols("region_region")
+
+# no batch effects prefiltering, 42277 isoforms left
+region_region_switchlist_nobatch <- preFilter(region_region_switchlist_nobatch, geneExpressionCutoff = NULL)
+
+# now run DEXSeq on no batch effects
+region_region_switchlist_dexseq_nobatch <- isoformSwitchTestDEXSeq(
+  switchAnalyzeRlist = region_region_switchlist_nobatch,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_dexseq_nobatch)
+
+# now run saturn on no batch effects
+region_region_switchlist_saturn_nobatch <- isoformSwitchTestSatuRn(
+  switchAnalyzeRlist = region_region_switchlist_nobatch,
+  reduceToSwitchingGenes = TRUE
+)
+
+extractSwitchSummary(region_region_switchlist_saturn_nobatch)
+```
+Expected DEXSeq output with sva:
+
+cerebellum vs cortex	71	48	45	
+cerebellum vs hippocampus	23	24	18	
+cerebellum vs striatum	141	101	86	
+cortex vs hippocampus	22	16	14	
+cortex vs striatum	18	15	13	
+hippocampus vs striatum	5	4	3	
+Combined	193	153	125	
+
+Expected DEXSeq output without sva:
+
+cerebellum vs cortex	447	343	285	
+cerebellum vs hippocampus	268	188	165	
+cerebellum vs striatum	411	309	250	
+cortex vs hippocampus	27	19	17	
+cortex vs striatum	59	47	36	
+hippocampus vs striatum	60	50	38	
+Combined	752	637	458	
+
+Expected saturn output without sva:
+
+cerebellum vs cortex	444	331	288	
+cerebellum vs hippocampus	169	129	114	
+cerebellum vs striatum	514	419	321	
+cortex vs hippocampus	40	32	30	
+cortex vs striatum	253	182	167	
+hippocampus vs striatum	70	67	48	
+Combined	924	819	570	
+
+Expected saturn output without sva:
+
+cerebellum vs cortex	214	166	140	
+cerebellum vs hippocampus	150	120	105	
+cerebellum vs striatum	272	226	180	
+cortex vs hippocampus	46	37	33	
+cortex vs striatum	157	124	100	
+hippocampus vs striatum	99	83	65	
+Combined	539	504	345	
+
+```{r save image}
+# save all switchlist objects for later analysis
+save.image(file = here("data", "dtu_versions", "switchlists.RData"))
+
+```
+
+Since I want to make dfs 4 times, I'm going to make a function that creates the df for me
+
+
+```{r make dfs for dtu with pvalues}
+# make function for creating dataframes that extract the DTUs
+make_sig_df <- function(object = x, name = y) {
+  # pull features
+  sig_features_temp <- object$isoformFeatures
+  # filter for signifciant events
+  sig_features_temp <- dplyr::filter(
+    sig_features_temp, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+    )
+  # get cols of interest
+  temp_subset <- 
+    sig_features_temp[,c("isoform_id", "gene_id", "condition_1", "condition_2",
+                         "gene_name", "isoform_switch_q_value",
+                         "gene_switch_q_value")]
+  # export subset to global environment
+  assign(paste0(name, "_results"), temp_subset, envir = .GlobalEnv)
+}
+
+# apply function 
+make_sig_df(object = region_region_switchlist_dexseq, name = "dexseq_sva") 
+make_sig_df(object = region_region_switchlist_saturn, name = "saturn_sva")
+make_sig_df(object = region_region_switchlist_dexseq_nobatch, name = "dexseq_no_sva")
+make_sig_df(object = region_region_switchlist_saturn_nobatch, name = "saturn_no_sva")
+
+```
+
+Now that I have separate data frames for each condition, I need to keep the DTUs that actually overlap. I think that the best way to do this is to add suffixes to the columns so it is clear which qvalue comes from where with inner_join.
+
+```{r inner join}
+# do dexseq vs saturn for sva
+sva_joined <- inner_join(dexseq_sva_results, saturn_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_dexseq", "_saturn"))
+# do dexseq vs saturn for no sva
+no_sva_joined <- inner_join(dexseq_no_sva_results, saturn_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_dexseq", "_saturn"))
+
+# compare dexseq with and without sva
+dexseq_joined <- inner_join(dexseq_sva_results, dexseq_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_sva", "_no"))
+# compare saturn with and without sva
+saturn_joined <- inner_join(saturn_sva_results, saturn_no_sva_results, by = c("isoform_id", "gene_id", "condition_1", "condition_2"), suffix = c("_sva", "_no"))
+
+```
+
+
+```{r plot and get cor}
+
+# plot log because so many values are very low
+plot(log(sva_joined$isoform_switch_q_value_dexseq),
+     log(sva_joined$isoform_switch_q_value_saturn)
+     )
+# get pearson correlation - .6859
+cor(log(sva_joined$isoform_switch_q_value_dexseq),
+    log(sva_joined$isoform_switch_q_value_saturn)
+    )
+# get spearman correlation - .6271
+cor(log(sva_joined$isoform_switch_q_value_dexseq),
+    log(sva_joined$isoform_switch_q_value_saturn), method = "spearman"
+    )
+
+# plot the log because so many values are very low
+plot(log(no_sva_joined$isoform_switch_q_value_dexseq),
+     log(no_sva_joined$isoform_switch_q_value_saturn)
+     )
+# get pearson correlation - .6711
+cor(log(no_sva_joined$isoform_switch_q_value_dexseq),
+    log(no_sva_joined$isoform_switch_q_value_saturn)
+    )
+# get spearman correlation - .5796
+cor(log(no_sva_joined$isoform_switch_q_value_dexseq),
+    log(no_sva_joined$isoform_switch_q_value_saturn), method = "spearman"
+    )
+
+#do for dexseq
+# plot log because so many values are very low
+plot(log(dexseq_joined$isoform_switch_q_value_sva),
+     log(dexseq_joined$isoform_switch_q_value_no)
+     )
+# get pearson correlation - .8888
+cor(log(dexseq_joined$isoform_switch_q_value_sva),
+    log(dexseq_joined$isoform_switch_q_value_no)
+    )
+# get spearman correlation - .6524
+cor(log(dexseq_joined$isoform_switch_q_value_sva),
+    log(dexseq_joined$isoform_switch_q_value_no), method = "spearman"
+    )
+
+## plot log because so many values are very low
+plot(log(saturn_joined$isoform_switch_q_value_sva),
+     log(saturn_joined$isoform_switch_q_value_no)
+     )
+# get pearson correlation - .8877
+cor(log(saturn_joined$isoform_switch_q_value_sva),
+    log(saturn_joined$isoform_switch_q_value_no)
+    )
+# get spearman correlation -.7598
+cor(log(saturn_joined$isoform_switch_q_value_sva),
+    log(saturn_joined$isoform_switch_q_value_no), method = "spearman"
+    )
+```
+
+Overall, with spearman correlation, SVA helps satuRn and DEXSeq results to correlate more, and satuRn is more correlated with itself than DEXSeq. DEXSeq seems to have the biggest fluctuations in pvalue, suggesting that it was possibly previously inflated. (like e-279).
+
+Because each list contains results for all 6 comparisons, I'm going to filter down so that the DTU genes are only from one of those comparisons (some repeat, avoiding problems there)
+
+```{r filter down to one region region comparison}
+
+dexseq_sva_results_small <- filter(dexseq_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+dexseq_no_sva_results_small <- filter(dexseq_no_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+saturn_sva_results_small <- filter(saturn_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+saturn_no_sva_results_small <- filter(saturn_no_sva_results, condition_1 == "cerebellum" &
+                             condition_2 == "striatum")
+
+```
+
+
+I installed the ggvenn package to make a Venn diagram.
+
+```{r plot venn diagrams}
+# install potnential package; need to add to docker later if used in paper
+if (!require(devtools)) install.packages("devtools")
+devtools::install_github("yanlinlin82/ggvenn")
+library(ggvenn)
+
+# get colors
+install.packages("rcartocolor")
+my_colors <- carto_pal(7, "Vivid")
+my_colors
+
+# make results into a list
+for_plot <- list(dexseq_sva = dexseq_sva_results_small$isoform_id,
+           saturn_sva = saturn_sva_results_small$isoform_id,
+           dexseq_no_sva = dexseq_sva_no_results_small$isoform_id,
+           saturn_no_sva = saturn_sva_no_results_small$isoform_id)
+# plot venn diagram
+ggvenn(for_plot,
+       fill_color = c("#E58606", "#5D69B1", "#52BCA3", "#99C945"),
+       stroke_size = 0.5, set_name_size = 4
+       )
+
+```
+
+
+Another way to visualize this is an upset plot. I'll use the complexheatmap version so it can have numbers on the plot.
+
+```{r make upsetplot}
+
+# create matrix
+for_plot_mat <- list_to_matrix(for_plot)
+
+# generate combination matrix
+for_plot_comb_mat <- make_comb_mat(for_plot_mat)
+
+# make UpSet plot (ComplexHeatmap)
+UpSet(for_plot_comb_mat,
+  comb_order = order(-comb_size(for_plot_comb_mat)),
+  comb_col = c("#E58606", "#5D69B1", "#52BCA3", "#99C945")[comb_degree(for_plot_comb_mat)],
+  top_annotation = upset_top_annotation(for_plot_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(for_plot_comb_mat,
+    add_numbers = TRUE
+  )
+)
+
+```
+
+Next, I going to make some switchplots. I want to get the most unqiue saturn genes, aka not overlapping with dexseq.
+
+```{r narrow transcript lists}
+shared_results <- intersect(dexseq_sva_results_small$isoform_id,
+                        saturn_sva_results_small$isoform_id)
+
+unique_transcripts <- saturn_sva_results_small$isoform_id[!saturn_sva_results_small$isoform_id %in% shared_results]
+
+unique_results <- saturn_sva_results[saturn_sva_results$isoform_id %in% unique_transcripts,]
+
+unique_results_ordered <- unique_results[order(unique_results$isoform_switch_q_value),]
+
+top_saturn_genes <- unique(head(unique_results_ordered$gene_id, 20))
+
+# do the same for dexseq
+unique_dexseq_transcripts <- dexseq_sva_results_small$isoform_id[!dexseq_sva_results_small$isoform_id %in% shared_results]
+
+dexseq_unique_results <- dexseq_sva_results[dexseq_sva_results$isoform_id %in% unique_dexseq_transcripts,]
+
+dexseq_unique_results_ordered <- dexseq_unique_results[order(dexseq_unique_results$isoform_switch_q_value),]
+
+top_dexseq_genes <- unique(head(dexseq_unique_results_ordered$gene_id, 20))
+
+
+```
+
+Now that I have my top_saturn_genes, I will make some switch plots. Actually, I dont have the orfs anotated so it will just be that bottom portion.
+
+```{r plot plot plot}
+# plot saturn
+plot_iso_expression <- function(gene_id){
+  plot <- switchPlotIsoUsage(
+    region_region_switchlist_saturn,
+    gene = gene_id,
+    condition1 = "cerebellum",
+    condition2 = "striatum"
+    )
+  plot + ggtitle(gene_id)
+}
+
+mapply(plot_iso_expression, top_saturn_genes, SIMPLIFY = FALSE)
+
+# plot dexseq
+plot_iso_expression <- function(gene_id){
+  plot <- switchPlotIsoUsage(
+    region_region_switchlist_dexseq,
+    gene = gene_id,
+    condition1 = "cerebellum",
+    condition2 = "striatum"
+    )
+  plot + ggtitle(gene_id)
+}
+
+mapply(plot_iso_expression, top_dexseq_genes, SIMPLIFY = FALSE)
+
+```
+
+Overall and after discussion, we decided that satuRn is finding real switches and to preserve the most DTU genes, we will move ahead with satuRn and SVA.

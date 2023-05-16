@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_14
+FROM bioconductor/bioconductor_docker:RELEASE_3_16
 
 # location for mounting
 #RUN mkdir /home/rstudio/data
@@ -12,7 +12,7 @@ FROM bioconductor/bioconductor_docker:RELEASE_3_14
 RUN R -e 'install.packages(c("tidyverse", "remotes",  "BiocManager", "devtools", "knitr", "lintr", "styler", "here"))'
 
 #### Project Specific CRAN Packages ####
-RUN R -e 'install.packages(c("viridis", "gprofiler2"))'
+RUN R -e 'install.packages(c("viridis", "gprofiler2", "readxl", "openxlsx"))'
 
 #### Project Specific GitHub Packages ####
 # RUN R -e 'devtools::install_github("# insert GitHub repos here #")'
@@ -21,7 +21,7 @@ RUN R -e 'install.packages(c("viridis", "gprofiler2"))'
 
 #### Project Specific Bioconductor Packages ####
 
-RUN R -e 'BiocManager::install(c("IsoformSwitchAnalyzeR", "ComplexHeatmap", "AnnotationDbi", "org.Mm.eg.db"))'
+RUN R -e 'BiocManager::install(c("IsoformSwitchAnalyzeR", "ComplexHeatmap", "AnnotationDbi", "org.Mm.eg.db", "org.Hs.eg.db"))'
 
 ##----------------------------------------------------------------------------##
 ## SYSTEM PACKAGES
@@ -31,12 +31,11 @@ RUN apt-get update --yes && \
   apt-get upgrade --yes
 
 RUN apt-get install --yes \
-  python-dev \
+  python-dev-is-python3 \
   python3-pip \
   python3-dev \
   python3-pip \
   python3-tk
-
 
 RUN apt-get install --yes \
   libcurl4-openssl-dev \
@@ -59,4 +58,15 @@ RUN apt-get install --yes \
 # RUN pip3 install #pythonPackageHere
 
 
+##----------------------------------------------------------------------------##
+## INSTALL GFFREAD
+##----------------------------------------------------------------------------##
+
+# Install miniconda
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda
+ENV PATH=$CONDA_DIR/bin:$PATH
+
+RUN conda install -c bioconda gffread
 

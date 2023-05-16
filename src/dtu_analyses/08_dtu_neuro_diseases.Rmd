@@ -11,6 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Differential Transcript Usage (DTU) Analysis across Sex in Mouse Brain lrRNA-Seq Data
 
+The goal of this script is to compare my DTU genes to known psychiatric disorder risk genes. It is dependent on scripts 01 - 07.
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+
 #### Load in packages
 
 ```{r load packages}
@@ -24,29 +33,62 @@ library(openxlsx)
 library(org.Hs.eg.db)
 library(org.Mm.eg.db)
 library(readxl)
-```
-Get metadata and functions into your environment
 
-```{r read in data and get cpm values}
-source("calculate_cpm.R", local = knitr::knit_global())
+set.seed(123)
+```
+Get functions into your environment
+
+```{r read in functions}
 source("functions.R", local = knitr::knit_global())
 ```
 
 #### Load in data
 
-Load in switchlist object. it needs to have the orf added, if not already.
+Load in switchlist objects. I should maybe make this into a function for later...
 
 ```{r load in switchlist objects}
 # load object comparing all regions to each other
 region_region_switchlist_analyzed <- readRDS(
-  here("data","switchlist_objects", "orf_added", "region_region_switchlist_orf.Rds")
+  here("data", "switchlist_objects", "region_region_switchlist_saturn.Rds")
   )
-
-region_region_switchlist_analyzed <- analyzePFAM(
-  switchAnalyzeRlist = region_region_switchlist_analyzed,
-  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
-)
+# load object for cerebellum
+cerebellum_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "cerebellum_switchlist_saturn.Rds")
+  )
+# load object for cortex
+cortex_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "cortex_switchlist_saturn.Rds")
+  )
+# load object for hippocampus
+hippocampus_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "hippocampus_switchlist_saturn.Rds")
+  )
+# load object for cortex
+striatum_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "striatum_switchlist_saturn.Rds")
+  )
 ```
+
+```{r read in sex specific objects}
+# load object for cerebellum
+cerebellum_sex_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "cerebellum_sex_switchlist_saturn.Rds")
+  )
+# load object for cortex
+cortex_sex_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "cortex_sex_switchlist_saturn.Rds")
+  )
+# load object for hippocampus
+hippocampus_sex_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "hippocampus_sex_switchlist_saturn.Rds")
+  )
+# load object for cortex
+striatum_sex_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "striatum_sex_switchlist_saturn.Rds")
+  )
+```
+
+Now, I can use the results from this object to get my significant gene lists.
 
 ```{r prep dtu genes}
 # prep dtu genes
@@ -118,7 +160,7 @@ dtu_psych_genes <- names$decimal[names$short %in% dtu_psych_genes]
 
 Now, I am going to pull in CPAM case genes from Lizzy
 ```{r pull in cpam genes}
-cpam_cases <- read_excel(here("data", "CPAM", "CPAM_Cases.xlsx"))
+cpam_cases <- read_excel(here("doc", "CPAM", "CPAM_Cases.xlsx"))
 cpam_genes <- cpam_cases$Gene[-c(1,length(cpam_cases))]
 
 mapped_genes <- convert_human_to_mouse(cpam_genes)
@@ -132,36 +174,6 @@ dtu_cpam_genes <- names$decimal[names$short %in% dtu_cpam_genes]
 
 
 
-Here I am going to try and make a function for plotting all genes to visualize! I NEED TO ADD TO THIS FUNCTION TO SAVE PLOTS
-
-```{r function}
-make_all_switchplots <- function(x) {
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "cortex")
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "hippocampus")
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "striatum")
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "hippocampus")
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "striatum")
-  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "hippocampus", condition2 = "striatum")
-}
-
-lapply(dtu_psych_genes, make_all_switchplots)
-
-lapply(dtu_ad_genes, make_all_switchplots)
-
-lapply(dtu_cpam_genes, make_all_switchplots)
-
-```
-
-```{r do switchplot for striatum gene}
-
-striatum_sex_switchlist_analyzed <- analyzePFAM(
-  switchAnalyzeRlist = striatum_sex_switchlist_analyzed,
-  pathToPFAMresultFile = here("data", "Pfam", "striatum", "pfam_results.txt")
-)
-
-switchPlot(striatum_sex_switchlist_analyzed, gene = "Dhrs4")
-```
-
 #### Clean up script
 
 ```{r tidy script}
@@ -172,6 +184,14 @@ lint("dtu_neuro_disease.Rmd", linters = linters_with_defaults(
   object_usage_linter = NULL
 ))
 ```
+
+Get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
 
 #### Software versions
 
