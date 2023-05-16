@@ -4,7 +4,7 @@
 ##################### pca_eda script ########################
 
 # make plot function where color is x and shape is y
-plot_pca <- function(metadata,firstPC, secondPC, color, shape) {
+plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   color_len <- deparse(substitute(color))
   shape_len <- deparse(substitute(shape))
   color_class <- class(select(metadata, color_len)[[1]])
@@ -683,6 +683,62 @@ convert_human_to_mouse <- function(x){
                   martL = mouse, uniqueRows = TRUE)
   return(genes)
 }
+
+# function for pulling significant genes and getting overlap for a given brain
+# region with three different gene lists.
+compare_switching_genes <- function(brain_region) {
+  # get name
+  name <- deparse(substitute(brain_region))
+  # assign internal name
+  assign("switchlist_analyzed",
+         paste0(name, "_switchlist_analyzed")
+  )
+  # get significant genes
+  sig_features <- dplyr::filter(
+    switchlist_analyzed$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  # remove decimals from ENSEMBL ID
+  sig_features$short_id <- str_extract(sig_features$gene_id,
+                                       "ENSMUSG...........")
+  # pull short gene ids
+  dtu_genes <- unique(sig_features$short_id)
+  
+  # give name in global env
+  assign(paste0(name, "_switching_genes"),
+         switching_genes,
+         envir = .GlobalEnv
+  )
+  
+  # compare to ad genes
+  dtu_ad_genes <- intersect(dtu_genes, ad_mouse)
+  
+  # export genes
+  assign(paste0(name, "_ad_genes"),
+         dtu_ad_genes,
+         envir = .GlobalEnv
+  )
+  
+  # compare to psych genes
+  dtu_psych_genes <- intersect(dtu_genes, psychiatric_mouse)
+  # export genes
+  assign(paste0(name, "_psych_genes"),
+         dtu_psych_genes,
+         envir = .GlobalEnv
+  )
+  
+  # compare to CPAM genes
+  dtu_cpam_genes <- intersect(dtu_genes, cpam_mouse)
+  
+  # export genes
+  assign(paste0(name, "_cpam_genes"),
+         dtu_cpam_genes,
+         envir = .GlobalEnv
+  )
+  
+}
+
+
 
 ########## dtu_isoform_switching script #################
 # function for adding and saving orfs for brain region x (when you run x vs others)

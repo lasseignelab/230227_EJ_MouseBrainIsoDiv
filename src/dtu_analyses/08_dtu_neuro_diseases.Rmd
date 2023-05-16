@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Differential Transcript Usage (DTU) Analysis across Sex in Mouse Brain lrRNA-Seq Data
 
-The goal of this script is to compare my DTU genes to known alzheimers disease, psychiatric disorder risk, and cpam case genes. It is dependent on scripts 01 - 07.
+The goal of this script is to compare my DTU genes to known Alzheimer's disease, psychiatric disorder, and CPAM case genes. It is dependent on scripts 01 - 07.
 
-I am going to split this analysis by brain region.
+I am going to split this analysis by brain region, and am using the region_others isoform switch test results.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -70,20 +70,6 @@ striatum_switchlist_analyzed <- readRDS(
   )
 ```
 
-Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this.
-
-```{r prep dtu genes}
-# prep dtu genes
-region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
-
-region_region_genes <- unique(
-  region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
-
-# I need to pull the correct decimal points
-names <- data.frame(short = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id),
-                    decimal = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id))
-```
-
 #### AD Genes
 Load in AD gene set
 
@@ -100,17 +86,9 @@ mapped_ad_genes <- convert_human_to_mouse(ad_genes)
 ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
 ```
 
-Next, I need to compare this cleaned up list with the intersect function to my DTU genes in each tissue.
-
-```{r compare intersections}
-dtu_ad_genes <- intersect(dtu_genes, ad_mouse)
-
-dtu_ad_genes
-```
+#### Psych Genes
 
 Load in mood disorders gene set. This table does not have individual genes split out, so I need to do that.
-
-#### Psych Genes
 
 ```{r read in mood disorders gene sets}
 # read in from web
@@ -133,20 +111,6 @@ mapped_genes <- convert_human_to_mouse(mood_genes)
 psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
 ```
 
-Next, I check for overlap of my genes with mouse psychiatric genes.
-
-```{r check for psych overlap}
-# check for any overlap
-region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
-
-dtu_genes <- unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
-
-dtu_psych_genes <- intersect(dtu_genes, psychiatric_mouse)
-dtu_psych_genes
-
-dtu_psych_genes <- names$decimal[names$short %in% dtu_psych_genes]
-```
-
 #### CPAM genes
 
 Now, I am going to pull in CPAM case genes from Lizzy
@@ -159,11 +123,16 @@ mapped_genes <- convert_human_to_mouse(cpam_genes)
 cpam_mouse <- mapped_genes$Gene.stable.ID.1
 ```
 
-and now compare overlap with my gene lists
+### Run Comparisons
 
-```{r compare cpam overlap}
-dtu_cpam_genes <- intersect(dtu_genes, cpam_mouse)
-dtu_cpam_genes <- names$decimal[names$short %in% dtu_cpam_genes]
+Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this. I made a function to pull out the gene lists, compare, and save objects.
+
+```{r run analysis}
+# make vector of brain regions
+all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
+
+# prep signficant gene lists and compare
+lapply(all_regions, compare_switching_genes) #this function still has BUGS!!!
 ```
 
 #### Clean up script
