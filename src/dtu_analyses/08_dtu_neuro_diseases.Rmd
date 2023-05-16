@@ -11,7 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Differential Transcript Usage (DTU) Analysis across Sex in Mouse Brain lrRNA-Seq Data
 
-The goal of this script is to compare my DTU genes to known psychiatric disorder risk genes. It is dependent on scripts 01 - 07.
+The goal of this script is to compare my DTU genes to known alzheimers disease, psychiatric disorder risk, and cpam case genes. It is dependent on scripts 01 - 07.
+
+I am going to split this analysis by brain region.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -19,23 +21,26 @@ For code review, I am tracking the amount of time that this analysis will take.
 ptm <- proc.time()
 ```
 
-
 #### Load in packages
 
 ```{r load packages}
-library(tidyverse)
-library(IsoformSwitchAnalyzeR)
-library(viridis)
-library(styler)
-library(lintr)
-library(here)
-library(openxlsx)
-library(org.Hs.eg.db)
-library(org.Mm.eg.db)
-library(readxl)
+suppressPackageStartupMessages(
+ {library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+  library(openxlsx)
+  library(org.Hs.eg.db)
+  library(org.Mm.eg.db)
+  library(readxl)
+   }
+)
 
 set.seed(123)
 ```
+
 Get functions into your environment
 
 ```{r read in functions}
@@ -44,13 +49,9 @@ source("functions.R", local = knitr::knit_global())
 
 #### Load in data
 
-Load in switchlist objects. I should maybe make this into a function for later...
+Load in switchlist objects.
 
 ```{r load in switchlist objects}
-# load object comparing all regions to each other
-region_region_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "region_region_switchlist_saturn.Rds")
-  )
 # load object for cerebellum
 cerebellum_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "cerebellum_switchlist_saturn.Rds")
@@ -69,32 +70,14 @@ striatum_switchlist_analyzed <- readRDS(
   )
 ```
 
-```{r read in sex specific objects}
-# load object for cerebellum
-cerebellum_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cerebellum_sex_switchlist_saturn.Rds")
-  )
-# load object for cortex
-cortex_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cortex_sex_switchlist_saturn.Rds")
-  )
-# load object for hippocampus
-hippocampus_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "hippocampus_sex_switchlist_saturn.Rds")
-  )
-# load object for cortex
-striatum_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "striatum_sex_switchlist_saturn.Rds")
-  )
-```
-
-Now, I can use the results from this object to get my significant gene lists.
+Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this.
 
 ```{r prep dtu genes}
 # prep dtu genes
 region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
 
-dtu_genes <- unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
+region_region_genes <- unique(
+  region_region_switchlist_analyzed[["isoformFeatures"]]$short_id)
 
 # I need to pull the correct decimal points
 names <- data.frame(short = unique(region_region_switchlist_analyzed[["isoformFeatures"]]$short_id),
@@ -106,16 +89,20 @@ Load in AD gene set
 
 ```{r read AD gene set}
 # read in from web
-AD_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx", sheet = 6, rows = 5:87, cols = 4, colNames = FALSE)
+ad_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx", sheet = 6, rows = 5:87, cols = 4, colNames = FALSE)
 
-colnames(AD_genes) <- "symbol"
+colnames(ad_genes) <- "symbol"
 
-AD_genes <- unique(AD_genes)
+ad_genes <- unique(ad_genes)
 
-mapped_ad_genes <- convert_human_to_mouse(AD_genes)
+mapped_ad_genes <- convert_human_to_mouse(ad_genes)
 
 ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
+```
 
+Next, I need to compare this cleaned up list with the intersect function to my DTU genes in each tissue.
+
+```{r compare intersections}
 dtu_ad_genes <- intersect(dtu_genes, ad_mouse)
 
 dtu_ad_genes
@@ -144,7 +131,11 @@ mood_genes <- vals
 mapped_genes <- convert_human_to_mouse(mood_genes)
 
 psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
+```
 
+Next, I check for overlap of my genes with mouse psychiatric genes.
+
+```{r check for psych overlap}
 # check for any overlap
 region_region_switchlist_analyzed[["isoformFeatures"]]$short_id <- str_extract(region_region_switchlist_analyzed[["isoformFeatures"]]$gene_id, "ENSMUSG...........")
 
@@ -166,13 +157,14 @@ cpam_genes <- cpam_cases$Gene[-c(1,length(cpam_cases))]
 mapped_genes <- convert_human_to_mouse(cpam_genes)
 
 cpam_mouse <- mapped_genes$Gene.stable.ID.1
+```
 
+and now compare overlap with my gene lists
+
+```{r compare cpam overlap}
 dtu_cpam_genes <- intersect(dtu_genes, cpam_mouse)
 dtu_cpam_genes <- names$decimal[names$short %in% dtu_cpam_genes]
 ```
-
-
-
 
 #### Clean up script
 
@@ -198,3 +190,110 @@ fptm[3] / 60
 ```{r versions}
 sessionInfo()
 ```
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] biomaRt_2.56.0                readxl_1.4.2                 
+ [3] org.Mm.eg.db_3.17.0           org.Hs.eg.db_3.17.0          
+ [5] openxlsx_4.2.5.2              here_1.0.1                   
+ [7] lintr_3.0.2                   styler_1.9.1                 
+ [9] viridis_0.6.2                 viridisLite_0.4.1            
+[11] IsoformSwitchAnalyzeR_1.99.17 pfamAnalyzeR_1.0.0           
+[13] sva_3.48.0                    genefilter_1.82.0            
+[15] mgcv_1.8-42                   nlme_3.1-162                 
+[17] satuRn_1.8.0                  DEXSeq_1.46.0                
+[19] RColorBrewer_1.1-3            AnnotationDbi_1.62.0         
+[21] DESeq2_1.40.0                 SummarizedExperiment_1.30.0  
+[23] GenomicRanges_1.52.0          GenomeInfoDb_1.36.0          
+[25] IRanges_2.34.0                S4Vectors_0.38.0             
+[27] MatrixGenerics_1.12.0         matrixStats_0.63.0           
+[29] Biobase_2.60.0                BiocGenerics_0.46.0          
+[31] BiocParallel_1.34.0           limma_3.56.0                 
+[33] lubridate_1.9.2               forcats_1.0.0                
+[35] stringr_1.5.0                 dplyr_1.1.2                  
+[37] purrr_1.0.1                   readr_2.1.4                  
+[39] tidyr_1.3.0                   tibble_3.2.1                 
+[41] ggplot2_3.4.2                 tidyverse_2.0.0              
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.0                 later_1.3.0                  
+  [3] BiocIO_1.10.0                 bitops_1.0-7                 
+  [5] filelock_1.0.2                cellranger_1.1.0             
+  [7] R.oo_1.25.0                   XML_3.99-0.14                
+  [9] rex_1.2.1                     lifecycle_1.0.3              
+ [11] rprojroot_2.0.3               edgeR_3.42.0                 
+ [13] processx_3.8.0                lattice_0.21-8               
+ [15] ensembldb_2.24.0              magrittr_2.0.3               
+ [17] rmarkdown_2.21                remotes_2.4.2                
+ [19] yaml_2.3.7                    httpuv_1.6.9                 
+ [21] zip_2.2.2                     pbapply_1.7-0                
+ [23] DBI_1.1.3                     zlibbioc_1.46.0              
+ [25] R.cache_0.16.0                R.utils_2.12.2               
+ [27] AnnotationFilter_1.24.0       RCurl_1.98-1.12              
+ [29] rappdirs_0.3.3                GenomeInfoDbData_1.2.10      
+ [31] annotate_1.78.0               codetools_0.2-19             
+ [33] DelayedArray_0.25.0           xml2_1.3.4                   
+ [35] tidyselect_1.2.0              futile.logger_1.4.3          
+ [37] locfdr_1.1-8                  BiocFileCache_2.8.0          
+ [39] GenomicAlignments_1.36.0      jsonlite_1.8.4               
+ [41] ellipsis_0.3.2                survival_3.5-5               
+ [43] tools_4.3.0                   progress_1.2.2               
+ [45] Rcpp_1.0.10                   glue_1.6.2                   
+ [47] gridExtra_2.3                 xfun_0.39                    
+ [49] withr_2.5.0                   formatR_1.14                 
+ [51] BiocManager_1.30.20           fastmap_1.1.1                
+ [53] boot_1.3-28.1                 fansi_1.0.4                  
+ [55] callr_3.7.3                   digest_0.6.31                
+ [57] timechange_0.2.0              R6_2.5.1                     
+ [59] mime_0.12                     colorspace_2.1-0             
+ [61] RSQLite_2.3.1                 R.methodsS3_1.8.2            
+ [63] utf8_1.2.3                    generics_0.1.3               
+ [65] tximeta_1.18.0                rtracklayer_1.60.0           
+ [67] prettyunits_1.1.1             httr_1.4.5                   
+ [69] pkgconfig_2.0.3               gtable_0.3.3                 
+ [71] blob_1.2.4                    hwriter_1.3.2.1              
+ [73] XVector_0.40.0                htmltools_0.5.5              
+ [75] geneplotter_1.78.0            ProtGenerics_1.32.0          
+ [77] scales_1.2.1                  cyclocomp_1.1.0              
+ [79] png_0.1-8                     knitr_1.42                   
+ [81] lambda.r_1.2.4                rstudioapi_0.14              
+ [83] tzdb_0.3.0                    reshape2_1.4.4               
+ [85] rjson_0.2.21                  curl_5.0.0                   
+ [87] cachem_1.0.8                  BiocVersion_3.17.1           
+ [89] parallel_4.3.0                desc_1.4.2                   
+ [91] restfulr_0.0.15               pillar_1.9.0                 
+ [93] grid_4.3.0                    vctrs_0.6.2                  
+ [95] promises_1.2.0.1              dbplyr_2.3.2                 
+ [97] xtable_1.8-4                  tximport_1.28.0              
+ [99] evaluate_0.20                 VennDiagram_1.7.3            
+[101] GenomicFeatures_1.52.0        cli_3.6.1                    
+[103] locfit_1.5-9.7                compiler_4.3.0               
+[105] futile.options_1.0.1          Rsamtools_2.16.0             
+[107] rlang_1.1.1                   crayon_1.5.2                 
+[109] ps_1.7.4                      plyr_1.8.8                   
+[111] stringi_1.7.12                munsell_0.5.0                
+[113] Biostrings_2.68.0             lazyeval_0.2.2               
+[115] Matrix_1.5-4                  BSgenome_1.68.0              
+[117] hms_1.1.3                     bit64_4.0.5                  
+[119] KEGGREST_1.40.0               statmod_1.5.0                
+[121] shiny_1.7.4                   interactiveDisplayBase_1.38.0
+[123] AnnotationHub_3.8.0           memoise_2.0.1                
+[125] bit_4.0.5
