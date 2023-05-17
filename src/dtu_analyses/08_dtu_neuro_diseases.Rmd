@@ -24,20 +24,20 @@ ptm <- proc.time()
 #### Load in packages
 
 ```{r load packages}
-suppressPackageStartupMessages(
-  {library(tidyverse)
-   library(IsoformSwitchAnalyzeR)
-   library(viridis)
-   library(styler)
-   library(lintr)
-   library(here)
-   library(openxlsx)
-   library(org.Hs.eg.db)
-   library(org.Mm.eg.db)
-   library(biomaRt)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+  library(openxlsx)
+  library(org.Hs.eg.db)
+  library(org.Mm.eg.db)
+  library(biomaRt)
   library(readxl)
-   }
-)
+  library(ComplexHeatmap)
+})
 
 set.seed(123)
 ```
@@ -56,19 +56,19 @@ Load in switchlist objects.
 # load object for cerebellum
 cerebellum_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "cerebellum_switchlist_saturn.Rds")
-  )
+)
 # load object for cortex
 cortex_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "cortex_switchlist_saturn.Rds")
-  )
+)
 # load object for hippocampus
 hippocampus_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "hippocampus_switchlist_saturn.Rds")
-  )
+)
 # load object for cortex
 striatum_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "striatum_switchlist_saturn.Rds")
-  )
+)
 ```
 
 #### AD Genes
@@ -76,7 +76,9 @@ Load in AD gene set
 
 ```{r read AD gene set}
 # read in from web
-ad_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx", sheet = 6, rows = 5:87, cols = 4, colNames = FALSE)
+ad_genes <- read.xlsx("https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01024-z/MediaObjects/41588_2022_1024_MOESM4_ESM.xlsx",
+  sheet = 6, rows = 5:87, cols = 4, colNames = FALSE
+)
 
 colnames(ad_genes) <- "symbol"
 
@@ -93,14 +95,20 @@ Load in mood disorders gene set. This table does not have individual genes split
 
 ```{r read in mood disorders gene sets}
 # read in from web
-mood_genes <- read.xlsx("https://ars.els-cdn.com/content/image/1-s2.0-S0092867419312760-mmc4.xlsx", sheet = 1, rows = 4:149, cols = 8, colNames = FALSE)
+mood_genes <- read.xlsx("https://ars.els-cdn.com/content/image/1-s2.0-S0092867419312760-mmc4.xlsx",
+  sheet = 1, rows = 4:149, cols = 8, colNames = FALSE
+)
 
 colnames(mood_genes) <- "symbol"
 # separate out the columns
-new_col <- mood_genes %>% separate_wider_delim(symbol, ";", names = paste0("gene", 1:36), too_many = "debug", too_few = "debug")
+new_col <- mood_genes %>%
+  separate_wider_delim(symbol, ";",
+    names = paste0("gene", 1:36),
+    too_many = "debug", too_few = "debug"
+  )
 
 # clear up formatting
-vals <- unlist(new_col[,1:36], use.names = FALSE)
+vals <- unlist(new_col[, 1:36], use.names = FALSE)
 vals <- vals[!is.na(vals)]
 vals <- vals[!vals == "" & !vals == "-"]
 vals <- gsub("\\s*\\([^\\)]+\\)", "", vals)
@@ -117,7 +125,7 @@ psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
 Now, I am going to pull in CPAM case genes from Lizzy
 ```{r pull in cpam genes}
 cpam_cases <- read_excel(here("doc", "CPAM", "CPAM_Cases.xlsx"))
-cpam_genes <- cpam_cases$Gene[-c(1,length(cpam_cases))]
+cpam_genes <- cpam_cases$Gene[-c(1, length(cpam_cases))]
 
 mapped_genes <- convert_human_to_mouse(cpam_genes)
 
@@ -133,21 +141,52 @@ Now, I can use the results from this object to get my significant gene lists, Al
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 
 # prep signficant gene lists and compare
-lapply(all_regions, compare_switching_genes) # this function only prints the last result (cpam)
+lapply(all_regions, compare_switching_genes) # only prints last result (cpam)
 ```
 So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
 
 Either way, I can still make an upset plot for psychiatric genes at minimum.
 
 ```{r make upset plots}
+# make all into list
+all_psych_genes <- list(
+  cerebellum = cerebellum_psych_genes,
+  cortex = cortex_psych_genes,
+  hippocampus = hippocampus_psych_genes,
+  striatum = striatum_psych_genes
+)
 
+# make matrix
+all_psych_genes_mat <- list_to_matrix(all_psych_genes)
+
+# create combination matrix
+all_psych_genes_comb_mat <- make_comb_mat(all_psych_genes_mat)
+
+# make UpSet plot (ComplexHeatmap)
+upset_psych_genes <- UpSet(
+  all_psych_genes_comb_mat,
+  comb_order = order(-comb_size(all_psych_genes_comb_mat)),
+  comb_col = viridis(4)[comb_degree(all_psych_genes_comb_mat)],
+  top_annotation = upset_top_annotation(all_psych_genes_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(all_psych_genes_comb_mat,
+    add_numbers = TRUE
+  )
+)
+
+draw(upset_psych_genes,
+  column_title = "Overlap of DTU psychiatric risk genes by brain region"
+)
 ```
+
+It looks like there is no overlap of psychiatric risk genes.
 
 #### Clean up script
 
 ```{r tidy script}
-style_file("dtu_neuro_disease.Rmd")
-lint("dtu_neuro_disease.Rmd", linters = linters_with_defaults(
+style_file("08_dtu_neuro_diseases.Rmd")
+lint("08_dtu_neuro_diseases.Rmd", linters = linters_with_defaults(
   object_length_linter = NULL,
   object_name_linter = NULL,
   object_usage_linter = NULL
