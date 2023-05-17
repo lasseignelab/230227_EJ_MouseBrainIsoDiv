@@ -688,11 +688,9 @@ convert_human_to_mouse <- function(x){
 # region with three different gene lists.
 compare_switching_genes <- function(brain_region) {
   # get name
-  name <- deparse(substitute(brain_region))
+  name <- brain_region
   # assign internal name
-  assign("switchlist_analyzed",
-         paste0(name, "_switchlist_analyzed")
-  )
+  assign("switchlist_analyzed", get(paste0(name, "_switchlist_analyzed")))
   # get significant genes
   sig_features <- dplyr::filter(
     switchlist_analyzed$isoformFeatures,
@@ -706,7 +704,7 @@ compare_switching_genes <- function(brain_region) {
   
   # give name in global env
   assign(paste0(name, "_switching_genes"),
-         switching_genes,
+         dtu_genes,
          envir = .GlobalEnv
   )
   
@@ -737,8 +735,6 @@ compare_switching_genes <- function(brain_region) {
   )
   
 }
-
-
 
 ########## dtu_isoform_switching script #################
 # function for adding and saving orfs for brain region x (when you run x vs others)

@@ -25,15 +25,16 @@ ptm <- proc.time()
 
 ```{r load packages}
 suppressPackageStartupMessages(
- {library(tidyverse)
-  library(IsoformSwitchAnalyzeR)
-  library(viridis)
-  library(styler)
-  library(lintr)
-  library(here)
-  library(openxlsx)
-  library(org.Hs.eg.db)
-  library(org.Mm.eg.db)
+  {library(tidyverse)
+   library(IsoformSwitchAnalyzeR)
+   library(viridis)
+   library(styler)
+   library(lintr)
+   library(here)
+   library(openxlsx)
+   library(org.Hs.eg.db)
+   library(org.Mm.eg.db)
+   library(biomaRt)
   library(readxl)
    }
 )
@@ -132,7 +133,14 @@ Now, I can use the results from this object to get my significant gene lists, Al
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 
 # prep signficant gene lists and compare
-lapply(all_regions, compare_switching_genes) #this function still has BUGS!!!
+lapply(all_regions, compare_switching_genes) # this function only prints the last result (cpam)
+```
+So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
+
+Either way, I can still make an upset plot for psychiatric genes at minimum.
+
+```{r make upset plots}
+
 ```
 
 #### Clean up script
