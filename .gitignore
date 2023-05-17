@@ -6,3 +6,4 @@ data/cpm_out/*
 data/gencode_annotations/*
 data/gffread/*
 data/nextflow/*
+*/*.sif
