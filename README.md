@@ -1,6 +1,6 @@
 README
 ================
-2023-05-12
+2023-05-17
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -29,10 +29,11 @@ descriptions for all scripts
     ## │   ├── 05_dtu_region_region.Rmd
     ## │   ├── 06_dtu_region_others.Rmd
     ## │   ├── 07_dtu_region_sex.Rmd
+    ## │   ├── 08_dtu_neuro_diseases.Rmd
+    ## │   ├── 09_dtu_isoform_switching.Rmd
     ## │   ├── compare_results.Rmd
-    ## │   ├── dtu_isoform_switching.Rmd
-    ## │   ├── dtu_neuro_diseases.Rmd
     ## │   ├── functions.R
+    ## │   ├── protein_domain_info.Rmd
     ## │   └── size_power.R
     ## └── preprocessing
     ##     ├── 00_run_nanoseq.sh
@@ -93,6 +94,11 @@ depends on scripts 01-03. Run this in the github.1.2 docker. Takes about
 DTU analysis across sexes within brain regions. This script depends on
 scripts 01-03. Run this in the github.1.2 docker. Takes about 20 minutes
 to run (I think).
+
+*Script 08: dtu_analyses/dtu_neuro_diseases.R* - This script is for
+comparing brain-region-specific DTU genes to known Alzheimer’s disease,
+psychiatric disorder, and CPAM case genes. It is dependent on scripts
+01 - 06. It takes 4 minutes to run.
 
 ## Authors
 
