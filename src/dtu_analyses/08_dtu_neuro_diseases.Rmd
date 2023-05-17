@@ -156,12 +156,17 @@ all_psych_genes <- list(
   hippocampus = hippocampus_psych_genes,
   striatum = striatum_psych_genes
 )
+# save list
+saveRDS(all_psych_genes, here("results", "psych_dtu_genes", "all_psych_genes.Rds"))
 
 # make matrix
 all_psych_genes_mat <- list_to_matrix(all_psych_genes)
 
 # create combination matrix
 all_psych_genes_comb_mat <- make_comb_mat(all_psych_genes_mat)
+
+# save
+png(here("results", "psych_dtu_genes", "psych_genes_region_upset.png"))
 
 # make UpSet plot (ComplexHeatmap)
 upset_psych_genes <- UpSet(
@@ -179,6 +184,8 @@ upset_psych_genes <- UpSet(
 draw(upset_psych_genes,
   column_title = "Overlap of DTU psychiatric risk genes by brain region"
 )
+
+dev.off()
 ```
 
 It looks like there is no overlap of psychiatric risk genes.
