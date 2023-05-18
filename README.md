@@ -1,6 +1,6 @@
 README
 ================
-2023-05-17
+2023-05-18
 
 # Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
 
@@ -74,9 +74,9 @@ script 02. It is a single command but needs to be run in a docker
 (either RStudio docker I made has gffread) or on a local machine with
 gffread.
 
-*Script 04: dtu_analyses/pca_eda.* - This script is for exploratory data
-analysis and PCA. It depends on script 01. If data looks bad, do not
-proceed to script 05, but it is technically independent. This script
+*Script 04: dtu_analyses/pca_eda.Rmd* - This script is for exploratory
+data analysis and PCA. It depends on script 01. If data looks bad, do
+not proceed to script 05, but it is technically independent. This script
 takes 3 minutes to run.
 
 *Script 05: dtu_analyses/dtu_region_region.R* - This script depends on
@@ -85,20 +85,26 @@ also depends on script 03 - the gffread script. Run in github.1.2 docker
 so you have the most up-to-date version of the package. This script
 takes about 10 minutes to run.
 
-*Script 06: dtu_analyses/dtu_region_others.R* - This script is meant for
-DTU analysis comparing one brain region to all others. This script
+*Script 06: dtu_analyses/dtu_region_others.Rmd* - This script is meant
+for DTU analysis comparing one brain region to all others. This script
 depends on scripts 01-03. Run this in the github.1.2 docker. Takes about
 10 minutes to run.
 
-*Script 07: dtu_analyses/dtu_region_sex.R* - This script is meant for
+*Script 07: dtu_analyses/dtu_region_sex.Rmd* - This script is meant for
 DTU analysis across sexes within brain regions. This script depends on
 scripts 01-03. Run this in the github.1.2 docker. Takes about 20 minutes
 to run (I think).
 
-*Script 08: dtu_analyses/dtu_neuro_diseases.R* - This script is for
+*Script 08: dtu_analyses/dtu_neuro_diseases.Rmd* - This script is for
 comparing brain-region-specific DTU genes to known Alzheimer’s disease,
 psychiatric disorder, and CPAM case genes. It is dependent on scripts
 01 - 06. It takes 4 minutes to run.
+
+*Script 09: dtu_analyses/dtu_isoform_switching.Rmd* - This script is for
+adding open reading frames to the existing switchlist objects. It is
+also for plotting and saving switch plots, which show the significant
+isoform switching events. It is dependent on scripts 01-07. This script
+also takes 36 minutes to run.
 
 ## Authors
 
