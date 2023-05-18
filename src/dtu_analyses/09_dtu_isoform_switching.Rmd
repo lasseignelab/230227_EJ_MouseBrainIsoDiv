@@ -12,254 +12,238 @@ knitr::opts_chunk$set(echo = TRUE)
 This script depends on scripts 01 through 07, which identifies significantly switching genes.
 For these genes, we can look at individual isoform switches.
 
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+
+#### Load in Packages
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+#### Read in functions
 
 ```{r read in functions}
 source("functions.R", local = knitr::knit_global())
 ```
 
-read in data (might replace with function later)
+#### Read in Data
 
 ```{r load in switchlist objects}
-# load object comparing all regions to each other
-region_region_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "region_region_switchlist_saturn.Rds")
+files <- list.files(here("data", "switchlist_objects"),
+  pattern = "switchlist_saturn.Rds"
+)
+# loop in files
+for (i in files) {
+  temp <- readRDS(
+    here("data", "switchlist_objects", i)
   )
-# load object for cerebellum
-cerebellum_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cerebellum_switchlist_saturn.Rds")
+  assign(paste0(str_sub(i, end = -12), "_analyzed"),
+    temp,
+    envir = .GlobalEnv
   )
-# load object for cortex
-cortex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cortex_switchlist_saturn.Rds")
-  )
-# load object for hippocampus
-hippocampus_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "hippocampus_switchlist_saturn.Rds")
-  )
-# load object for cortex
-striatum_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "striatum_switchlist_saturn.Rds")
-  )
-```
-
-also, need to read in the sex-specific objects
-
-```{r read in sex specific objects}
-# load object for cerebellum
-cerebellum_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cerebellum_sex_switchlist_saturn.Rds")
-  )
-# load object for cortex
-cortex_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cortex_sex_switchlist_saturn.Rds")
-  )
-# load object for hippocampus
-hippocampus_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "hippocampus_sex_switchlist_saturn.Rds")
-  )
-# load object for cortex
-striatum_sex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "striatum_sex_switchlist_saturn.Rds")
-  )
-```
-
-
-
-```{r examine isoform switch events}
-# apply function for creating open reading frames and saving them
-all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-lapply(all_regions, add_save_orfs_sex)
-```
-
-
-```{r plot isoform switch events}
-switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000024758.16')
-switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000053819.17')
-switchPlot(cerebellum_sex_switchlist_orf, gene = 'ENSMUSG00000072501.6')
-
-switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000020056.17')
-switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000035212.15')
-switchPlot(cortex_sex_switchlist_orf, gene = 'ENSMUSG00000061479.16')
-
-switchPlot(hippocampus_sex_switchlist_orf, gene = 'ENSMUSG00000025264.13')
-
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000002107.19')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000022210.8')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000029128.13')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000034544.18')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000038365.9')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000040591.19')
-switchPlot(striatum_sex_switchlist_orf, gene = 'ENSMUSG00000057914.16')
-```
-want to to the analyzeDeepHMHMM.
-
-First I am going to analyze isoform switching by brain region
-
-```{r edit function for orf}
-# apply function for adding and saving orf
-all_regions <- c("cortex", "cerebellum", "hippocampus", "striatum")
-
-lapply(all_regions, add_save_orfs)
-
-```
-
-Great, now we have all the orfs annotated for these objects.
-
-
-```{r plot sig orfs}
-
-gene_for_plotting <- dplyr::filter(cerebellum_switchlist_analyzed$isoformFeatures,
-    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05)$gene_id
-
-for(i in gene_for_plotting[1:50]) {
-  switchPlot(cerebellum_switchlist_analyzed, gene = i)
 }
-
-
-cerebellum_switchlist_analyzed[["isoformFeatures"]]$condition_1 <- "other_regions"
-cerebellum_switchlist_analyzed[["isoformFeatures"]]$condition_2 <- "cerebellum"
-
-switchPlot(cerebellum_switchlist_orf, gene = "ENSMUSG00000004892.14", 
-           localTheme = theme_bw(base_size = 10))
-
 ```
 
-## Use External Tools
+To visualize the top switching events, we need to add open reading frames for all switching genes. This function will also save all the open reading frames to the switchlist object as well.
 
-Now, I want to try using external tools for analysis. To do this I need to extract nucleotide and amino acid sequences. Isoform SwitchAnalyzeR has a function for this.
+```{r add open reading frames}
+# make vector of all regions
+all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 
-```{r extract sequences}
+# apply function for creating open reading frames and saving them
+lapply(all_regions, add_save_orfs)
+add_save_orfs("region_region")
 
-striatum_sex_switchlist_orf <- extractSequence(
-  striatum_sex_switchlist_orf,
-  pathToOutput = here("data", "switchlist_fasta"),
-  writeToFile = TRUE
-)
-
+# for sex-specific, only need to do striatum because it had only sig results
+add_save_orfs_sex("striatum")
 ```
+Now, we can save the isoform switching events plots.
 
-add external data
+```{r plot isoform switch events for striatum}
+get_gene_symbols("striatum_sex") # need to do this to get gene symbol for title
 
-```{r add external sequence analysis}
-
-striatum_sex_switchlist_more <- analyzeCPC2(
-  switchAnalyzeRlist = striatum_sex_switchlist_orf,
-  pathToCPC2resultFile = here("data", "CPC2", "result_cpc2.txt"),
-  removeNoncodinORFs = TRUE
+# striatum sex
+switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "striatum_sex"
+  ),
+  splitFunctionalConsequences = FALSE
 )
 
-striatum_sex_switchlist_more <- analyzeSignalP(
-  switchAnalyzeRlist = striatum_sex_switchlist_more,
-  pathToSignalPresultFile = here("data", "SignalP6", "prediction_results.txt")
+# region region
+switchPlotTopSwitches(region_region_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "region_region"
+  ),
+  splitFunctionalConsequences = FALSE
 )
 
-striatum_sex_switchlist_more <- analyzeDeepLoc2(
-  switchAnalyzeRlist = striatum_sex_switchlist_more,
-  pathToDeepLoc2resultFile = here("data", "DeepLoc2", "results_640660B000004A492D07E377.csv")
+# cerebellum
+switchPlotTopSwitches(cerebellum_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
 )
 
-striatum_sex_switchlist_more <- analyzeDeepTMHMM(
-  switchAnalyzeRlist = striatum_sex_switchlist_more,
-  pathToDeepTMHMMresultFile = here("data", "DeepTMHMM", "TMRs.gff3")
+# cortex
+switchPlotTopSwitches(cortex_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
 )
 
-striatum_sex_switchlist_more <- analyzePFAM(
-  switchAnalyzeRlist = striatum_sex_switchlist_more,
-  pathToPFAMresultFile = here("data", "Pfam", "pfam_results.txt")
+# hippocampus
+switchPlotTopSwitches(hippocampus_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "hippocampus"
+  ),
+  splitFunctionalConsequences = FALSE
 )
 
-striatum_sex_switchlist_more
-
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000002107.19')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000022210.8')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000029128.13')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000034544.18')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000038365.9')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000040591.19')
-switchPlot(striatum_sex_switchlist_more, gene = 'ENSMUSG00000057914.16')
-```
-
-
-```{r predict alternative splicing}
-
-striatum_sex_switchlist_more <- analyzeAlternativeSplicing(
-    switchAnalyzeRlist = striatum_sex_switchlist_more,
-    quiet = TRUE
+# striatum
+switchPlotTopSwitches(striatum_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
 )
-
-table(striatum_sex_switchlist_more$AlternativeSplicingAnalysis$IR)
-
-consequencesOfInterest <- c('intron_retention','coding_potential','NMD_status','domains_identified','ORF_seq_similarity')
-
-striatum_sex_switchlist_more <- analyzeSwitchConsequences(
-    striatum_sex_switchlist_more,
-    consequencesToAnalyze = consequencesOfInterest, 
-    dIFcutoff = 0.1,
-    showProgress = FALSE
-)
-
-extractSwitchSummary(striatum_sex_switchlist_more, dIFcutoff = 0.1, filterForConsequences = TRUE)
-
-#this is cool and I want to show for all brain regions I think
-extractSplicingSummary(
-    striatum_sex_switchlist_more,
-    asFractionTotal = FALSE,
-    plotGenes=FALSE
-)
-
-splicingEnrichment <- extractSplicingEnrichment(
-    striatum_sex_switchlist_more,
-    splicingToAnalyze='all',
-    returnResult=TRUE,
-    returnSummary=TRUE
-)
-
-
-```
-
-#### Do external analyisis on all comparisons (region region object)
-
-```{r export all region data}
-
-region_region_switchlist_orf <- extractSequence(
-  region_region_switchlist_orf,
-  pathToOutput = here("data", "switchlist_fasta"),
-  writeToFile = TRUE,
-  outputPrefix = "all_region"
-)
-
 ```
 
 
-pull in data
+#### Clean up script
 
-```{r all region import pfam}
-
-region_region_switchlist_more <- analyzePFAM(
-  switchAnalyzeRlist = region_region_switchlist_orf,
-  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
-)
-
-```
-
-```{r analyze alternative splicing for all brain regions}
-
-region_region_switchlist_more <- analyzeAlternativeSplicing(
-    switchAnalyzeRlist = region_region_switchlist_more,
-    quiet = TRUE
-)
-
-extractSplicingSummary(
-    region_region_switchlist_more,
-    asFractionTotal = FALSE,
-    plotGenes=FALSE
-)
-
-splicingEnrichment <- extractSplicingEnrichment(
-    region_region_switchlist_more,
-    splicingToAnalyze='all',
-    returnResult=TRUE,
-    returnSummary=TRUE
+```{r tidy script}
+style_file("09_dtu_isoform_switching.Rmd")
+lint("09_dtu_isoform_switching.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
 )
 ```
 
+Also, need to get processing finish time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+This script takes 36 minutes to run, mostly during add_save_orfs.
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] grid      stats4    stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] here_1.0.1                    lintr_3.0.2                   styler_1.9.1                 
+ [4] gprofiler2_0.2.1              org.Mm.eg.db_3.17.0           viridis_0.6.2                
+ [7] viridisLite_0.4.1             ComplexHeatmap_2.16.0         IsoformSwitchAnalyzeR_1.99.17
+[10] pfamAnalyzeR_1.0.0            sva_3.48.0                    genefilter_1.82.0            
+[13] mgcv_1.8-42                   nlme_3.1-162                  satuRn_1.8.0                 
+[16] DEXSeq_1.46.0                 RColorBrewer_1.1-3            AnnotationDbi_1.62.0         
+[19] DESeq2_1.40.0                 SummarizedExperiment_1.30.0   GenomicRanges_1.52.0         
+[22] GenomeInfoDb_1.36.0           IRanges_2.34.0                S4Vectors_0.38.0             
+[25] MatrixGenerics_1.12.0         matrixStats_0.63.0            Biobase_2.60.0               
+[28] BiocGenerics_0.46.0           BiocParallel_1.34.0           limma_3.56.0                 
+[31] lubridate_1.9.2               forcats_1.0.0                 stringr_1.5.0                
+[34] dplyr_1.1.2                   purrr_1.0.1                   readr_2.1.4                  
+[37] tidyr_1.3.0                   tibble_3.2.1                  ggplot2_3.4.2                
+[40] tidyverse_2.0.0              
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.0                 later_1.3.0                   BiocIO_1.10.0                
+  [4] bitops_1.0-7                  filelock_1.0.2                R.oo_1.25.0                  
+  [7] rex_1.2.1                     XML_3.99-0.14                 lifecycle_1.0.3              
+ [10] rprojroot_2.0.3               edgeR_3.42.0                  doParallel_1.0.17            
+ [13] processx_3.8.0                lattice_0.21-8                ensembldb_2.24.0             
+ [16] magrittr_2.0.3                plotly_4.10.1                 rmarkdown_2.21               
+ [19] remotes_2.4.2                 yaml_2.3.7                    httpuv_1.6.9                 
+ [22] pbapply_1.7-0                 DBI_1.1.3                     zlibbioc_1.46.0              
+ [25] R.cache_0.16.0                R.utils_2.12.2                AnnotationFilter_1.24.0      
+ [28] RCurl_1.98-1.12               rappdirs_0.3.3                circlize_0.4.15              
+ [31] GenomeInfoDbData_1.2.10       annotate_1.78.0               codetools_0.2-19             
+ [34] DelayedArray_0.25.0           xml2_1.3.4                    tidyselect_1.2.0             
+ [37] shape_1.4.6                   futile.logger_1.4.3           locfdr_1.1-8                 
+ [40] farver_2.1.1                  BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [43] jsonlite_1.8.4                GetoptLong_1.0.5              ellipsis_0.3.2               
+ [46] survival_3.5-5                iterators_1.0.14              systemfonts_1.0.4            
+ [49] foreach_1.5.2                 tools_4.3.0                   progress_1.2.2               
+ [52] ragg_1.2.5                    Rcpp_1.0.10                   glue_1.6.2                   
+ [55] gridExtra_2.3                 xfun_0.39                     withr_2.5.0                  
+ [58] formatR_1.14                  BiocManager_1.30.20           fastmap_1.1.1                
+ [61] boot_1.3-28.1                 fansi_1.0.4                   callr_3.7.3                  
+ [64] digest_0.6.31                 timechange_0.2.0              R6_2.5.1                     
+ [67] mime_0.12                     textshaping_0.3.6             colorspace_2.1-0             
+ [70] biomaRt_2.56.0                RSQLite_2.3.1                 R.methodsS3_1.8.2            
+ [73] utf8_1.2.3                    generics_0.1.3                data.table_1.14.8            
+ [76] tximeta_1.18.0                rtracklayer_1.60.0            htmlwidgets_1.6.2            
+ [79] prettyunits_1.1.1             httr_1.4.5                    pkgconfig_2.0.3              
+ [82] gtable_0.3.3                  blob_1.2.4                    hwriter_1.3.2.1              
+ [85] XVector_0.40.0                htmltools_0.5.5               geneplotter_1.78.0           
+ [88] ProtGenerics_1.32.0           clue_0.3-64                   scales_1.2.1                 
+ [91] cyclocomp_1.1.0               png_0.1-8                     knitr_1.42                   
+ [94] lambda.r_1.2.4                rstudioapi_0.14               tzdb_0.3.0                   
+ [97] reshape2_1.4.4                rjson_0.2.21                  curl_5.0.0                   
+[100] cachem_1.0.8                  GlobalOptions_0.1.2           BiocVersion_3.17.1           
+[103] parallel_4.3.0                desc_1.4.2                    restfulr_0.0.15              
+[106] pillar_1.9.0                  vctrs_0.6.2                   promises_1.2.0.1             
+[109] dbplyr_2.3.2                  xtable_1.8-4                  cluster_2.1.4                
+[112] tximport_1.28.0               evaluate_0.20                 VennDiagram_1.7.3            
+[115] GenomicFeatures_1.52.0        cli_3.6.1                     locfit_1.5-9.7               
+[118] compiler_4.3.0                futile.options_1.0.1          Rsamtools_2.16.0             
+[121] rlang_1.1.1                   crayon_1.5.2                  labeling_0.4.2               
+[124] ps_1.7.4                      plyr_1.8.8                    stringi_1.7.12               
+[127] munsell_0.5.0                 Biostrings_2.68.0             lazyeval_0.2.2               
+[130] Matrix_1.5-4                  BSgenome_1.68.0               hms_1.1.3                    
+[133] bit64_4.0.5                   KEGGREST_1.40.0               statmod_1.5.0                
+[136] shiny_1.7.4                   interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
+[139] memoise_2.0.1                 bit_4.0.5                     xmlparsedata_1.0.5  

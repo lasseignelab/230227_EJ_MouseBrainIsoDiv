@@ -211,6 +211,8 @@ make_switchlist_run_saturn <- function(x) {
   ))
 }
 # create function to get gene symbols for all genes of a tissue x
+# if you want this function to work for one of the "sex" conditions,
+# you can just add the "_sex" as the input.
 get_gene_symbols <- function(x) {
   # assign name
   assign("temp_switchlist", get(paste0(x, "_switchlist_analyzed")))
@@ -643,7 +645,8 @@ run_gprofiler <- function(x) {
     gostplot(temp_sex_gostres, capped = TRUE, interactive = FALSE)
   }
 }
-# write function to get symbols for each list
+# write function to get symbols for each list, though this function only works
+# on the signifciant genes list, not the switchlist object.
 get_gene_symbols_sex <- function(x) {
   # get name of object
   name <- substr(x, 1, 4)
@@ -780,6 +783,6 @@ add_save_orfs_sex <- function(x) {
   )
   )
   # assign object
-  assign(paste0(name, "_sex_switchlist_analyzed"), switchlist_analyzed,
+  assign(paste0(x, "_sex_switchlist_analyzed"), switchlist_analyzed,
          envir = .GlobalEnv)
 }
