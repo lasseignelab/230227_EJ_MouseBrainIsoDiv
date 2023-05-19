@@ -2,8 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-data/cpm_out/*
-data/gencode_annotations/*
-data/gffread/*
-data/nextflow/*
+data/*
 bin/docker/RStudio/github_tag/*.sif
+bin/docker/
+.gitignore
