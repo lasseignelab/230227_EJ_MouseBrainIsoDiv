@@ -61,7 +61,7 @@ I expect the outputs from variance explained to be 0.06121201 0.03620078 0.03448
 Now that the PCA has been run, we can plot. The plots can be colored by different aspects to see what is driving the principal components. My plot pca function is derived from the functions script.
 
 ```{r plot PCA, warning=FALSE}
-if(! dir.exists(
+if (!dir.exists(
   here(
     "results",
     "plots",
@@ -86,66 +86,66 @@ pdf(
 )
 # color by tissue and sex
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
-  color = tissue, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
+  color = tissue,
   shape = sex
 )
 
 # color by sample
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = sample_id
 )
 
 # color by batch
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = batch
 )
 
 # color by rin score
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = RIN
 )
 
 # color by median length
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = med_len
 )
 
 # color by median quality
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = med_qual
 )
 
 # color by total reads
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = total_reads
 )
 
 # color by mouse id
 plot_pca(
-  metadata = pca_metadata, 
-  firstPC = PC1, 
-  secondPC = PC2, 
+  metadata = pca_metadata,
+  firstPC = PC1,
+  secondPC = PC2,
   color = mouse_id
 )
 dev.off()
@@ -153,8 +153,8 @@ dev.off()
 #### Clean up script
 
 ```{r tidy script}
-style_file("pca_eda.Rmd")
-lint("pca_eda.Rmd",
+style_file("04_pca_eda.Rmd")
+lint("04_pca_eda.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
     object_name_linter = NULL,
