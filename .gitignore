@@ -1,8 +1,0 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-data/*
-bin/docker/RStudio/github_tag/*.sif
-bin/docker/
-.gitignore
