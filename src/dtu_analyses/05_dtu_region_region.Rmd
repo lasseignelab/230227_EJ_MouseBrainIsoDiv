@@ -40,7 +40,7 @@ set.seed(123)
 
 Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be run beforehand and saves the data to an RData file. I will also source all of the functions I wrote.
 
-```{r read in data and get tpm values}
+```{r read in data and get cpm values}
 load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 source("functions.R", local = knitr::knit_global())
 ```
@@ -178,7 +178,7 @@ sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_region_upset.png"))
+pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"))
 upset_plot <- UpSet(sig_overlap_list_comb_mat,
   comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
   comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],

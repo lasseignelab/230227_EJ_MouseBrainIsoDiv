@@ -100,7 +100,7 @@ UpSet(all_gene_list_comb_mat,
   pt_size = unit(3, "mm"),
   comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
 )
-png(here("results", "plots", "upset_plots", "region_others_gene_upset.png"))
+pdf(here("results", "plots", "upset_plots", "region_others_gene_upset.pdf"))
 upset_gene <- UpSet(all_gene_list_comb_mat,
   comb_order = order(-comb_size(all_gene_list_comb_mat)),
   comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
@@ -152,7 +152,7 @@ all_isoform_list_mat <- list_to_matrix(all_isoform_list)
 all_isoform_list_comb_mat <- make_comb_mat(all_isoform_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_others_isoform_upset.png"))
+pdf(here("results", "plots", "upset_plots", "region_others_isoform_upset.pdf"))
 upset_isoform <- UpSet(
   all_isoform_list_comb_mat,
   comb_order = order(-comb_size(all_isoform_list_comb_mat)),
