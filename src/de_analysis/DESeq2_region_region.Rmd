@@ -107,6 +107,80 @@ Expected output:
 [1] "cortex versus striatum had 2256 significant DE genes"
 [1] "striatum versus hippocampus had 1855 significant DE genes"
 
+## Do DESeq2 at the isoform level. Note: THIS WILL TREAT TRANSCRIPTS AS SEPARATE GENES
+
+```{r redo at isoform level}
+# read in transcript counts data
+transcript_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_transcript.txt"),
+  header = TRUE
+)
+
+# rename columns
+colnames(transcript_counts) <- str_extract(colnames(transcript_counts), "sample..")
+
+# remove gene names
+transcript_counts <- transcript_counts[,-2]
+
+# add rownames
+rownames(transcript_counts) <- transcript_counts[,1]
+
+# remove isoform_id column
+transcript_counts <- transcript_counts[,-1]
+```
+
+
+```{r prep data for deseq2}
+dds_transcripts <- DESeqDataSetFromMatrix(
+  countData = round(transcript_counts),
+  colData = sample_collection_metadata,
+  design = ~ sex + tissue
+)
+nrow(dds_transcripts)
+
+keep <- rowSums(counts(dds_transcripts)) > 1
+dds_transcripts <- dds_transcripts[keep, ]
+nrow(dds_transcripts)
+
+# vst normalization
+vsd_transcripts <- vst(dds_transcripts, blind = FALSE)
+head(assay(vsd_transcripts), 3)
+
+colData(vsd_transcripts)
+
+plotPCA(vsd_transcripts, intgroup = c("tissue"))
+```
+
+After filtering, I get 60,526 transcripts that it decides to keep.
+
+Next, I can run DESeq2.
+
+```{r run DESeq2}
+dds_transcripts <- estimateSizeFactors(dds_transcripts)
+dds_transcripts <- estimateDispersions(dds_transcripts)
+dds_transcripts <- nbinomWaldTest(dds_transcripts, maxit = 5000) # the more I increase this
+# the less "did not converge" columns you will get
+```
+
+Run function for saving data
+
+```{r get de results}
+get_de_results_transcripts("cerebellum", "cortex")
+get_de_results_transcripts("cerebellum", "hippocampus")
+get_de_results_transcripts("cerebellum", "striatum")
+get_de_results_transcripts("cortex", "hippocampus")
+get_de_results_transcripts("cortex", "striatum")
+get_de_results_transcripts("hippocampus", "striatum")
+```
+
+Expected results:
+[1] "cerebellum versus cortex had 6033 significant DE transcripts"
+[1] "cerebellum versus hippocampus had 4871 significant DE transcripts"
+[1] "cerebellum versus striatum had 5591 significant DE transcripts"
+[1] "cortex versus hippocampus had 897 significant DE transcripts"
+[1] "cortex versus striatum had 1866 significant DE transcripts"
+[1] "hippocampus versus striatum had 1657 significant DE transcripts"
+
 #### Clean up script
 
 ```{r tidy script}
