@@ -98,3 +98,31 @@ format_deseq_results <- function(condition1, condition2) {
   
   assign("final_gene_column", final_gene_column, env = .GlobalEnv)
 }
+
+## also do for transcript level expression
+
+format_deseq_results_dte <- function(condition1, condition2) {
+  assign("condition1_condition2_res", get(paste0(
+    condition1, "_", condition2, "_dte_res"
+  )))
+  
+  condition1_condition2_padj <- condition1_condition2_res[, 6]
+  
+  condition1_condition2_padj <- data.frame(
+    "isoform_id" =
+      rownames(condition1_condition2_res),
+    "padj" = condition1_condition2_padj
+  )
+  
+  condition1_condition2_order <- order_needed_transcripts %>%
+    filter(condition_1 == condition1, condition_2 == condition2)
+  
+  condition1_condition2_both <- left_join(
+    condition1_condition2_order,
+    condition1_condition2_padj
+  )
+  
+  final_transcript_column <- c(final_transcript_column, condition1_condition2_both$padj)
+  
+  assign("final_transcript_column", final_transcript_column, env = .GlobalEnv)
+}
