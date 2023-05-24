@@ -165,7 +165,6 @@ switchPlot(region_region_switchlist_orf,
 )
 ```
 
-
 #### Clean up script
 
 ```{r tidy script}
