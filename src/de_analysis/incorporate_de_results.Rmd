@@ -163,6 +163,14 @@ switchPlot(region_region_switchlist_orf,
   gene = "Gng13",
   condition1 = "cerebellum", condition2 = "cortex"
 )
+
+switchPlotTopSwitches(region_region_switchlist_orf,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "region_region"
+  ),
+  splitFunctionalConsequences = FALSE
+)
 ```
 
 #### Clean up script
