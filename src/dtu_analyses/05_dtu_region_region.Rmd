@@ -158,12 +158,12 @@ Once I have these, I can combine them into a list for plotting.
 ```{r setup overlap of comparisons}
 # make into list - needed to remove NAs which are genes with no gene names
 sig_overlap_list <- list(
-  cere_cort = na.omit(sig_isoform_genes_cere_cort),
-  cere_hipp = na.omit(sig_isoform_genes_cere_hipp),
-  cere_stri = na.omit(sig_isoform_genes_cere_stri),
-  cort_hipp = na.omit(sig_isoform_genes_cort_hipp),
-  cort_stri = na.omit(sig_isoform_genes_cort_stri),
-  hipp_stri = na.omit(sig_isoform_genes_hipp_stri)
+  `cerebellum vs. cortex` = na.omit(sig_isoform_genes_cere_cort),
+  `cerebellum vs. hippocampus` = na.omit(sig_isoform_genes_cere_hipp),
+  `cerebellum vs. striatum` = na.omit(sig_isoform_genes_cere_stri),
+  `cortex vs. hippocampus` = na.omit(sig_isoform_genes_cort_hipp),
+  `cortex vs. striatum` = na.omit(sig_isoform_genes_cort_stri),
+  `hippocampus vs. striatum` = na.omit(sig_isoform_genes_hipp_stri)
 )
 ```
 
@@ -178,7 +178,7 @@ sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"))
+pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"), width = 12, height = 6)
 upset_plot <- UpSet(sig_overlap_list_comb_mat,
   comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
   comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
