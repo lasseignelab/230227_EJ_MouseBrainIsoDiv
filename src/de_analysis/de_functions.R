@@ -126,3 +126,54 @@ format_deseq_results_dte <- function(condition1, condition2) {
   
   assign("final_transcript_column", final_transcript_column, env = .GlobalEnv)
 }
+
+#######
+# function so doing deseq2 on a single brain region
+deseq2_single_region <- function(counts_table, metadata, region,
+                                 object_save_path, results_save_path, level){
+  # add extra column
+  metadata <- mutate(metadata, region = tissue == region)
+  # create deseq data set
+  dds_region <- DESeqDataSetFromMatrix(
+    countData = round(counts_table),
+    colData = metadata,
+    design = ~ region
+  )
+  # filter genes
+  keep <- rowSums(counts(dds_region)) > 1
+  dds_region <- dds_region[keep, ]
+  nrow(dds_region)
+  # run deseq2
+  dds_region <- estimateSizeFactors(dds_region)
+  dds_region <- estimateDispersions(dds_region)
+  dds_region <- nbinomWaldTest(dds_region, maxit = 5000)
+  # save object to global environment
+  assign(paste0("dds_", region), dds_region, envir = .GlobalEnv)
+  # pull results
+  temp_results <- results(dds_region,
+                          independentFiltering = TRUE, alpha = 0.05,
+                          pAdjustMethod = "BH", parallel = TRUE
+  )
+  # save results output as well
+  assign(paste0(region, "_res"), temp_results, env = .GlobalEnv)
+  # save results object
+  saveRDS(temp_results, paste0(object_save_path, "/",
+    region, "_", level,
+    "_results.Rds"
+  ))
+  # filter for genes with an adjusted pval of less than 0.05
+  sig_temp_results <- subset(temp_results, padj < 0.05)
+  sig_genes <- rownames(sig_temp_results[
+    order(sig_temp_results$log2FoldChange),
+  ])
+  # print number of significant genes
+  print(paste0(
+    region, " had ",
+    length(sig_genes), " significant DE ", level, "s"
+  ))
+  # save csv of significant genes
+  write.table(sig_genes,
+              file = paste0(results_save_path, "/", region, ".csv"),
+              row.names = FALSE, quote = FALSE, col.names = FALSE
+  )
+}
