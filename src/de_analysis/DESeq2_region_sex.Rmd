@@ -1,0 +1,99 @@
+---
+title: "DESEq2 within brain region by sex"
+author: "Emma Jones"
+date: "2023-05-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## DESeq within brain region DE across sexes
+
+The purpose of this script is to comapre expression at the gene and transcript level across sexes within brain regions.
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+
+```{r load in packages}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(DESeq2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+```{r read in gene-level counts data}
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+source(here("src", "de_analysis", "de_functions.R"))
+
+# read in gene counts data
+gene_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_gene.txt"),
+  header = TRUE
+)
+
+# rename columns
+colnames(gene_counts) <- str_extract(colnames(gene_counts), "sample..")
+```
+
+
+```{r read in isoform-level counts data}
+# read in transcript counts data
+transcript_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_transcript.txt"),
+  header = TRUE
+)
+
+# rename columns
+colnames(transcript_counts) <- str_extract(
+  colnames(transcript_counts),
+  "sample.."
+)
+
+# remove gene names
+transcript_counts <- transcript_counts[, -2]
+
+# add rownames
+rownames(transcript_counts) <- transcript_counts[, 1]
+
+# remove isoform_id column
+transcript_counts <- transcript_counts[, -1]
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("DESeq2_region_sex.Rmd")
+lint("DESeq2_region_sex.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
