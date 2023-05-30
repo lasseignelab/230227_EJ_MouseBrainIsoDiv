@@ -146,7 +146,7 @@ create_volcano_plot_comp <- function(tissue1, tissue2) {
 }
 
 # create function
-run_plot_gprofiler <- function(tissue_obj) {
+run_plot_gprofiler <- function(tissue_obj, path) {
   # get names
   name <- deparse(substitute(tissue_obj))
   name <- substr(name, nchar(name) - 9 + 1, nchar(name))
@@ -164,7 +164,7 @@ run_plot_gprofiler <- function(tissue_obj) {
   gostplot(gostres, capped = TRUE, interactive = FALSE)
   # save
   ggsave(paste0(
-    here("results", "plots", "gprofiler2"),
+    path,
     "/", name, "_gostres.png"
   ), width = 6, height = 4)
 }
@@ -172,7 +172,7 @@ run_plot_gprofiler <- function(tissue_obj) {
 ##################### dtu_region_others script #####################
 
 # create function for making switchlists and running saturn on tissue x
-make_switchlist_run_saturn <- function(tissue) {
+make_switchlist_run_saturn <- function(tissue, path) {
   # create design
   temp_design <- data.frame(
     sampleID = sample_collection_metadata$sample_id,
@@ -205,10 +205,9 @@ make_switchlist_run_saturn <- function(tissue) {
     envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects",
-    paste0(tissue, "_switchlist_saturn.Rds")
-  ))
+  saveRDS(switchlist_analyzed,
+    paste0(path, "/", tissue, "_switchlist_saturn.Rds")
+  )
 }
 # create function to get gene symbols for all genes of a tissue x
 # if you want this function to work for one of the "sex" conditions,

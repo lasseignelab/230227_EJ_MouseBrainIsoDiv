@@ -218,12 +218,12 @@ bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 Now I can run gprofiler.
 
 ```{r gprofiler2}
-run_plot_gprofiler(sig_isoform_genes_cere_cort)
-run_plot_gprofiler(sig_isoform_genes_cere_hipp)
-run_plot_gprofiler(sig_isoform_genes_cere_stri)
-run_plot_gprofiler(sig_isoform_genes_cort_hipp)
-run_plot_gprofiler(sig_isoform_genes_cort_stri)
-run_plot_gprofiler(sig_isoform_genes_hipp_stri)
+run_plot_gprofiler(sig_isoform_genes_cere_cort, here("results", "plots", "gprofiler2"))
+run_plot_gprofiler(sig_isoform_genes_cere_hipp, here("results", "plots", "gprofiler2"))
+run_plot_gprofiler(sig_isoform_genes_cere_stri, here("results", "plots", "gprofiler2"))
+run_plot_gprofiler(sig_isoform_genes_cort_hipp, here("results", "plots", "gprofiler2"))
+run_plot_gprofiler(sig_isoform_genes_cort_stri, here("results", "plots", "gprofiler2"))
+run_plot_gprofiler(sig_isoform_genes_hipp_stri, here("results", "plots", "gprofiler2"))
 ```
 
 There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
