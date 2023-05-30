@@ -177,3 +177,60 @@ deseq2_single_region <- function(counts_table, metadata, region,
               row.names = FALSE, quote = FALSE, col.names = FALSE
   )
 }
+
+######## edit functions so they work for regions others (single brain region)
+format_deseq_results_region <- function(region, save_path) {
+  assign("region_res", get(paste0(
+    region, "_gene_res"
+  )))
+  # get results table
+  region_padj <- region_res[, 6]
+  # pull just gene id and adjusted p values
+  region_padj <- data.frame(
+    "gene_id" =
+      rownames(region_res),
+    "padj" = region_padj
+  )
+  # get switchlist object
+  assign("region_switchlist_orf", get(paste0(
+    region, "_switchlist_orf"
+  )))
+  # reorder here and make longer
+  joined <- left_join(region_switchlist_orf[["isoformFeatures"]], region_padj)
+  # add the matched data
+  region_switchlist_orf$isoformFeatures$gene_q_value <- joined$padj
+  # output the new switchlist object
+  assign(paste0(region, "_switchlist_orf_de"), region_switchlist_orf,
+         envir = .GlobalEnv
+  )
+  # save RDS object
+  saveRDS(region_switchlist_orf, paste0(save_path, "/", region, "_orf_de.Rds"))
+}
+# also do for transcript level expression
+format_deseq_results_region_dte <- function(region, save_path) {
+  assign("region_res", get(paste0(
+    region, "_transcript_res"
+  )))
+  # get results table
+  region_padj <- region_res[, 6]
+  # pull just gene id and adjusted p values
+  region_padj <- data.frame(
+    "isoform_id" =
+      rownames(region_res),
+    "padj" = region_padj
+  )
+  # get switchlist object
+  assign("region_switchlist_orf", get(paste0(
+    region, "_switchlist_orf_de"
+  )))
+  # reorder here and make longer
+  joined <- left_join(region_switchlist_orf[["isoformFeatures"]], region_padj)
+  # add the matched data
+  region_switchlist_orf$isoformFeatures$iso_q_value <- joined$padj
+  # output the new switchlist object
+  assign(paste0(region, "_switchlist_orf_dte"), region_switchlist_orf,
+         envir = .GlobalEnv
+  )
+  # this will overwrite the last object, but I want that
+  saveRDS(region_switchlist_orf, paste0(save_path, "/", region, "_orf_de.Rds"))
+}

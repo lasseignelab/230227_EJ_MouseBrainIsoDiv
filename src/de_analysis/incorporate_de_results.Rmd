@@ -173,6 +173,44 @@ switchPlotTopSwitches(region_region_switchlist_orf,
 )
 ```
 
+### Incorporate DE results for region vs others comparisons
+
+```{r region others gene level}
+format_deseq_results_region(region = "cerebellum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region(region = "cortex",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region(region = "hippocampus",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region(region = "striatum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+```
+
+```{r region others transcript level}
+format_deseq_results_region_dte(region = "cerebellum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte(region = "cortex",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte(region = "hippocampus",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte(region = "striatum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+```
+
 #### Clean up script
 
 ```{r tidy script}
