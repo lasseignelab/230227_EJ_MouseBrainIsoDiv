@@ -23,7 +23,7 @@ First, we need to load in all packages.
 #### Load in packages
 
 ```{r load packages and set seed}
-library(tidyverse)
+suppressPackageStartupMessages({library(tidyverse)
 library(IsoformSwitchAnalyzeR)
 library(ComplexHeatmap)
 library(viridis)
@@ -31,7 +31,7 @@ library(org.Mm.eg.db)
 library(gprofiler2)
 library(styler)
 library(lintr)
-library(here)
+library(here)})
 
 set.seed(123)
 ```
