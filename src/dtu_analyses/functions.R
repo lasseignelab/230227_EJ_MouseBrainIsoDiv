@@ -1,9 +1,12 @@
-# the purpose of this script is to include all functions used in dtu analyses
-# in most functions, the input "region" is a character vector denoting brain region 
+# Function script for use with the EJMouseBrainIsoDiv project and was written by
+# Emma Jones. The purpose of this script is to include all functions used in DTU
+# analyses. The input "tissue" or "region" is a character vector denoting brain
+# region. This file is broken up into sections with functions for each
+#individual numbered script.
 
-##################### pca_eda script ########################
+######################### 04_pca_eda script ####################################
 
-# make plot function for PCA plot
+# this function is for PCA plotting
 plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   color_len <- deparse(substitute(color))
   shape_len <- deparse(substitute(shape))
@@ -45,9 +48,9 @@ plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   }
 }
 
-##################### dtu_region_region script #####################
+######################### 05_dtu_region_region script ##########################
 
-# this function is for filtering genes that are tissue x in condition 1 or 2
+# this function is for filtering genes that are tissue in condition 1 or 2
 filter_genes_or <- function(tissue) {
   # subset genes of interest
   sig_genes_subset <- filter(
@@ -63,8 +66,8 @@ filter_genes_or <- function(tissue) {
   )
 }
 
-# filtering genes for each comparison
-# specifying tissue x for condition 1 and tissue y in condition 2
+# this function is for filtering genes for each comparison
+# specifying tissue1 for condition 1 and tissue2 in condition 2
 filter_genes_comp <- function(tissue1, tissue2) {
   # subset genes of interest
   sig_genes_subset <- filter(
@@ -86,8 +89,8 @@ filter_genes_comp <- function(tissue1, tissue2) {
               row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
-# create volcano plot function
-# specifying tissue x for condition 1 and tissue y in condition 2
+# this function is for creating a volcano plot
+# specifying tissue1 for condition 1 and tissue2 in condition 2
 # save_path is here("results", "plots", "satuRn_volcano")
 create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
   # create subset
@@ -146,7 +149,7 @@ create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
   )
 }
 
-# create function
+# this function is for runnning gprofiler
 run_plot_gprofiler <- function(tissue_obj, save_path) {
   # get names
   name <- deparse(substitute(tissue_obj))
@@ -170,10 +173,10 @@ run_plot_gprofiler <- function(tissue_obj, save_path) {
   ), width = 6, height = 4)
 }
 
-##################### dtu_region_others script #####################
+######################### 06_dtu_region_others script ##########################
 
-# create function for making switchlists and running saturn on tissue x
-# nust specifiy save path as well
+# this function is for making switchlists and running saturn on a tissue
+# must specify a save_path as well, use here() for easier path
 make_switchlist_run_saturn <- function(tissue, save_path) {
   # create design
   temp_design <- data.frame(
@@ -212,9 +215,7 @@ make_switchlist_run_saturn <- function(tissue, save_path) {
   )
 }
 
-# create function to get gene symbols for all genes of a tissue
-# if you want this function to work for one of the "sex" conditions,
-# you can just add the "_sex" as the input.
+# this function is for getting gene symbols for all genes of a tissue
 # save_path for this should be here("data", "switchlist_objects")
 get_gene_symbols <- function(tissue, save_path) {
   # assign name
@@ -254,7 +255,8 @@ get_gene_symbols <- function(tissue, save_path) {
     paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
   )
 }
-# make function for extracting significant genes
+
+# this function is for extracting significant genes from a switchlist
 # save_path is typically here("results", "dtu_genes")
 get_sig_genes <- function(tissue_switchlist, save_path) {
   # subset features
@@ -283,7 +285,7 @@ get_sig_genes <- function(tissue_switchlist, save_path) {
               row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
-# create function for plotting a single brain region/tissue object
+# this function is for plotting a single brain region/tissue object
 # save_path is here("results", "plots", "satuRn_volcano")
 create_volcano_plot_region <- function(tissue_obj, save_path) {
   # get name
@@ -338,9 +340,9 @@ create_volcano_plot_region <- function(tissue_obj, save_path) {
   )
 }
 
-##################### dtu_region_sex script #####################
+######################### 07_dtu_region_sex script #############################
 
-# make function to split out brain regions
+# this function is for splitting out brain region counts with input "tissue"
 split_region <- function(tissue) {
   # subset counts
   subset_counts <- subset(
@@ -371,7 +373,7 @@ split_region <- function(tissue) {
   assign(paste0(name, "_cpm"), subset_cpm, envir = .GlobalEnv)
 }
 
-# make function for making a switchlist
+# this function is for making a switchlist object. it is sex-analysis specific.
 make_switchlist <- function(tissue) {
   # get name
   name <- substr(tissue, 1, 4)
@@ -402,7 +404,7 @@ make_switchlist <- function(tissue) {
   assign(paste0(name, "_sex_switchlist"), temp_switchlist, envir = .GlobalEnv)
 }
 
-# make function to filter and run satuRn
+# this function is for filtering data and runing satuRn for DTU analysis
 # save path is typically here("data", "switchlist_objects") 
 filter_run_saturn <- function(tissue, save_path) {
   # get name
@@ -433,7 +435,8 @@ if (!is.null(switchlist_analyzed)) {
 }
     
 }
-# create function for sex split volcano plot for each brain region x
+
+# this function is for sex split volcano plots for each brain region/tissue
 # save_path is usually here("results", "plots", "satuRn_volcano")
 create_sex_volcano_plot <- function(tissue_obj, save_path) {
   # get name
@@ -486,7 +489,8 @@ create_sex_volcano_plot <- function(tissue_obj, save_path) {
     width = 6, height = 4
   )
 }
-# make different function without reducing argument
+
+# this function is similar to the above without reducing argument
 # save_path is usually here("data", "switchlist_objects")
 filter_run_saturn_noreduce <- function(tissue, save_path) {
   # get name
@@ -511,7 +515,7 @@ filter_run_saturn_noreduce <- function(tissue, save_path) {
   )
 }
 
-# make volcano plot function, but remove NAs
+# this function is also for volcano plots, but removing NAs
 # save path is usually here("results", "plots", "satuRn_volcano")
 create_sex_volcano_plot_rm <- function(tissue_obj, save_path) {
   # get name
@@ -566,7 +570,7 @@ create_sex_volcano_plot_rm <- function(tissue_obj, save_path) {
   )
 }
 
-# write function to get significant isoforms
+# this function is for getting significant isoforms from a certain region.
 get_sig_isoforms <- function(region) {
   # get name of object
   name <- substr(region, 1, 4)
@@ -589,7 +593,7 @@ get_sig_isoforms <- function(region) {
   )
 }
 
-# make simple function to get significant genes and cutting off decimals
+# this function is for getting significant genes and cutting off decimals
 get_cut_sig_genes <- function(tissue) {
   # get name
   name <- substr(tissue, 1, 4)
@@ -617,7 +621,8 @@ get_cut_sig_genes <- function(tissue) {
     envir = .GlobalEnv
   )
 }
-# make go analysis function that skips plotting if no result returned
+
+# this function is for running gprofiler, skips plotting if no result returned
 run_gprofiler <- function(tissue) {
   # get name
   name <- substr(tissue, 1, 4)
@@ -650,8 +655,8 @@ run_gprofiler <- function(tissue) {
   }
 }
 
-# write function to get symbols for each list, though this function only works
-# on the significant genes list, not the switchlist object.
+# this function is for getting gene symbols, though this function only works
+# on a significant genes list, not the switchlist object.
 # save path is here("results", "dtu_genes")
 get_gene_symbols_sex <- function(tissue, save_path) {
   # get name of object
@@ -675,8 +680,9 @@ get_gene_symbols_sex <- function(tissue, save_path) {
   )
 }
 
-###### dtu_neuro_diseases script #######
-# write function to convert human to mouse gene names
+######################### 08_dtu_neuro_diseases script #########################
+
+# this function is for converting human gene names to mouse gene names
 convert_human_to_mouse <- function(gene_list){
   human <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl", 
                    host = "https://dec2021.archive.ensembl.org")
@@ -690,8 +696,8 @@ convert_human_to_mouse <- function(gene_list){
   return(genes)
 }
 
-# function for pulling significant genes and getting overlap for a given brain
-# region with three different gene lists.
+# this function is for pulling significant genes and getting overlap for a given
+# brain region with three different gene lists.
 compare_switching_genes <- function(brain_region) {
   # get name
   name <- brain_region
@@ -742,8 +748,9 @@ compare_switching_genes <- function(brain_region) {
   
 }
 
-########## dtu_isoform_switching script #################
-# function for adding and saving orfs for brain region x
+######################### 09_dtu_isoform_switching script ######################
+
+# this function is for adding and saving orfs for brain region
 # save_path is here("data", "switchlist_objects", "orf_added")
 add_save_orfs <- function(region, save_path) {
   # pull in switchlist
@@ -765,7 +772,8 @@ add_save_orfs <- function(region, save_path) {
   assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
          envir = .GlobalEnv)
 }
-# function for adding and saving orfs for brain region x (sex-specific)
+
+# this function for adding and saving orfs for brain region (sex-specific)
 # save_path is here("data", "switchlist_objects", "orf_added")
 add_save_orfs_sex <- function(region, save_path) {
   # pull in switchlist
