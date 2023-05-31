@@ -50,6 +50,47 @@ plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
 
 ######################### 05_dtu_region_region script ##########################
 
+# this function is for getting gene symbols for all genes of a tissue
+# save_path for this should be here("data", "switchlist_objects")
+get_gene_symbols <- function(tissue, save_path) {
+  # assign name
+  assign("temp_switchlist", get(paste0(tissue, "_switchlist_analyzed")))
+  # pull shorter gene IDs
+  temp_switchlist[["isoformFeatures"]]$shorter <-
+    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
+                pattern = "ENSMUSG..........."
+    )
+  # get gene symbols from annotation dbi
+  temp_gene_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  )
+  # add symbols and biotypes to object
+  temp_switchlist[["isoformFeatures"]] <-
+    left_join(temp_switchlist[["isoformFeatures"]],
+              temp_gene_symbols,
+              by = c("shorter" = "ENSEMBL")
+    )
+  # add to correct columns
+  temp_switchlist[["isoformFeatures"]]$gene_name <-
+    temp_switchlist[["isoformFeatures"]]$SYMBOL
+  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
+    temp_switchlist[["isoformFeatures"]]$GENETYPE
+  # remove extra columns
+  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
+  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
+  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
+  # rename object
+  assign(paste0(tissue, "_switchlist_analyzed"),
+         temp_switchlist,
+         envir = .GlobalEnv
+  )
+  saveRDS(temp_switchlist, 
+          paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
+  )
+}
+
 # this function is for filtering genes that are tissue in condition 1 or 2
 filter_genes_or <- function(tissue) {
   # subset genes of interest
@@ -136,14 +177,14 @@ create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
     ) +
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(
-      x, " vs. ", y,
+      tissue1, " vs. ", tissue2,
       " differentially used isoforms"
     ))
   # save
   ggsave(
     paste0(
       save_path,
-      "/", x, "_", y, "_volcano.png"
+      "/", tissue1, "_", tissue2, "_volcano.png"
     ),
     plot = volcano, width = 6, height = 4
   )
@@ -211,47 +252,6 @@ make_switchlist_run_saturn <- function(tissue, save_path) {
   )
   # save object
   saveRDS(switchlist_analyzed,
-    paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
-  )
-}
-
-# this function is for getting gene symbols for all genes of a tissue
-# save_path for this should be here("data", "switchlist_objects")
-get_gene_symbols <- function(tissue, save_path) {
-  # assign name
-  assign("temp_switchlist", get(paste0(tissue, "_switchlist_analyzed")))
-  # pull shorter gene IDs
-  temp_switchlist[["isoformFeatures"]]$shorter <-
-    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
-      pattern = "ENSMUSG..........."
-    )
-  # get gene symbols from annotation dbi
-  temp_gene_symbols <- AnnotationDbi::select(
-    org.Mm.eg.db,
-    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
-    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
-  )
-  # add symbols and biotypes to object
-  temp_switchlist[["isoformFeatures"]] <-
-    left_join(temp_switchlist[["isoformFeatures"]],
-      temp_gene_symbols,
-      by = c("shorter" = "ENSEMBL")
-    )
-  # add to correct columns
-  temp_switchlist[["isoformFeatures"]]$gene_name <-
-    temp_switchlist[["isoformFeatures"]]$SYMBOL
-  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
-    temp_switchlist[["isoformFeatures"]]$GENETYPE
-  # remove extra columns
-  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
-  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
-  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
-  # rename object
-  assign(paste0(tissue, "_switchlist_analyzed"),
-    temp_switchlist,
-    envir = .GlobalEnv
-  )
-  saveRDS(temp_switchlist, 
     paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
   )
 }
