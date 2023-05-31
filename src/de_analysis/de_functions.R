@@ -234,3 +234,54 @@ format_deseq_results_region_dte <- function(region, save_path) {
   # this will overwrite the last object, but I want that
   saveRDS(region_switchlist_orf, paste0(save_path, "/", region, "_orf_de.Rds"))
 }
+
+##### rewrite single region function for sex
+# function so doing deseq2 on a single brain region
+deseq2_single_region_sex <- function(counts_table, metadata, region,
+                                 object_save_path, results_save_path, level){
+  # split out brain region from counts
+  save_ids <- metadata$sample_id[metadata$tissue == region]
+  # create deseq data set
+  dds_region <- DESeqDataSetFromMatrix(
+    countData = round(counts_table[, save_ids]),
+    colData = metadata[metadata$tissue == region,],
+    design = ~ sex
+  )
+  # filter genes
+  keep <- rowSums(counts(dds_region)) > 1
+  dds_region <- dds_region[keep, ]
+  nrow(dds_region)
+  # run deseq2
+  dds_region <- estimateSizeFactors(dds_region)
+  dds_region <- estimateDispersions(dds_region)
+  dds_region <- nbinomWaldTest(dds_region, maxit = 5000)
+  # save object to global environment
+  assign(paste0("dds_", region), dds_region, envir = .GlobalEnv)
+  # pull results
+  temp_results <- results(dds_region,
+                          independentFiltering = TRUE, alpha = 0.05,
+                          pAdjustMethod = "BH", parallel = TRUE
+  )
+  # save results output as well
+  assign(paste0(region, "_sex_res"), temp_results, env = .GlobalEnv)
+  # save results object
+  saveRDS(temp_results, paste0(object_save_path, "/",
+                               region, "_sex_", level,
+                               "_results.Rds"
+  ))
+  # filter for genes with an adjusted pval of less than 0.05
+  sig_temp_results <- subset(temp_results, padj < 0.05)
+  sig_genes <- rownames(sig_temp_results[
+    order(sig_temp_results$log2FoldChange),
+  ])
+  # print number of significant genes
+  print(paste0(
+    region, " had ",
+    length(sig_genes), " significant DE ", level, "s by sex"
+  ))
+  # save csv of significant genes
+  write.table(sig_genes,
+              file = paste0(results_save_path, "/", region, "_sex",".csv"),
+              row.names = FALSE, quote = FALSE, col.names = FALSE
+  )
+}

@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## DESeq within brain region DE across sexes
 
-The purpose of this script is to comapre expression at the gene and transcript level across sexes within brain regions.
+The purpose of this script is to compare expression at the gene and transcript level across sexes within brain regions.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -19,8 +19,10 @@ For code review, I am tracking the amount of time that this analysis will take.
 ptm <- proc.time()
 ```
 
+Load in packages
 
 ```{r load in packages}
+# load in packages and suppress messages
 suppressPackageStartupMessages({
   library(tidyverse)
   library(DESeq2)
@@ -28,12 +30,16 @@ suppressPackageStartupMessages({
   library(lintr)
   library(here)
 })
-
+# set seed
 set.seed(123)
 ```
 
+Read in gene-level counts
+
 ```{r read in gene-level counts data}
+# load in metadata
 load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+# source functions
 source(here("src", "de_analysis", "de_functions.R"))
 
 # read in gene counts data
@@ -46,6 +52,7 @@ gene_counts <- read.table(
 colnames(gene_counts) <- str_extract(colnames(gene_counts), "sample..")
 ```
 
+Read in isoform-level counts data
 
 ```{r read in isoform-level counts data}
 # read in transcript counts data
@@ -69,6 +76,117 @@ rownames(transcript_counts) <- transcript_counts[, 1]
 # remove isoform_id column
 transcript_counts <- transcript_counts[, -1]
 ```
+
+### Run DESeq2 with a brain region at gene level
+
+```{r run deseq2 on region at gene level}
+deseq2_single_region_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  region = "cerebellum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+
+deseq2_single_region_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  region = "cerebellum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+
+deseq2_single_region_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  region = "cortex",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+
+deseq2_single_region_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  region = "hippocampus",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+
+deseq2_single_region_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  region = "striatum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+```
+
+Expected results:
+
+[1] "cerebellum had 9 significant DE genes by sex"
+[1] "cortex had 11 significant DE genes by sex"
+[1] "hippocampus had 7 significant DE genes by sex"
+[1] "striatum had 13 significant DE genes by sex"
+
+### RUn DESeq2 at transcript level by sex
+
+```{r run deseq2 on region}
+deseq2_single_region_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  region = "cerebellum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+
+deseq2_single_region_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  region = "cerebellum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+
+deseq2_single_region_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  region = "cortex",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+
+deseq2_single_region_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  region = "hippocampus",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+
+deseq2_single_region_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  region = "striatum",
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+```
+
+Expected results:
+[1] "cerebellum had 14 significant DE transcripts by sex"
+[1] "cortex had 10 significant DE transcripts by sex"
+[1] "hippocampus had 4 significant DE transcripts by sex"
+[1] "striatum had 10 significant DE transcripts by sex"
 
 #### Clean up script
 
