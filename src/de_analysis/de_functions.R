@@ -285,3 +285,102 @@ deseq2_single_region_sex <- function(counts_table, metadata, region,
               row.names = FALSE, quote = FALSE, col.names = FALSE
   )
 }
+
+######## edit functions so they work for regions sex (single brain region)
+format_deseq_results_region_sex <- function(region, save_path) {
+  assign("region_res", get(paste0(
+    region, "_sex_gene_res"
+  )))
+  # get results table
+  region_padj <- region_res[, 6]
+  # pull just gene id and adjusted p values
+  region_padj <- data.frame(
+    "gene_id" =
+      rownames(region_res),
+    "padj" = region_padj
+  )
+  # get switchlist object
+  assign("region_switchlist_orf", get(paste0(
+    region, "_sex_switchlist_orf"
+  )))
+  # reorder here and make longer
+  joined <- left_join(region_switchlist_orf[["isoformFeatures"]], region_padj)
+  # add the matched data
+  region_switchlist_orf$isoformFeatures$gene_q_value <- joined$padj
+  # output the new switchlist object
+  assign(paste0(region, "_sex_switchlist_orf_de"), region_switchlist_orf,
+         envir = .GlobalEnv
+  )
+  # save RDS object
+  saveRDS(region_switchlist_orf,
+          paste0(save_path, "/", region, "_sex_orf_de.Rds"))
+}
+# also do for transcript level expression
+format_deseq_results_region_dte_sex <- function(region, save_path) {
+  assign("region_res", get(paste0(
+    region, "_sex_transcript_res"
+  )))
+  # get results table
+  region_padj <- region_res[, 6]
+  # pull just gene id and adjusted p values
+  region_padj <- data.frame(
+    "isoform_id" =
+      rownames(region_res),
+    "padj" = region_padj
+  )
+  # get switchlist object
+  assign("region_switchlist_orf", get(paste0(
+    region, "_sex_switchlist_orf_de"
+  )))
+  # reorder here and make longer
+  joined <- left_join(region_switchlist_orf[["isoformFeatures"]], region_padj)
+  # add the matched data
+  region_switchlist_orf$isoformFeatures$iso_q_value <- joined$padj
+  # output the new switchlist object
+  assign(paste0(region, "_sex_switchlist_orf_dte"), region_switchlist_orf,
+         envir = .GlobalEnv
+  )
+  # this will overwrite the last object, but I want that
+  saveRDS(region_switchlist_orf,
+          paste0(save_path, "/", region, "_sex_orf_de.Rds"))
+}
+
+### modify function to get back gene names for striatum sex object
+get_gene_symbols_mod <- function(tissue, save_path) {
+  # assign name
+  assign("temp_switchlist", get(paste0(tissue, "_sex_switchlist_orf_dte")))
+  # pull shorter gene IDs
+  temp_switchlist[["isoformFeatures"]]$shorter <-
+    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
+                pattern = "ENSMUSG..........."
+    )
+  # get gene symbols from annotation dbi
+  temp_gene_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  )
+  # add symbols and biotypes to object
+  temp_switchlist[["isoformFeatures"]] <-
+    left_join(temp_switchlist[["isoformFeatures"]],
+              temp_gene_symbols,
+              by = c("shorter" = "ENSEMBL")
+    )
+  # add to correct columns
+  temp_switchlist[["isoformFeatures"]]$gene_name <-
+    temp_switchlist[["isoformFeatures"]]$SYMBOL
+  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
+    temp_switchlist[["isoformFeatures"]]$GENETYPE
+  # remove extra columns
+  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
+  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
+  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
+  # rename object
+  assign(paste0(tissue, "_sex_switchlist_orf_dte"),
+         temp_switchlist,
+         envir = .GlobalEnv
+  )
+  saveRDS(temp_switchlist, paste0(save_path, "/", tissue, "_sex_orf_de.Rds")
+  )
+}
+

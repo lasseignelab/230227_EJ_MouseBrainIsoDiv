@@ -9,7 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Incorporating differential expression results
+
+The purpose of this script is to wrap in all DESeq2 significance values into my isoformswitchanalyzeR objects and subsequently, plots. This enables us to plot them all with significance values for DGE, DTE, and DTU. This script is fully dependent on scripts 01-09 and the currently unnumbered de_analysis DESeq2 scripts.
+
 For code review, I am tracking the amount of time that this analysis will take.
 
 ```{r proc time}
@@ -20,6 +23,7 @@ ptm <- proc.time()
 #### Load in Packages
 
 ```{r load packages and set seed}
+# load packages
 suppressPackageStartupMessages({
   library(tidyverse)
   library(IsoformSwitchAnalyzeR)
@@ -31,7 +35,7 @@ suppressPackageStartupMessages({
   library(lintr)
   library(here)
 })
-
+# set seed
 set.seed(123)
 ```
 
@@ -257,6 +261,72 @@ switchPlotTopSwitches(striatum_switchlist_orf_dte,
 
 ```
 
+### DESeq2 by sex
+
+Now I need to pull in the results from my individual tissue comparisons by sex. I had edited those original function again to make this a bit easier.
+
+Start with gene-level, then move to transcript-level.
+
+```{r incorporate deseq2 results by sex for within brain regions}
+format_deseq_results_region_sex(region = "cerebellum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_sex(region = "cortex",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_sex(region = "hippocampus",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_sex(region = "striatum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+
+```
+
+Now can do transcript level.
+
+```{r incorporate deseq2 results by sex for within brain regions transcript level}
+format_deseq_results_region_dte_sex(region = "cerebellum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte_sex(region = "cortex",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte_sex(region = "hippocampus",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+format_deseq_results_region_dte_sex(region = "striatum",
+                            save_path = 
+                              here("data", "switchlist_objects", "de_added"))
+
+
+```
+
+Finally, make new plots for these sex. The only signficnat plots are for striatum anyway, so I'm only running the plotting function once.
+
+At some point, we lost the gene names for these sex objects. I will have to re-add the gene names.
+
+```{r plot striatum sex}
+
+get_gene_symbols_mod(tissue = "striatum",
+                     save_path = here("data", "switchlist_objects", "de_added"))
+
+switchPlotTopSwitches(striatum_sex_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+```
 
 #### Clean up script
 

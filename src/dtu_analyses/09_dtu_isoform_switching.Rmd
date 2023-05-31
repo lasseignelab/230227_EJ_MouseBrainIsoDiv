@@ -72,6 +72,10 @@ lapply(all_regions, add_save_orfs)
 add_save_orfs("region_region")
 
 # for sex-specific, only need to do striatum because it had only sig results
+# but I choose to do the others as well just so DESeq2 results can be saved.
+add_save_orfs_sex("cerebellum")
+add_save_orfs_sex("cortex")
+add_save_orfs_sex("hippocampus")
 add_save_orfs_sex("striatum")
 ```
 Now, we can save the isoform switching events plots.
