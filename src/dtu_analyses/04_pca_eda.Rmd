@@ -22,10 +22,10 @@ ptm <- proc.time()
 #### Load in packages
 
 ```{r load packages}
-library(tidyverse)
+suppressPackageStartupMessages({library(tidyverse)
 library(styler)
 library(lintr)
-library(here)
+library(here)})
 
 set.seed(123)
 ```
