@@ -211,6 +211,53 @@ format_deseq_results_region_dte(region = "striatum",
                               here("data", "switchlist_objects", "de_added"))
 ```
 
+#### Save new region other plots with signficiance values
+
+```{r save new plots}
+
+switchPlotTopSwitches(cerebellum_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+switchPlotTopSwitches(cortex_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+switchPlotTopSwitches(cerebellum_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+switchPlotTopSwitches(hippocampus_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "hippocampus"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+switchPlotTopSwitches(striatum_switchlist_orf_dte,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+```
+
+
 #### Clean up script
 
 ```{r tidy script}
