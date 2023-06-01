@@ -490,86 +490,6 @@ create_sex_volcano_plot <- function(tissue_obj, save_path) {
   )
 }
 
-# this function is similar to the above without reducing argument
-# save_path is usually here("data", "switchlist_objects")
-filter_run_saturn_noreduce <- function(tissue, save_path) {
-  # get name
-  name <- substr(tissue, 1, 4)
-  # assign name
-  assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
-  # filter switchlist
-  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run saturn
-  switchlist_analyzed <- isoformSwitchTestSatuRn(
-    switchAnalyzeRlist = temp_switchlist,
-    reduceToSwitchingGenes = FALSE
-  )
-  # rename object
-  assign(paste0(name, "_sex_switchlist_analyzed"),
-    switchlist_analyzed,
-    envir = .GlobalEnv
-  )
-  # save object
-  saveRDS(switchlist_analyzed, 
-    paste0(save_path, "/", tissue, "_sex_switchlist_saturn.Rds")
-  )
-}
-
-# this function is also for volcano plots, but removing NAs
-# save path is usually here("results", "plots", "satuRn_volcano")
-create_sex_volcano_plot_rm <- function(tissue_obj, save_path) {
-  # get name
-  name <- deparse(substitute(tissue_obj))
-  name <- substr(name, 1, 4)
-  # plot
-  volcano_plot <- ggplot(
-    data = tissue_obj$isoformFeatures,
-    aes(x = dIF, y = -log10(isoform_switch_q_value))
-  ) +
-    geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-      size = 2,
-      alpha = 0.5,
-      stroke = NA
-    ) +
-    geom_hline(
-      yintercept = -log10(0.05),
-      linetype = "dashed",
-      color = "magenta",
-      linewidth = .7
-    ) +
-    geom_vline(
-      xintercept = c(-0.1, 0.1),
-      linetype = "dashed",
-      color = "turquoise3",
-      linewidth = .7
-    ) +
-    scale_color_manual("Signficant\nIsoform Switch",
-      labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen"),
-      na.translate = FALSE
-    ) +
-    labs(
-      x = "dIF (Differential Isoform Fraction)",
-      y = "-log10 (Isoform Switch q Value)"
-    ) +
-    theme_light() +
-    theme(
-      legend.text = element_text(size = 11),
-      axis.text = element_text(size = 10)
-    ) +
-    guides(colour = guide_legend(override.aes = list(size = 4))) +
-    ggtitle(paste0(name, " sex differentially used isoforms"))
-  # save
-  ggsave(
-    paste0(
-      save_path,
-      "/", name, "_sex_volcano.png"
-    ),
-    volcano_plot,
-    width = 6, height = 4
-  )
-}
-
 # this function is for getting significant isoforms from a certain region.
 get_sig_isoforms <- function(region) {
   # get name of object
@@ -638,7 +558,7 @@ run_gprofiler <- function(tissue) {
     measure_underrepresentation = FALSE, evcodes = FALSE,
     user_threshold = 0.05, correction_method = "g_SCS", domain_scope = "custom",
     custom_bg = str_extract(
-      unique(cere_sex_switchlist_analyzed$isoformFeatures$gene_id),
+      unique(stri_sex_switchlist_analyzed$isoformFeatures$gene_id),
       pattern = "ENSMUSG..........."
     ),
     numeric_ns = "", sources = NULL, as_short_link = FALSE
