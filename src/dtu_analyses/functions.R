@@ -689,7 +689,7 @@ add_save_orfs <- function(region, save_path) {
     )
   )
   # assign object
-  assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
+  assign(paste0(region, "_switchlist_analyzed"), switchlist_analyzed,
          envir = .GlobalEnv)
 }
 
