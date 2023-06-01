@@ -1,0 +1,115 @@
+---
+title: "Protein Domain Information"
+author: "Emma Jones"
+date: "2023-05-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Use Pfam to annotate protein domains
+
+Now, I want to try using external tools for analysis. To do this I need to extract nucleotide and amino acid sequences. IsoformSwitchAnalyzeR has a function for this.
+
+This script depends on scripts 00-13, and also includes run_pfam.sh.
+
+#### Load packages
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+#### Load in data
+
+```{r load in data}
+files <- list.files(here("data", "switchlist_objects", "de_added"),
+  pattern = ".Rds"
+)
+# loop in files
+for (i in files) {
+  temp <- readRDS(
+    here("data", "switchlist_objects", "de_added", i)
+  )
+  assign(paste0(str_sub(i, end = -11), "analyzed"),
+    temp,
+    envir = .GlobalEnv
+  )
+}
+```
+
+Now that the files are read in, we can extract the amino acid sequences
+
+```{r extract sequences}
+striatum_sex_analyzed <- extractSequence(
+  striatum_sex_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum_sex",
+  writeToFile = TRUE
+)
+
+region_region_analyzed <- extractSequence(
+  region_region_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "region_region",
+  writeToFile = TRUE
+)
+
+cerebellum_analyzed <- extractSequence(
+  cerebellum_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cerebellum",
+  writeToFile = TRUE
+)
+
+cortex_analyzed <- extractSequence(
+  cortex_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cortex",
+  writeToFile = TRUE
+)
+
+hippocampus_analyzed <- extractSequence(
+  hippocampus_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "hippocampus",
+  writeToFile = TRUE
+)
+
+striatum_analyzed <- extractSequence(
+  striatum_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum",
+  writeToFile = TRUE
+)
+```
+
+PFAM!!!
+
+```{bash}
+perl pfam_scan.pl -fasta fasta/all_region_AA.fasta -dir ../../PfamScan/PfamFiles | tee results/all_regions/pfamscan_out.txt
+```
+
+Then add this back to your object.
+
+```{r add external sequence analysis}
+
+striatum_sex_switchlist_more <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToPFAMresultFile = here("data", "Pfam", "straitum_sex", "pfam_results.txt")
+)
+
+
+```
+

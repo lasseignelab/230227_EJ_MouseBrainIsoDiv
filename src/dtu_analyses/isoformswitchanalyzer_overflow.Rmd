@@ -1,7 +1,7 @@
 ---
-title: "Protein Domain Information"
+title: "isoformswitchanalyzer_overflow"
 author: "Emma Jones"
-date: "2023-05-15"
+date: "2023-06-01"
 output: html_document
 ---
 
@@ -9,26 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-## Use External Tools
-
-Now, I want to try using external tools for analysis. To do this I need to extract nucleotide and amino acid sequences. Isoform SwitchAnalyzeR has a function for this.
+## R Markdown
 
 
-This script depends on scripts 00-09, and also inlcudes run_pfam.sh.
-
-
-```{r extract sequences}
-striatum_sex_switchlist_orf <- extractSequence(
-  striatum_sex_switchlist_orf,
-  pathToOutput = here("data", "switchlist_fasta"),
-  writeToFile = TRUE
-)
-```
-
-add external data, if applicable
-
-```{r add external sequence analysis}
+```{r cars}
 striatum_sex_switchlist_more <- analyzeCPC2(
   switchAnalyzeRlist = striatum_sex_switchlist_orf,
   pathToCPC2resultFile = here("data", "CPC2", "result_cpc2.txt"),
@@ -52,21 +36,6 @@ striatum_sex_switchlist_more <- analyzeDeepTMHMM(
   switchAnalyzeRlist = striatum_sex_switchlist_more,
   pathToDeepTMHMMresultFile = here("data", "DeepTMHMM", "TMRs.gff3")
 )
-
-striatum_sex_switchlist_more <- analyzePFAM(
-  switchAnalyzeRlist = striatum_sex_switchlist_more,
-  pathToPFAMresultFile = here("data", "Pfam", "pfam_results.txt")
-)
-
-striatum_sex_switchlist_more
-
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000002107.19")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000022210.8")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000029128.13")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000034544.18")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000038365.9")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000040591.19")
-switchPlot(striatum_sex_switchlist_more, gene = "ENSMUSG00000057914.16")
 ```
 
 
