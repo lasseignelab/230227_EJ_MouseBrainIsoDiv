@@ -65,7 +65,7 @@ cortex_switchlist_analyzed <- readRDS(
 hippocampus_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "hippocampus_switchlist_saturn.Rds")
 )
-# load object for cortex
+# load object for striatum
 striatum_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "striatum_switchlist_saturn.Rds")
 )
@@ -141,7 +141,7 @@ Now, I can use the results from this object to get my significant gene lists, Al
 # make vector of brain regions
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
 
-# prep signficant gene lists and compare
+# prep significant gene lists and compare
 lapply(all_regions, compare_switching_genes) # only prints last result (cpam)
 ```
 So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
@@ -157,7 +157,10 @@ all_psych_genes <- list(
   striatum = striatum_psych_genes
 )
 # save list
-saveRDS(all_psych_genes, here("results", "psych_dtu_genes", "all_psych_genes.Rds"))
+saveRDS(
+  all_psych_genes,
+  here("results", "psych_dtu_genes", "all_psych_genes.Rds")
+)
 
 # make matrix
 all_psych_genes_mat <- list_to_matrix(all_psych_genes)
