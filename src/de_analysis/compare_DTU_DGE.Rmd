@@ -1,0 +1,113 @@
+---
+title: "comparing DTU and DGE"
+author: "Emma Jones"
+date: "2023-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Comparing DTU and DGE
+
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. For ease, I can do DGE and DTU together first. Then I can pull the genes from the transcripts
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+#### Load in Packages
+
+```{r load packages}
+# load packages
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+# install package; need to add to docker later if used in paper
+devtools::install_github("yanlinlin82/ggvenn")
+library(ggvenn)
+```
+
+
+```{r load in data}
+# DGE
+dge_files <- list.files(here("results", "de_genes"))
+# loop in files
+for (i in dge_files) {
+  temp <- read.csv(
+    here("results", "de_genes", i), header = FALSE
+  )
+  assign(paste0(str_sub(i, end = -5), "_de_genes"),
+    temp,
+    envir = .GlobalEnv
+  )
+}
+
+# DTE
+dte_files <- list.files(here("results", "de_transcripts"))
+# loop in files
+for (i in dte_files) {
+  temp <- read.csv(
+    here("results", "de_transcripts", i), header = FALSE
+  )
+  assign(paste0(str_sub(i, end = -5), "_de_transcripts"),
+    temp,
+    envir = .GlobalEnv
+  )
+}
+
+# DTU
+dtu_files <- list.files(here("results", "dtu_genes"))
+# loop in files
+for (i in dtu_files) {
+  temp <- read.csv(
+    here("results", "dtu_genes", i), header = FALSE
+  )
+  assign(paste0(str_sub(i, end = -5), "_dtu_genes"),
+    temp,
+    envir = .GlobalEnv
+  )
+}
+```
+
+
+```{r make function for plotting}
+
+de_gene_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = str_extract(cerebellum_cortex_de_genes$V1,
+                       pattern = "ENSMUSG..........."),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  )
+
+de_transcript_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = str_extract(cerebellum_cortex_de_transcripts$V1,
+                                             pattern = "ENSMUST..........."),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBLTRANS"
+  )
+
+# make results into a list
+for_plot <- list(`cerebellum DGE` = de_gene_symbols$SYMBOL,
+                 `cerebellum DTE` = de_transcript_symbols$SYMBOL,
+           `cerebellum DTU` = cere_cort_dtu_genes$V1)
+
+# plot venn diagram
+ggvenn(for_plot,
+       fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
+       stroke_size = 0.5, set_name_size = 4
+       )
+
+```
+

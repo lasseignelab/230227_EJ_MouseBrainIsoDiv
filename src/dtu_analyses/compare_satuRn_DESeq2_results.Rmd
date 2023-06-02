@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Comparing results of satuRn and DEXSeq
 
-This script is for comparing the results of isoform switch tests with satuRn and DEXSeq (with and without SVA)
+This script is for comparing the results of isoform switch tests with satuRn and DEXSeq2 (with and without SVA)
 
 ```{r load in packages}
 library(tidyverse)
@@ -311,7 +311,7 @@ saturn_no_sva_results_small <- filter(saturn_no_sva_results, condition_1 == "cer
 I installed the ggvenn package to make a Venn diagram.
 
 ```{r plot venn diagrams}
-# install potnential package; need to add to docker later if used in paper
+# install potential package; need to add to docker later if used in paper
 if (!require(devtools)) install.packages("devtools")
 devtools::install_github("yanlinlin82/ggvenn")
 library(ggvenn)
