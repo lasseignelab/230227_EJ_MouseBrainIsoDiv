@@ -6,4 +6,9 @@ docker run -d -it \
 pfam_test:1.0.36
 
 # run actual script
-perl pfam_scan.pl -fasta fasta/all_region_AA.fasta -dir ../../PfamScan/PfamFiles | tee results/all_regions/pfamscan_out.txt
+cd /opt/PfamScan/
+
+perl pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/region_region_AA.fasta \
+-dir ~/PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/region_region_pfamscan_out.txt

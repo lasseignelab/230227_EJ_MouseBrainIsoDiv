@@ -98,7 +98,12 @@ striatum_analyzed <- extractSequence(
 PFAM!!!
 
 ```{bash}
-perl pfam_scan.pl -fasta fasta/all_region_AA.fasta -dir ../../PfamScan/PfamFiles | tee results/all_regions/pfamscan_out.txt
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/region_region_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/region_region_pfamscan_out.txt
 ```
 
 Then add this back to your object.
