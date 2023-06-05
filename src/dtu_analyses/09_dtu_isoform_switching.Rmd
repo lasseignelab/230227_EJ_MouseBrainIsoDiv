@@ -108,8 +108,8 @@ get_gene_symbols(
 # striatum sex
 switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
-    "striatum_sex"
+    "results", "plots", "switch_plots", "raw",
+    "striatum"
   ),
   splitFunctionalConsequences = FALSE
 )
@@ -117,7 +117,7 @@ switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
 # region region
 switchPlotTopSwitches(region_region_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "region_region"
   ),
   splitFunctionalConsequences = FALSE
@@ -126,7 +126,7 @@ switchPlotTopSwitches(region_region_switchlist_analyzed,
 # cerebellum
 switchPlotTopSwitches(cerebellum_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "cerebellum"
   ),
   splitFunctionalConsequences = FALSE
@@ -135,7 +135,7 @@ switchPlotTopSwitches(cerebellum_switchlist_analyzed,
 # cortex
 switchPlotTopSwitches(cortex_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "cortex"
   ),
   splitFunctionalConsequences = FALSE
@@ -144,7 +144,7 @@ switchPlotTopSwitches(cortex_switchlist_analyzed,
 # hippocampus
 switchPlotTopSwitches(hippocampus_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "hippocampus"
   ),
   splitFunctionalConsequences = FALSE
@@ -153,7 +153,7 @@ switchPlotTopSwitches(hippocampus_switchlist_analyzed,
 # striatum
 switchPlotTopSwitches(striatum_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "striatum"
   ),
   splitFunctionalConsequences = FALSE
