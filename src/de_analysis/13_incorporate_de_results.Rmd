@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Incorporating differential expression results
 
-The purpose of this script is to wrap in all DESeq2 significance values into my isoformswitchanalyzeR objects and subsequently, plots. This enables us to plot them all with significance values for DGE, DTE, and DTU. This script is fully dependent on scripts 01-09 and the currently unnumbered de_analysis DESeq2 scripts.
+The purpose of this script is to wrap in all DESeq2 significance values into my isoformswitchanalyzeR objects and subsequently, plots. This enables us to plot them all with significance values for DGE, DTE, and DTU. This script is fully dependent on scripts 01-09 and the de_analysis DESeq2 scripts 10-12.
 
 For code review, I am tracking the amount of time that this analysis will take.
 

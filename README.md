@@ -1,20 +1,18 @@
 README
 ================
-2023-05-18
+2023-06-05
 
-# Quantifying Isoform Diversity with lrRNA-Seq in Mouse Brain
+# Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
+
+## Authors
+
+Emma Jones, TC Howton, Victoria Flanary, and Brittany Lasseigne.
 
 ## Purpose
 
 The purpose of this project is to analyze Oxford Nanopore RNA sequencing
 from four wildtype mouse brain regions balanced for sex, to assay
 isoform usage differences across brain region and sex.
-
-## Dependencies
-
-“Dependencies” Include a code chunk (if relevant) on what your project
-depends on.  
-Currently: nextflow, gffread
 
 ## Scripts
 
@@ -23,6 +21,13 @@ descriptions for all scripts
 
     ## src
     ## ├── README
+    ## ├── de_analysis
+    ## │   ├── 10_DESeq2_region_region.Rmd
+    ## │   ├── 11_DESeq2_region_others.Rmd
+    ## │   ├── 12_DESeq2_region_sex.Rmd
+    ## │   ├── 13_incorporate_de_results.Rmd
+    ## │   ├── 15_compare_DTU_DGE.Rmd
+    ## │   └── de_functions.R
     ## ├── dtu_analyses
     ## │   ├── 01_calculate_cpm.R
     ## │   ├── 04_pca_eda.Rmd
@@ -31,9 +36,10 @@ descriptions for all scripts
     ## │   ├── 07_dtu_region_sex.Rmd
     ## │   ├── 08_dtu_neuro_diseases.Rmd
     ## │   ├── 09_dtu_isoform_switching.Rmd
-    ## │   ├── compare_results.Rmd
+    ## │   ├── 14_protein_domain_info.Rmd
+    ## │   ├── compare_satuRn_DESeq2_results.Rmd
     ## │   ├── functions.R
-    ## │   ├── protein_domain_info.Rmd
+    ## │   ├── isoformswitchanalyzer_overflow.Rmd
     ## │   └── size_power.R
     ## └── preprocessing
     ##     ├── 00_run_nanoseq.sh
@@ -59,17 +65,17 @@ used GENCODE mouse release M31.
 
 *Script 01: dtu_analyses/calculate_cpm.R* - This script is very short
 and depends on having transcript counts available either by downloading
-or running the nanoseq pipeline. Can run in either docker. Takes less
-than one minute.
+or running the nanoseq pipeline. Takes less than one minute.
 
-*Script 02: preprocessing/get_genome_annotations.sh* - you need these
-for gffread to run, you also need genome annotations to run the nanoseq
-pipeline so frankly you should already have them somewhere. You do need
-to get genome annotations if you didn’t run the nanoseq pipeline and are
-just using counts, so I am keeping it as script 2. It took me 20 minutes
-to download.
+*Script 02: preprocessing/get_genome_annotations.sh* - You need genome
+annotations available for gffread to run, but you also need genome
+annotations to run the nanoseq pipeline so frankly you should already
+have them somewhere and could just move them. You do need to get genome
+annotations if you didn’t run the nanoseq pipeline and are just using
+counts, so I am keeping it as script 2. It took me 20 minutes to
+download.
 
-*Script 03: preprocessing/create_isoform_fa.sh* - this script depends on
+*Script 03: preprocessing/create_isoform_fa.sh* - This script depends on
 script 02. It is a single command but needs to be run in a docker
 (either RStudio docker I made has gffread) or on a local machine with
 gffread.
@@ -79,7 +85,7 @@ data analysis and PCA. It depends on script 01. If data looks bad, do
 not proceed to script 05, but it is technically independent. This script
 takes 3 minutes to run.
 
-*Script 05: dtu_analyses/dtu_region_region.R* - This script depends on
+*Script 05: dtu_analyses/dtu_region_region.Rmd* - This script depends on
 the outputs from script 01 which are read as an RDS file. This script
 also depends on script 03 - the gffread script. Run in github.1.2 docker
 so you have the most up-to-date version of the package. This script
@@ -106,9 +112,42 @@ also for plotting and saving switch plots, which show the significant
 isoform switching events. It is dependent on scripts 01-07. This script
 also takes 36 minutes to run.
 
-## Authors
+*Script 10: de_analysis/DESeq2_region_region.Rmd* - This script is
+dependent on script 00/01 or having gene and transcript level count data
+with metadata in your /data/ directory. The purpose of this script is to
+run DESeq2 across brain regions at the gene and transcript level. It
+takes less than 5 minutes to run.
 
-Emma Jones, TC Howton, Victoria Flanary, and Brittany Lasseigne.
+*Script 11: de_analysis/DESeq2_region_others.Rmd* - This script is
+dependent on script 00/01 or having gene and transcript level count data
+with metadata in your /data/ directory. The purpose of this script is to
+run DESeq2 for each brain region compared to an aggregate of other brain
+regions at the gene and transcript level. It takes about 10 minutes to
+run.
+
+*Script 12: de_analysis/DESeq2_region_sex.Rmd* - This script is
+dependent on script 00/01 or having gene and transcript level count data
+with metadata in your /data/ directory. The purpose of this script is to
+compare expression at the gene and transcript level across sexes within
+brain regions. It takes less than 10 minutes to run.
+
+*Script 13: de_analysis/incorporate_de_results.Rmd* - This script is
+fully dependent on scripts 01-09 and the de_analysis DESeq2 scripts
+10-12. The purpose of this script is to wrap in all DESeq2 significance
+values into my isoformSwitchAnalyzeR objects and subsequently, plots.
+This enables us to plot them all with significance values for DGE, DTE,
+and DTU. This script takes 12 minutes to run.
+
+*Script 14: dtu_analyses/protein_domain_info.Rmd* - This script depends
+on scripts 00-13, and also includes a shell script for running perl
+code. The purpose of thei script is to extract nucleotide and amino acid
+sequences and run pfam to annotate the protein domains. IT MUST RUN IN
+PFAM DOCKER!!!
+
+*Script 15: de_analysis/compare_DTU_DGE.Rmd* - This script depends on
+scripts 00-14. The purpose of this script is to compare genes with
+differential gene expression, differential transcript usage, and
+differential transcript expression. It is not currently finished.
 
 ## Lasseigne Lab
 

@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Comparing DTU and DGE
 
-The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. For ease, I can do DGE and DTU together first. Then I can pull the genes from the transcripts
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. 
 
 For code review, I am tracking the amount of time that this analysis will take.
 
