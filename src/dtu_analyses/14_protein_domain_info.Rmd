@@ -1,0 +1,399 @@
+---
+title: "Protein Domain Information"
+author: "Emma Jones"
+date: "2023-05-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Use Pfam to annotate protein domains
+
+Now, I want to try using external tools for analysis. To do this I need to extract nucleotide and amino acid sequences. IsoformSwitchAnalyzeR has a function for this.
+
+This script depends on scripts 00-13, and also includes a shell script for running perl code that was in run_pfam.sh. YOU NEED TO BE IN THE PFAM DOCKER FOR THIS SCRIPT!!!
+
+#### Load packages
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+#### Load in data
+
+```{r load in data}
+files <- list.files(here("data", "switchlist_objects", "de_added"),
+  pattern = ".Rds"
+)
+# loop in files
+for (i in files) {
+  temp <- readRDS(
+    here("data", "switchlist_objects", "de_added", i)
+  )
+  assign(paste0(str_sub(i, end = -11), "analyzed"),
+    temp,
+    envir = .GlobalEnv
+  )
+}
+```
+
+Now that the files are read in, we can extract the amino acid sequences
+
+```{r extract sequences}
+striatum_sex_analyzed <- extractSequence(
+  striatum_sex_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum_sex",
+  writeToFile = TRUE
+)
+
+region_region_analyzed <- extractSequence(
+  region_region_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "region_region",
+  writeToFile = TRUE
+)
+
+cerebellum_analyzed <- extractSequence(
+  cerebellum_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cerebellum",
+  writeToFile = TRUE
+)
+
+cortex_analyzed <- extractSequence(
+  cortex_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cortex",
+  writeToFile = TRUE
+)
+
+hippocampus_analyzed <- extractSequence(
+  hippocampus_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "hippocampus",
+  writeToFile = TRUE
+)
+
+striatum_analyzed <- extractSequence(
+  striatum_analyzed,
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum",
+  writeToFile = TRUE
+)
+```
+
+PFAM!!! Start with region_region comparison switchlist
+
+```{bash run pfan on region region AA}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/region_region_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/region_region_pfamscan_out.txt
+```
+
+Do the same thing for each region vs others
+
+cerebellum
+
+```{bash run pfam on each region - cerebellum}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cerebellum_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/cerebellum_pfamscan_out.txt
+```
+
+cortex
+
+```{bash run pfam on each region - cortex}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cortex_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/cortex_pfamscan_out.txt
+```
+
+hippocampus
+
+```{bash run pfam on each region - hippocampus}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/hippocampus_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/hippocampus_pfamscan_out.txt
+```
+
+striatum
+
+```{bash run pfam on each region - striatum}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/striatum_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/striatum_pfamscan_out.txt
+```
+finally, do striatum split by sex
+
+```{bash run pfamscan on striatum split by sex}
+cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/striatum_sex_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/striatum_sex_pfamscan_out.txt
+```
+
+#### Pull pfam results back into objects
+
+Then add this back to your object.
+
+```{r annotate protein domains}
+# region region
+region_region_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = region_region_analyzed,
+  pathToPFAMresultFile =
+    here("results", "PfamScan", "region_region_pfamscan_out.txt")
+)
+# cerebellum other
+cerebellum_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = cerebellum_analyzed,
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "cerebellum_pfamscan_out.txt"
+  )
+)
+# cortex other
+cortex_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = cortex_analyzed,
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "cortex_pfamscan_out.txt"
+  )
+)
+# hippocampus other
+hippocampus_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = hippocampus_analyzed,
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "hippocampus_pfamscan_out.txt"
+  )
+)
+# striatum other
+striatum_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = striatum_analyzed,
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "striatum_pfamscan_out.txt"
+  )
+)
+# striatum sex
+striatum_sex_switchlist_pfam <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_analyzed,
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "striatum_sex_pfamscan_out.txt"
+  )
+)
+```
+
+plot everything
+
+
+```{r plot with protein domain info}
+# region region
+switchPlotTopSwitches(region_region_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "region_region"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# cerebellum
+switchPlotTopSwitches(cerebellum_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# cortex
+switchPlotTopSwitches(cortex_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# hippocampus
+switchPlotTopSwitches(hippocampus_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "hippocampus"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# striatum
+switchPlotTopSwitches(striatum_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# striatum - sex
+switchPlotTopSwitches(striatum_sex_switchlist_pfam,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("14_protein_domain_info.Rmd")
+lint("14_protein_domain_info.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, need to get processing finish time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] here_1.0.1                  lintr_3.0.2                 styler_1.10.0              
+ [4] viridis_0.6.3               viridisLite_0.4.2           IsoformSwitchAnalyzeR_2.1.2
+ [7] pfamAnalyzeR_1.0.0          sva_3.48.0                  genefilter_1.82.1          
+[10] mgcv_1.8-42                 nlme_3.1-162                satuRn_1.8.0               
+[13] DEXSeq_1.46.0               RColorBrewer_1.1-3          AnnotationDbi_1.62.1       
+[16] DESeq2_1.40.1               SummarizedExperiment_1.30.1 GenomicRanges_1.52.0       
+[19] GenomeInfoDb_1.36.0         IRanges_2.34.0              S4Vectors_0.38.1           
+[22] MatrixGenerics_1.12.0       matrixStats_0.63.0          Biobase_2.60.0             
+[25] BiocGenerics_0.46.0         BiocParallel_1.34.2         limma_3.56.1               
+[28] lubridate_1.9.2             forcats_1.0.0               stringr_1.5.0              
+[31] dplyr_1.1.2                 purrr_1.0.1                 readr_2.1.4                
+[34] tidyr_1.3.0                 tibble_3.2.1                ggplot2_3.4.2              
+[37] tidyverse_2.0.0            
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.0                 later_1.3.1                  
+  [3] BiocIO_1.10.0                 bitops_1.0-7                 
+  [5] filelock_1.0.2                R.oo_1.25.0                  
+  [7] XML_3.99-0.14                 rex_1.2.1                    
+  [9] lifecycle_1.0.3               rprojroot_2.0.3              
+ [11] edgeR_3.42.4                  processx_3.8.0               
+ [13] lattice_0.21-8                ensembldb_2.24.0             
+ [15] magrittr_2.0.3                rmarkdown_2.22               
+ [17] remotes_2.4.2                 yaml_2.3.7                   
+ [19] httpuv_1.6.11                 pbapply_1.7-0                
+ [21] DBI_1.1.3                     zlibbioc_1.46.0              
+ [23] R.cache_0.16.0                R.utils_2.12.2               
+ [25] AnnotationFilter_1.24.0       RCurl_1.98-1.12              
+ [27] rappdirs_0.3.3                GenomeInfoDbData_1.2.10      
+ [29] annotate_1.78.0               codetools_0.2-19             
+ [31] DelayedArray_0.26.3           xml2_1.3.4                   
+ [33] tidyselect_1.2.0              futile.logger_1.4.3          
+ [35] locfdr_1.1-8                  farver_2.1.1                 
+ [37] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [39] jsonlite_1.8.4                ellipsis_0.3.2               
+ [41] survival_3.5-5                tools_4.3.0                  
+ [43] progress_1.2.2                Rcpp_1.0.10                  
+ [45] glue_1.6.2                    gridExtra_2.3                
+ [47] xfun_0.39                     withr_2.5.0                  
+ [49] formatR_1.14                  BiocManager_1.30.20          
+ [51] fastmap_1.1.1                 boot_1.3-28.1                
+ [53] fansi_1.0.4                   callr_3.7.3                  
+ [55] digest_0.6.31                 timechange_0.2.0             
+ [57] R6_2.5.1                      mime_0.12                    
+ [59] colorspace_2.1-0              biomaRt_2.56.0               
+ [61] RSQLite_2.3.1                 R.methodsS3_1.8.2            
+ [63] utf8_1.2.3                    generics_0.1.3               
+ [65] tximeta_1.18.0                rtracklayer_1.60.0           
+ [67] prettyunits_1.1.1             httr_1.4.6                   
+ [69] S4Arrays_1.0.4                pkgconfig_2.0.3              
+ [71] gtable_0.3.3                  blob_1.2.4                   
+ [73] hwriter_1.3.2.1               XVector_0.40.0               
+ [75] htmltools_0.5.5               geneplotter_1.78.0           
+ [77] ProtGenerics_1.32.0           scales_1.2.1                 
+ [79] cyclocomp_1.1.0               png_0.1-8                    
+ [81] knitr_1.43                    lambda.r_1.2.4               
+ [83] rstudioapi_0.14               tzdb_0.4.0                   
+ [85] reshape2_1.4.4                rjson_0.2.21                 
+ [87] curl_5.0.0                    cachem_1.0.8                 
+ [89] BiocVersion_3.17.1            parallel_4.3.0               
+ [91] desc_1.4.2                    restfulr_0.0.15              
+ [93] pillar_1.9.0                  grid_4.3.0                   
+ [95] vctrs_0.6.2                   promises_1.2.0.1             
+ [97] dbplyr_2.3.2                  xtable_1.8-4                 
+ [99] tximport_1.28.0               evaluate_0.21                
+[101] VennDiagram_1.7.3             GenomicFeatures_1.52.0       
+[103] cli_3.6.1                     locfit_1.5-9.7               
+[105] compiler_4.3.0                futile.options_1.0.1         
+[107] Rsamtools_2.16.0              rlang_1.1.1                  
+[109] crayon_1.5.2                  labeling_0.4.2               
+[111] ps_1.7.4                      plyr_1.8.8                   
+[113] stringi_1.7.12                munsell_0.5.0                
+[115] Biostrings_2.68.1             lazyeval_0.2.2               
+[117] Matrix_1.5-4                  BSgenome_1.68.0              
+[119] hms_1.1.3                     bit64_4.0.5                  
+[121] KEGGREST_1.40.0               statmod_1.5.0                
+[123] shiny_1.7.4                   interactiveDisplayBase_1.38.0
+[125] AnnotationHub_3.8.0           memoise_2.0.1                
+[127] bit_4.0.5                     xmlparsedata_1.0.5 

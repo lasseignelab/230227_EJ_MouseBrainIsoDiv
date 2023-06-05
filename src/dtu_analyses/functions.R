@@ -1,9 +1,12 @@
-# the purpose of this script is to include all functions used in dtu analyses
-# in all functions, the input x is a character vector denoting brain region 
+# Function script for use with the EJMouseBrainIsoDiv project and was written by
+# Emma Jones. The purpose of this script is to include all functions used in DTU
+# analyses. The input "tissue" or "region" is a character vector denoting brain
+# region. This file is broken up into sections with functions for each
+#individual numbered script.
 
-##################### pca_eda script ########################
+######################### 04_pca_eda script ####################################
 
-# make plot function where color is x and shape is y
+# this function is for PCA plotting
 plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   color_len <- deparse(substitute(color))
   shape_len <- deparse(substitute(shape))
@@ -45,36 +48,77 @@ plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   }
 }
 
-##################### dtu_region_region script #####################
+######################### 05_dtu_region_region script ##########################
 
-# this function is for filtering genes that are tissue x in condition 1 or 2
-filter_genes_or <- function(x) {
+# this function is for getting gene symbols for all genes of a tissue
+# save_path for this should be here("data", "switchlist_objects")
+get_gene_symbols <- function(tissue, save_path) {
+  # assign name
+  assign("temp_switchlist", get(paste0(tissue, "_switchlist_analyzed")))
+  # pull shorter gene IDs
+  temp_switchlist[["isoformFeatures"]]$shorter <-
+    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
+                pattern = "ENSMUSG..........."
+    )
+  # get gene symbols from annotation dbi
+  temp_gene_symbols <- AnnotationDbi::select(
+    org.Mm.eg.db,
+    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
+    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  )
+  # add symbols and biotypes to object
+  temp_switchlist[["isoformFeatures"]] <-
+    left_join(temp_switchlist[["isoformFeatures"]],
+              temp_gene_symbols,
+              by = c("shorter" = "ENSEMBL")
+    )
+  # add to correct columns
+  temp_switchlist[["isoformFeatures"]]$gene_name <-
+    temp_switchlist[["isoformFeatures"]]$SYMBOL
+  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
+    temp_switchlist[["isoformFeatures"]]$GENETYPE
+  # remove extra columns
+  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
+  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
+  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
+  # rename object
+  assign(paste0(tissue, "_switchlist_analyzed"),
+         temp_switchlist,
+         envir = .GlobalEnv
+  )
+  saveRDS(temp_switchlist, 
+          paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
+  )
+}
+
+# this function is for filtering genes that are tissue in condition 1 or 2
+filter_genes_or <- function(tissue) {
   # subset genes of interest
   sig_genes_subset <- filter(
     sig_isoform_genes,
-    condition_1 == x | condition_2 == x
+    condition_1 == tissue | condition_2 == tissue
   )
   sig_genes_subset <- unique(sig_genes_subset$gene_id)
   # name object
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   assign(paste0("sig_isoform_genes_", name),
     sig_genes_subset,
     envir = .GlobalEnv
   )
 }
 
-# filtering genes for each comparison
-# specifying tissue x for condition 1 and tissue y in condition 2
-filter_genes_comp <- function(x, y) {
+# this function is for filtering genes for each comparison
+# specifying tissue1 for condition 1 and tissue2 in condition 2
+filter_genes_comp <- function(tissue1, tissue2) {
   # subset genes of interest
   sig_genes_subset <- filter(
     sig_isoform_genes,
-    condition_1 == x & condition_2 == y
+    condition_1 == tissue1 & condition_2 == tissue2
   )
   sig_genes_subset <- unique(sig_genes_subset$gene_name)
   # name object
-  name_1 <- substr(x, 1, 4)
-  name_2 <- substr(y, 1, 4)
+  name_1 <- substr(tissue1, 1, 4)
+  name_2 <- substr(tissue2, 1, 4)
   assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
          sig_genes_subset,
          envir = .GlobalEnv
@@ -86,13 +130,14 @@ filter_genes_comp <- function(x, y) {
               row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
-# create volcano plot function
-# specifying tissue x for condition 1 and tissue y in condition 2
-create_volcano_plot_comp <- function(x, y) {
+# this function is for creating a volcano plot
+# specifying tissue1 for condition 1 and tissue2 in condition 2
+# save_path is here("results", "plots", "satuRn_volcano")
+create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
   # create subset
   analyzed_subset <- dplyr::filter(
     region_region_switchlist_analyzed$isoformFeatures,
-    condition_1 == x & condition_2 == y
+    condition_1 == tissue1 & condition_2 == tissue2
   )
   # plot
   volcano <- ggplot(
@@ -132,27 +177,27 @@ create_volcano_plot_comp <- function(x, y) {
     ) +
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(
-      x, " vs. ", y,
+      tissue1, " vs. ", tissue2,
       " differentially used isoforms"
     ))
   # save
   ggsave(
     paste0(
-      here("results", "plots", "satuRn_volcano"),
-      "/", x, "_", y, "_volcano.png"
+      save_path,
+      "/", tissue1, "_", tissue2, "_volcano.png"
     ),
     plot = volcano, width = 6, height = 4
   )
 }
 
-# create function
-run_plot_gprofiler <- function(x) {
+# this function is for runnning gprofiler
+run_plot_gprofiler <- function(tissue_obj, save_path) {
   # get names
-  name <- deparse(substitute(x))
+  name <- deparse(substitute(tissue_obj))
   name <- substr(name, nchar(name) - 9 + 1, nchar(name))
   # run gprofiler2
   gostres <- gost(
-    query = x,
+    query = tissue_obj,
     organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
     measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -164,22 +209,23 @@ run_plot_gprofiler <- function(x) {
   gostplot(gostres, capped = TRUE, interactive = FALSE)
   # save
   ggsave(paste0(
-    here("results", "plots", "gprofiler2"),
+    save_path,
     "/", name, "_gostres.png"
   ), width = 6, height = 4)
 }
 
-##################### dtu_region_others script #####################
+######################### 06_dtu_region_others script ##########################
 
-# create function for making switchlists and running saturn on tissue x
-make_switchlist_run_saturn <- function(x) {
+# this function is for making switchlists and running saturn on a tissue
+# must specify a save_path as well, use here() for easier path
+make_switchlist_run_saturn <- function(tissue, save_path) {
   # create design
   temp_design <- data.frame(
     sampleID = sample_collection_metadata$sample_id,
-    condition = sample_collection_metadata$tissue == x
+    condition = sample_collection_metadata$tissue == tissue
   )
 
-  temp_design["condition"][temp_design["condition"] == TRUE] <- x
+  temp_design["condition"][temp_design["condition"] == TRUE] <- tissue
   temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
   # create switchlist
   temp_switchlist <- importRdata(
@@ -200,67 +246,26 @@ make_switchlist_run_saturn <- function(x) {
     reduceToSwitchingGenes = FALSE
   )
   # rename object
-  assign(paste0(x, "_switchlist_analyzed"),
+  assign(paste0(tissue, "_switchlist_analyzed"),
     switchlist_analyzed,
     envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects",
-    paste0(x, "_switchlist_saturn.Rds")
-  ))
-}
-# create function to get gene symbols for all genes of a tissue x
-# if you want this function to work for one of the "sex" conditions,
-# you can just add the "_sex" as the input.
-get_gene_symbols <- function(x) {
-  # assign name
-  assign("temp_switchlist", get(paste0(x, "_switchlist_analyzed")))
-  # pull shorter gene IDs
-  temp_switchlist[["isoformFeatures"]]$shorter <-
-    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
-      pattern = "ENSMUSG..........."
-    )
-  # get gene symbols from annotation dbi
-  temp_gene_symbols <- AnnotationDbi::select(
-    org.Mm.eg.db,
-    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
-    columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
+  saveRDS(switchlist_analyzed,
+    paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
   )
-  # add symbols and biotypes to object
-  temp_switchlist[["isoformFeatures"]] <-
-    left_join(temp_switchlist[["isoformFeatures"]],
-      temp_gene_symbols,
-      by = c("shorter" = "ENSEMBL")
-    )
-  # add to correct columns
-  temp_switchlist[["isoformFeatures"]]$gene_name <-
-    temp_switchlist[["isoformFeatures"]]$SYMBOL
-  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
-    temp_switchlist[["isoformFeatures"]]$GENETYPE
-  # remove extra columns
-  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
-  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
-  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
-  # rename object
-  assign(paste0(x, "_switchlist_analyzed"),
-    temp_switchlist,
-    envir = .GlobalEnv
-  )
-  saveRDS(temp_switchlist, here(
-    "data", "switchlist_objects",
-    paste0(x, "_switchlist_saturn.Rds")
-  ))
 }
-# make function for extracting significant genes
-get_sig_genes <- function(x) {
+
+# this function is for extracting significant genes from a switchlist
+# save_path is typically here("results", "dtu_genes")
+get_sig_genes <- function(tissue_switchlist, save_path) {
   # subset features
   sig_features <- dplyr::filter(
-    x$isoformFeatures,
+    tissue_switchlist$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )
   # get name
-  name <- deparse(substitute(x))
+  name <- deparse(substitute(tissue_switchlist))
   name <- substr(name, 1, 4)
   # assign object
   assign(paste0(name, "_sig_features"),
@@ -276,20 +281,19 @@ get_sig_genes <- function(x) {
   )
   # save result
   write.table(sig_genes, 
-              file = here("results", "dtu_genes", 
-                          paste0(name, "_others.txt")
-              ), 
+              file = paste0(save_path, "/", name, "_others.txt"), 
               row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
-# create function
-create_volcano_plot_region <- function(x) {
+# this function is for plotting a single brain region/tissue object
+# save_path is here("results", "plots", "satuRn_volcano")
+create_volcano_plot_region <- function(tissue_obj, save_path) {
   # get name
-  name <- deparse(substitute(x))
+  name <- deparse(substitute(tissue_obj))
   name <- substr(name, 1, 4)
   # plot
   volcano_plot <- ggplot(
-    data = x$isoformFeatures,
+    data = tissue_obj$isoformFeatures,
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -328,7 +332,7 @@ create_volcano_plot_region <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "satuRn_volcano"),
+      save_path,
       "/", name, "_all_volcano.png"
     ),
     volcano_plot,
@@ -336,17 +340,17 @@ create_volcano_plot_region <- function(x) {
   )
 }
 
-##################### dtu_region_sex script #####################
+######################### 07_dtu_region_sex script #############################
 
-# make function to split out brain regions
-split_region <- function(x) {
+# this function is for splitting out brain region counts with input "tissue"
+split_region <- function(tissue) {
   # subset counts
   subset_counts <- subset(
     merged_counts_iso,
     select = c(
       "isoform_id",
       sample_collection_metadata$sample_id[
-        sample_collection_metadata$tissue == x
+        sample_collection_metadata$tissue == tissue
       ]
     )
   )
@@ -356,33 +360,33 @@ split_region <- function(x) {
     select = c(
       "isoform_id",
       sample_collection_metadata$sample_id[
-        sample_collection_metadata$tissue == x
+        sample_collection_metadata$tissue == tissue
       ]
     )
   )
   # drop rows with 0 cpm
   subset_cpm <- subset_cpm[rowSums(subset_cpm[, -1]) != 0, ]
   # get name
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # assign objects
   assign(paste0(name, "_counts"), subset_counts, envir = .GlobalEnv)
   assign(paste0(name, "_cpm"), subset_cpm, envir = .GlobalEnv)
 }
 
-# make function for making a switchlist
-make_switchlist <- function(x) {
+# this function is for making a switchlist object. it is sex-analysis specific.
+make_switchlist <- function(tissue) {
   # get name
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # get objects for function
   assign("name_counts", get(paste0(name, "_counts")))
   assign("name_cpm", get(paste0(name, "_cpm")))
   # make design
   temp_design <- data.frame(
     sampleID = sample_collection_metadata$sample_id[
-      sample_collection_metadata$tissue == x
+      sample_collection_metadata$tissue == tissue
     ],
     condition = sample_collection_metadata$sex[
-      sample_collection_metadata$tissue == x
+      sample_collection_metadata$tissue == tissue
     ]
   )
   # make switchlist
@@ -400,10 +404,11 @@ make_switchlist <- function(x) {
   assign(paste0(name, "_sex_switchlist"), temp_switchlist, envir = .GlobalEnv)
 }
 
-# make function to filter and run satuRn
-filter_run_saturn <- function(x) {
+# this function is for filtering data and runing satuRn for DTU analysis
+# save path is typically here("data", "switchlist_objects") 
+filter_run_saturn <- function(tissue, save_path) {
   # get name
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # assign name
   assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
   # filter switchlist
@@ -424,21 +429,22 @@ if (!is.null(switchlist_analyzed)) {
          envir = .GlobalEnv
   )
   # save object
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_saturn.Rds")
-  ))
+  saveRDS(switchlist_analyzed, paste0(save_path, "/",
+                                      tissue, "_sex_switchlist_saturn.Rds")
+  )
 }
     
 }
-# create function for sex split volcano plot for each brain region x
-create_sex_volcano_plot <- function(x) {
+
+# this function is for sex split volcano plots for each brain region/tissue
+# save_path is usually here("results", "plots", "satuRn_volcano")
+create_sex_volcano_plot <- function(tissue_obj, save_path) {
   # get name
-  name <- deparse(substitute(x))
+  name <- deparse(substitute(tissue_obj))
   name <- substr(name, 1, 4)
   # plot
   volcano_plot <- ggplot(
-    data = x$isoformFeatures,
+    data = tissue_obj$isoformFeatures,
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -476,85 +482,7 @@ create_sex_volcano_plot <- function(x) {
   # save
   ggsave(
     paste0(
-      here("results", "plots", "satuRn_volcano"),
-      "/", name, "_sex_volcano.png"
-    ),
-    volcano_plot,
-    width = 6, height = 4
-  )
-}
-# make different function without reducing argument
-filter_run_saturn_noreduce <- function(x) {
-  # get name
-  name <- substr(x, 1, 4)
-  # assign name
-  assign("temp_switchlist", get(paste0(name, "_sex_switchlist")))
-  # filter switchlist
-  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
-  # run saturn
-  switchlist_analyzed <- isoformSwitchTestSatuRn(
-    switchAnalyzeRlist = temp_switchlist,
-    reduceToSwitchingGenes = FALSE
-  )
-  # rename object
-  assign(paste0(name, "_sex_switchlist_analyzed"),
-    switchlist_analyzed,
-    envir = .GlobalEnv
-  )
-  # save object
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects",
-    paste0(x, "_sex_switchlist_saturn.Rds")
-  ))
-}
-
-# make volcano plot function, but remove NAs
-create_sex_volcano_plot_rm <- function(x) {
-  # get name
-  name <- deparse(substitute(x))
-  name <- substr(name, 1, 4)
-  # plot
-  volcano_plot <- ggplot(
-    data = x$isoformFeatures,
-    aes(x = dIF, y = -log10(isoform_switch_q_value))
-  ) +
-    geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
-      size = 2,
-      alpha = 0.5,
-      stroke = NA
-    ) +
-    geom_hline(
-      yintercept = -log10(0.05),
-      linetype = "dashed",
-      color = "magenta",
-      linewidth = .7
-    ) +
-    geom_vline(
-      xintercept = c(-0.1, 0.1),
-      linetype = "dashed",
-      color = "turquoise3",
-      linewidth = .7
-    ) +
-    scale_color_manual("Signficant\nIsoform Switch",
-      labels = c("not significant", "significant"),
-      values = c("gray40", "limegreen"),
-      na.translate = FALSE
-    ) +
-    labs(
-      x = "dIF (Differential Isoform Fraction)",
-      y = "-log10 (Isoform Switch q Value)"
-    ) +
-    theme_light() +
-    theme(
-      legend.text = element_text(size = 11),
-      axis.text = element_text(size = 10)
-    ) +
-    guides(colour = guide_legend(override.aes = list(size = 4))) +
-    ggtitle(paste0(name, " sex differentially used isoforms"))
-  # save
-  ggsave(
-    paste0(
-      here("results", "plots", "satuRn_volcano"),
+      save_path,
       "/", name, "_sex_volcano.png"
     ),
     volcano_plot,
@@ -562,10 +490,10 @@ create_sex_volcano_plot_rm <- function(x) {
   )
 }
 
-# write function to get significant isoforms
-get_sig_isoforms <- function(x) {
+# this function is for getting significant isoforms from a certain region.
+get_sig_isoforms <- function(region) {
   # get name of object
-  name <- substr(x, 1, 4)
+  name <- substr(region, 1, 4)
   # assign name
   assign(
     "temp_sex_switchlist_analyzed",
@@ -585,10 +513,10 @@ get_sig_isoforms <- function(x) {
   )
 }
 
-# make simple function to get significant genes and cutting off decimals
-get_cut_sig_genes <- function(x) {
+# this function is for getting significant genes and cutting off decimals
+get_cut_sig_genes <- function(tissue) {
   # get name
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # assign name
   assign(
     "temp_sex_switchlist_analyzed",
@@ -613,10 +541,11 @@ get_cut_sig_genes <- function(x) {
     envir = .GlobalEnv
   )
 }
-# make go analysis function that skips plotting if no result returned
-run_gprofiler <- function(x) {
+
+# this function is for running gprofiler, skips plotting if no result returned
+run_gprofiler <- function(tissue) {
   # get name
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # assign name
   assign(
     "temp_sex_sig_genes",
@@ -629,7 +558,7 @@ run_gprofiler <- function(x) {
     measure_underrepresentation = FALSE, evcodes = FALSE,
     user_threshold = 0.05, correction_method = "g_SCS", domain_scope = "custom",
     custom_bg = str_extract(
-      unique(cere_sex_switchlist_analyzed$isoformFeatures$gene_id),
+      unique(stri_sex_switchlist_analyzed$isoformFeatures$gene_id),
       pattern = "ENSMUSG..........."
     ),
     numeric_ns = "", sources = NULL, as_short_link = FALSE
@@ -645,11 +574,13 @@ run_gprofiler <- function(x) {
     gostplot(temp_sex_gostres, capped = TRUE, interactive = FALSE)
   }
 }
-# write function to get symbols for each list, though this function only works
-# on the signifciant genes list, not the switchlist object.
-get_gene_symbols_sex <- function(x) {
+
+# this function is for getting gene symbols, though this function only works
+# on a significant genes list, not the switchlist object.
+# save path is here("results", "dtu_genes")
+get_gene_symbols_sex <- function(tissue, save_path) {
   # get name of object
-  name <- substr(x, 1, 4)
+  name <- substr(tissue, 1, 4)
   # assign name
   assign("temp_sex_sig_genes", get(paste0(name, "_sex_sig_genes")))
   # get gene symbols from annotation dbi
@@ -660,9 +591,7 @@ get_gene_symbols_sex <- function(x) {
   )
   # save results
   write.table(temp_sex_sig_gene_symbols$SYMBOL, 
-              file = here("results", "dtu_genes", 
-                          paste0(name, "_sex.txt")
-              ), 
+              file = paste0(save_path, "/", name, "_sex.txt"), 
               row.names = FALSE, col.names = FALSE, quote = FALSE)
   # rename object
   assign(paste0(name, "_sex_sig_gene_symbols"),
@@ -671,24 +600,24 @@ get_gene_symbols_sex <- function(x) {
   )
 }
 
-###### dtu_neuro_diseases script #######
-# write function to convert human to mouse gene names
-convert_human_to_mouse <- function(x){
-  require("biomaRt")
+######################### 08_dtu_neuro_diseases script #########################
+
+# this function is for converting human gene names to mouse gene names
+convert_human_to_mouse <- function(gene_list){
   human <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl", 
                    host = "https://dec2021.archive.ensembl.org")
   mouse <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "mmusculus_gene_ensembl", 
                    host = "https://dec2021.archive.ensembl.org")
   # use biomaRt to get homologous genes
   genes <- getLDS(attributes = c("hgnc_symbol",'ensembl_gene_id'), 
-                  filters = "hgnc_symbol", values = x , mart = human, 
+                  filters = "hgnc_symbol", values = gene_list , mart = human, 
                   attributesL = c("mgi_symbol",'ensembl_gene_id'), 
                   martL = mouse, uniqueRows = TRUE)
   return(genes)
 }
 
-# function for pulling significant genes and getting overlap for a given brain
-# region with three different gene lists.
+# this function is for pulling significant genes and getting overlap for a given
+# brain region with three different gene lists.
 compare_switching_genes <- function(brain_region) {
   # get name
   name <- brain_region
@@ -739,11 +668,13 @@ compare_switching_genes <- function(brain_region) {
   
 }
 
-########## dtu_isoform_switching script #################
-# function for adding and saving orfs for brain region x (when you run x vs others)
-add_save_orfs <- function(x) {
+######################### 09_dtu_isoform_switching script ######################
+
+# this function is for adding and saving orfs for brain region
+# save_path is here("data", "switchlist_objects", "orf_added")
+add_save_orfs <- function(region, save_path) {
   # pull in switchlist
-  assign("switchlist_analyzed", get(paste0(x, "_switchlist_analyzed")))
+  assign("switchlist_analyzed", get(paste0(region, "_switchlist_analyzed")))
   # add open reading frames
   switchlist_analyzed <- addORFfromGTF(
     switchAnalyzeRlist = switchlist_analyzed,
@@ -753,20 +684,20 @@ add_save_orfs <- function(x) {
   switchlist_analyzed <- analyzeNovelIsoformORF(
     switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
   # save
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects","orf_added", paste0(
-      x,"_switchlist_orf.Rds"
+  saveRDS(switchlist_analyzed, paste0(save_path, "/",
+      region,"_switchlist_orf.Rds"
     )
   )
-  )
   # assign object
-  assign(paste0(x, "_switchlist_analyzed"), switchlist_analyzed,
+  assign(paste0(region, "_switchlist_analyzed"), switchlist_analyzed,
          envir = .GlobalEnv)
 }
-# function for adding and saving orfs for brain region x (sex-specific)
-add_save_orfs_sex <- function(x) {
+
+# this function for adding and saving orfs for brain region (sex-specific)
+# save_path is here("data", "switchlist_objects", "orf_added")
+add_save_orfs_sex <- function(region, save_path) {
   # pull in switchlist
-  assign("switchlist_analyzed", get(paste0(x, "_sex_switchlist_analyzed")))
+  assign("switchlist_analyzed", get(paste0(region, "_sex_switchlist_analyzed")))
   # add open reading frames
   switchlist_analyzed <- addORFfromGTF(
     switchAnalyzeRlist = switchlist_analyzed,
@@ -776,13 +707,11 @@ add_save_orfs_sex <- function(x) {
   switchlist_analyzed <- analyzeNovelIsoformORF(
     switchlist_analyzed, analysisAllIsoformsWithoutORF = TRUE)
   # save
-  saveRDS(switchlist_analyzed, here(
-    "data", "switchlist_objects","orf_added", paste0(
-      x,"_sex_switchlist_orf.Rds"
+  saveRDS(switchlist_analyzed, paste0(save_path, "/",
+      region,"_sex_switchlist_orf.Rds"
     )
   )
-  )
   # assign object
-  assign(paste0(x, "_sex_switchlist_analyzed"), switchlist_analyzed,
+  assign(paste0(region, "_sex_switchlist_analyzed"), switchlist_analyzed,
          envir = .GlobalEnv)
 }

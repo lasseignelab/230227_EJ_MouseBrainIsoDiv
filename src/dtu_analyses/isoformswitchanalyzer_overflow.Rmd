@@ -1,0 +1,162 @@
+---
+title: "isoformswitchanalyzer_overflow"
+author: "Emma Jones"
+date: "2023-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r cars}
+striatum_sex_switchlist_more <- analyzeCPC2(
+  switchAnalyzeRlist = striatum_sex_switchlist_orf,
+  pathToCPC2resultFile = here("data", "CPC2", "result_cpc2.txt"),
+  removeNoncodinORFs = TRUE
+)
+
+striatum_sex_switchlist_more <- analyzeSignalP(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToSignalPresultFile = here("data", "SignalP6", "prediction_results.txt")
+)
+
+striatum_sex_switchlist_more <- analyzeDeepLoc2(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToDeepLoc2resultFile = here(
+    "data", "DeepLoc2",
+    "results_640660B000004A492D07E377.csv"
+  )
+)
+
+striatum_sex_switchlist_more <- analyzeDeepTMHMM(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  pathToDeepTMHMMresultFile = here("data", "DeepTMHMM", "TMRs.gff3")
+)
+```
+
+
+```{r predict alternative splicing}
+striatum_sex_switchlist_more <- analyzeAlternativeSplicing(
+  switchAnalyzeRlist = striatum_sex_switchlist_more,
+  quiet = TRUE
+)
+
+table(striatum_sex_switchlist_more$AlternativeSplicingAnalysis$IR)
+
+consequencesOfInterest <- c(
+  "intron_retention", "coding_potential",
+  "NMD_status", "domains_identified",
+  "ORF_seq_similarity"
+)
+
+striatum_sex_switchlist_more <- analyzeSwitchConsequences(
+  striatum_sex_switchlist_more,
+  consequencesToAnalyze = consequencesOfInterest,
+  dIFcutoff = 0.1,
+  showProgress = FALSE
+)
+
+extractSwitchSummary(striatum_sex_switchlist_more,
+  dIFcutoff = 0.1,
+  filterForConsequences = TRUE
+)
+
+# this is cool and I want to show for all brain regions I think
+extractSplicingSummary(
+  striatum_sex_switchlist_more,
+  asFractionTotal = FALSE,
+  plotGenes = FALSE
+)
+
+splicingEnrichment <- extractSplicingEnrichment(
+  striatum_sex_switchlist_more,
+  splicingToAnalyze = "all",
+  returnResult = TRUE,
+  returnSummary = TRUE
+)
+```
+
+#### Do external analyisis on all comparisons (region region object)
+
+```{r export all region data}
+region_region_switchlist_orf <- extractSequence(
+  region_region_switchlist_orf,
+  pathToOutput = here("data", "switchlist_fasta"),
+  writeToFile = TRUE,
+  outputPrefix = "all_region"
+)
+```
+
+
+pull in data
+
+```{r all region import pfam}
+region_region_switchlist_more <- analyzePFAM(
+  switchAnalyzeRlist = region_region_switchlist_orf,
+  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
+)
+```
+
+```{r analyze alternative splicing for all brain regions}
+region_region_switchlist_more <- analyzeAlternativeSplicing(
+  switchAnalyzeRlist = region_region_switchlist_more,
+  quiet = TRUE
+)
+
+extractSplicingSummary(
+  region_region_switchlist_more,
+  asFractionTotal = FALSE,
+  plotGenes = FALSE
+)
+
+splicingEnrichment <- extractSplicingEnrichment(
+  region_region_switchlist_more,
+  splicingToAnalyze = "all",
+  returnResult = TRUE,
+  returnSummary = TRUE
+)
+```
+
+
+```{r analyze pfam results}
+# pull in pfam data
+region_region_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = region_region_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "all_regions", "pfamscan_out.txt")
+)
+
+```
+
+Here I am going to try and make a function for plotting all genes to visualize! I NEED TO ADD TO THIS FUNCTION TO SAVE PLOTS
+
+```{r function}
+make_all_switchplots <- function(x) {
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "cortex")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cerebellum", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "hippocampus")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "cortex", condition2 = "striatum")
+  switchPlot(region_region_switchlist_analyzed, gene = x, condition1 = "hippocampus", condition2 = "striatum")
+}
+
+lapply(dtu_psych_genes, make_all_switchplots)
+
+lapply(dtu_ad_genes, make_all_switchplots)
+
+lapply(dtu_cpam_genes, make_all_switchplots)
+
+```
+
+```{r do switchplot for striatum gene}
+
+striatum_sex_switchlist_analyzed <- analyzePFAM(
+  switchAnalyzeRlist = striatum_sex_switchlist_analyzed,
+  pathToPFAMresultFile = here("data", "Pfam", "striatum", "pfam_results.txt")
+)
+
+switchPlot(striatum_sex_switchlist_analyzed, gene = "Dhrs4")
+```

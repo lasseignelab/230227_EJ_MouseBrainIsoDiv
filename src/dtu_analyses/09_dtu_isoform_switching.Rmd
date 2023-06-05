@@ -64,26 +64,52 @@ for (i in files) {
 To visualize the top switching events, we need to add open reading frames for all switching genes. This function will also save all the open reading frames to the switchlist object as well.
 
 ```{r add open reading frames}
-# make vector of all regions
-all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-
 # apply function for creating open reading frames and saving them
-lapply(all_regions, add_save_orfs)
-add_save_orfs("region_region")
+add_save_orfs(
+  region = "region_region",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+
+add_save_orfs(
+  region = "cerebellum",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+
+add_save_orfs(
+  region = "cortex",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+
+add_save_orfs(
+  region = "hippocampus",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+
+add_save_orfs(
+  region = "striatum",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
 
 # for sex-specific, only need to do striatum because it had only sig results
-add_save_orfs_sex("striatum")
+add_save_orfs_sex(
+  region = "striatum",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
 ```
 Now, we can save the isoform switching events plots.
 
 ```{r plot isoform switch events for striatum}
-get_gene_symbols("striatum_sex") # need to do this to get gene symbol for title
+get_gene_symbols(
+  tissue = "striatum_sex",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+# need to do this to get gene symbol for title
 
 # striatum sex
 switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
-    "striatum_sex"
+    "results", "plots", "switch_plots", "raw",
+    "striatum"
   ),
   splitFunctionalConsequences = FALSE
 )
@@ -91,7 +117,7 @@ switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
 # region region
 switchPlotTopSwitches(region_region_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "region_region"
   ),
   splitFunctionalConsequences = FALSE
@@ -100,7 +126,7 @@ switchPlotTopSwitches(region_region_switchlist_analyzed,
 # cerebellum
 switchPlotTopSwitches(cerebellum_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "cerebellum"
   ),
   splitFunctionalConsequences = FALSE
@@ -109,7 +135,7 @@ switchPlotTopSwitches(cerebellum_switchlist_analyzed,
 # cortex
 switchPlotTopSwitches(cortex_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "cortex"
   ),
   splitFunctionalConsequences = FALSE
@@ -118,7 +144,7 @@ switchPlotTopSwitches(cortex_switchlist_analyzed,
 # hippocampus
 switchPlotTopSwitches(hippocampus_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "hippocampus"
   ),
   splitFunctionalConsequences = FALSE
@@ -127,7 +153,7 @@ switchPlotTopSwitches(hippocampus_switchlist_analyzed,
 # striatum
 switchPlotTopSwitches(striatum_switchlist_analyzed,
   pathToOutput = here(
-    "results", "plots", "switch_plots",
+    "results", "plots", "switch_plots", "raw",
     "striatum"
   ),
   splitFunctionalConsequences = FALSE
@@ -154,7 +180,7 @@ Also, need to get processing finish time.
 fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
-This script takes 36 minutes to run, mostly during add_save_orfs.
+This script takes 35 minutes to run, mostly during add_save_orfs.
 
 #### Software versions
 

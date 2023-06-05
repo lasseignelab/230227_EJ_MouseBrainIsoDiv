@@ -1,0 +1,163 @@
+---
+title: "comparing DTU and DGE"
+author: "Emma Jones"
+date: "2023-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Comparing DTU and DGE
+
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. 
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+#### Load in Packages
+
+```{r load packages}
+# load packages
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(biomaRt)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+# install package; need to add to docker later if used in paper
+devtools::install_github("yanlinlin82/ggvenn")
+library(ggvenn)
+
+# make biomart object
+mart <- useMart(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+```
+
+
+```{r load in data}
+# DGE
+dge_files <- list.files(here("results", "de_genes"))
+# loop in files
+for (i in dge_files) {
+  temp <- read.csv(
+    here("results", "de_genes", i), header = FALSE
+  )
+  genes <- str_extract(temp$V1,
+                pattern = "ENSMUSG...........|gene....*")
+  assign(paste0(str_sub(i, end = -5), "_dge_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+
+# DTE
+dte_files <- list.files(here("results", "de_transcripts"))
+# loop in files
+for (i in dte_files) {
+  temp <- read.csv(
+    here("results", "de_transcripts", i), header = FALSE
+  )
+  transcripts <- temp$V1
+  transcripts <- str_extract(transcripts,
+                pattern = "ENSMUST...........|tx....*")
+  genes <- getBM(attributes = c('ensembl_transcript_id',
+                                'ensembl_gene_id'),
+             filters = 'ensembl_transcript_id', 
+             values = transcripts,
+             mart = mart)
+  genes <- unique(genes)
+  assign(paste0(str_sub(i, end = -5), "_dte_genes"),
+    genes$ensembl_gene_id,
+    envir = .GlobalEnv
+  )
+}
+
+# DTU
+dtu_files <- list.files(here("data", "switchlist_objects", "de_added"))
+# loop in files
+for (i in dtu_files) {
+  temp <- readRDS(
+    here("data", "switchlist_objects", "de_added", i)
+  )
+  sig_temp <- dplyr::filter(
+    temp$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  genes <- sig_temp$gene_id
+  genes <- unique(genes)
+  genes <- str_extract(genes,
+                pattern = "ENSMUSG...........|gene....*")
+  assign(paste0(str_sub(i, end = -12), "_dtu_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+```
+
+All gene names should be GENE IDS directly from objects instead of importing and converting the other lists I think so nothing is lost. But I still need to convert the transcript IDs to gene for DTE.
+
+Biomart did a much better job, but not perfect. 
+
+
+
+```{r prep data}
+# make results into a list
+cerebellum_list <- list(`cerebellum DGE` = cerebellum_dge_genes,
+                 `cerebellum DTE` = cerebellum_dte_genes,
+           `cerebellum DTU` = cerebellum_dtu_genes)
+
+cortex_list <- list(`cortex DGE` = cortex_dge_genes,
+                 `cortex DTE` = cortex_dte_genes,
+           `cortex DTU` = cortex_dtu_genes)
+
+hippocampus_list <- list(`hippocampus DGE` = hippocampus_dge_genes,
+                 `hippocampus DTE` = hippocampus_dte_genes,
+           `hippocampus DTU` = hippocampus_dtu_genes)
+
+striatum_list <- list(`striatum DGE` = striatum_dge_genes,
+                 `striatum DTE` = striatum_dte_genes,
+           `striatum DTU` = striatum_dtu_genes)
+```
+
+```{r make compare plot}
+
+make_comparison_plots <- function(comparison_list) {
+
+   # plot venn diagram
+  ggvenn(
+    comparison_list,
+    fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
+    stroke_size = 0.5,
+    set_name_size = 4
+  )
+  
+  # create matrix
+  for_plot_mat <- list_to_matrix(comparison_list)
+  
+  # generate combination matrix
+  for_plot_comb_mat <- make_comb_mat(for_plot_mat)
+  
+  # make UpSet plot (ComplexHeatmap)
+  UpSet(
+    for_plot_comb_mat,
+    comb_order = order(-comb_size(for_plot_comb_mat)),
+    comb_col = c("#5D69B1", "#52BCA3", "#99C945")[comb_degree(for_plot_comb_mat)],
+    top_annotation = upset_top_annotation(for_plot_comb_mat,
+                                          add_numbers = TRUE),
+    right_annotation = upset_right_annotation(for_plot_comb_mat,
+                                              add_numbers = TRUE)
+  )
+}
+
+make_comparison_plots(cerebellum_list)
+```
+

@@ -21,15 +21,17 @@ ptm <- proc.time()
 #### Load in packages
 
 ```{r load packages}
-library(tidyverse)
-library(IsoformSwitchAnalyzeR)
-library(ComplexHeatmap)
-library(viridis)
-library(org.Mm.eg.db)
-library(gprofiler2)
-library(styler)
-library(lintr)
-library(here)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
 
 set.seed(123)
 ```
@@ -79,9 +81,19 @@ sex_switchlist_analyzed <- isoformSwitchTestSatuRn(
 extractSwitchSummary(sex_switchlist_analyzed)
 ```
 
-Only 5 genes were considered switching, so I will also try splitting by brain region.
+Only 4 genes were considered switching, so I will also try splitting by brain region.
 
 One of the genes Atp6v0e2, had downregulation in females with AD in this study https://www.frontiersin.org/articles/10.3389/fnagi.2021.735611/full
+
+Either way, these genes need to be extracted and saved. If I don't modify my existing function, this can be done quickly but it will say sex__other.txt instead of just text which I think is fine.
+
+```{r get significant switching genes}
+# get sex signifciant genes
+get_sig_genes(
+  tissue_switchlist = sex_switchlist_analyzed,
+  save_path = here("results", "dtu_genes")
+)
+```
 
 ### Get sex DTU for each brain region
 
@@ -108,137 +120,62 @@ Once these are made, I can run satuRn.
 
 ```{r saturn by sex and brain region}
 # use function on all brain regions
-lapply(all_regions, filter_run_saturn) # this won't run all samples
+filter_run_saturn(
+  tissue = "cortex",
+  save_path = here("data", "switchlist_objects")
+)
+# no significant genes
 
-filter_run_saturn("cortex") # no significant genes
-filter_run_saturn("cerebellum") # no significant genes
-filter_run_saturn("hippocampus") # no significant genes
-filter_run_saturn("striatum") # this finds 3
+filter_run_saturn(
+  tissue = "cerebellum",
+  save_path = here("data", "switchlist_objects")
+)
+# no significant genes
+
+filter_run_saturn(
+  tissue = "hippocampus",
+  save_path = here("data", "switchlist_objects")
+)
+# no significant genes
+
+filter_run_saturn(
+  tissue = "striatum",
+  save_path = here("data", "switchlist_objects")
+)
+# this finds 3 switches in 2 genes
+extractSwitchSummary(stri_sex_switchlist_analyzed)
 ```
 
-Alright, now I have some differential used isoforms/genes. Let's visualize them with a volcano plot, although not including background genes in the analysis might be a bit much.
+Expected results:
+F vs M	3	2	2
+
+Alright, now I have some differential used isoforms/genes. Let's visualize them with a volcano plot, although with how few genes there are it feels silly.
 
 #### Make volcano plots
 
 ```{r volcano plots for sex split by brain region}
 # use function
-create_sex_volcano_plot(stri_sex_switchlist_analyzed)
-```
-
-These volcano plots are very sparse. I'm going to add the argument to include all genes and see if it is overwhelming. Note: I don't know if this is necessary or helpful.
-
-```{r redo satuRn split by tissue and sex}
-# run new function on all regions
-lapply(all_regions, filter_run_saturn_noreduce)
-```
-
-Okay, now time to plot again.
-
-```{r volcano plot again}
-# use function on all switchlists
-create_sex_volcano_plot_rm(cere_sex_switchlist_analyzed)
-create_sex_volcano_plot_rm(cort_sex_switchlist_analyzed)
-create_sex_volcano_plot_rm(hipp_sex_switchlist_analyzed)
-create_sex_volcano_plot_rm(stri_sex_switchlist_analyzed)
-```
-
-This is slightly better, I guess. Now the non-significant genes are included at the bottom. There are very few significant genes, but I'll still make an UpSet plot to compare them.
-
-```{r sex significant isoforms upset plot}
-# run new function on all regions
-lapply(all_regions, get_sig_isoforms)
-
-# make all into list
-all_sex_isoform_list <- list(
-  cerebellum = cere_sex_sig_isoforms,
-  cortex = cort_sex_sig_isoforms,
-  hippocampus = hipp_sex_sig_isoforms,
-  striatum = stri_sex_sig_isoforms
-)
-
-# make matrix
-all_sex_isoform_list_mat <- list_to_matrix(all_sex_isoform_list)
-
-# create combination matrix
-all_sex_isoform_list_comb_mat <- make_comb_mat(all_sex_isoform_list_mat)
-
-# make UpSet plot (ComplexHeatmap)
-upset_sex_isoform <- UpSet(
-  all_sex_isoform_list_comb_mat,
-  comb_order = order(-comb_size(all_sex_isoform_list_comb_mat)),
-  comb_col = viridis(4)[comb_degree(all_sex_isoform_list_comb_mat)],
-  top_annotation = upset_top_annotation(all_sex_isoform_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(all_sex_isoform_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-
-draw(upset_sex_isoform,
-  column_title = "Overlap of sex-DTU isoforms by brain region"
+create_sex_volcano_plot(
+  tissue_obj = stri_sex_switchlist_analyzed,
+  save_path = here("results", "plots", "satuRn_volcano")
 )
 ```
 
-There is no overlap! An UpSet plot might not be the best visualization if there is no overlap. I find this interesting since that means they are all brain-region specific sex differences. So what are they? Are they enriched for anything?
+I removed the UpSetPlot code because there were only 3 genes considered switching in a single brain region (striatum).
 
 #### GO Analysis using gprofiler2
 
 Before doing GO analysis, I need to pull out significant genes. GO analysis does not currently work at the isoform level (at least for gprofiler2).
 
 ```{r pull out signficant genes}
-# run  on all brain regions
-lapply(all_regions, get_cut_sig_genes)
+get_cut_sig_genes(tissue = "striatum")
 ```
 
-Now, perform go analysis with gprofiler2.
+Now, perform go analysis with gprofiler2, but this gives no results.
 
 ```{r go analysis}
-# run new function on all brain regions
-lapply(all_regions, run_gprofiler)
-
-run_gprofiler("striatum")
-```
-
-It does not look like there is a lot of enrichment here. There are only a few genes so it makes sense to me that there is very little enrichment.
-
-```{r interactive gprofiler}
-# get name
-name <- substr("striatum", 1, 4)
-# assign name
-assign(
-  "temp_sex_sig_genes",
-  get(paste0(name, "_sex_sig_genes"))
-)
-# run gprofiler
-temp_sex_gostres <- gost(
-  query = temp_sex_sig_genes, organism = "mmusculus", ordered_query = FALSE,
-  multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
-  measure_underrepresentation = FALSE, evcodes = FALSE,
-  user_threshold = 0.05, correction_method = "g_SCS", domain_scope = "custom",
-  custom_bg = str_extract(
-    unique(cere_sex_switchlist_analyzed$isoformFeatures$gene_id),
-    pattern = "ENSMUSG..........."
-  ),
-  numeric_ns = "", sources = NULL, as_short_link = FALSE
-)
-# only save and plot if there are significant results
-if (!is.null(temp_sex_gostres)) {
-  # save object
-  assign(paste0(name, "_sex_gostres"),
-    temp_sex_gostres,
-    envir = .GlobalEnv
-  )
-  # plot object
-  gostplot(temp_sex_gostres, capped = TRUE, interactive = TRUE)
-}
-```
-
-Lastly, I want to get the gene symbols.
-
-```{r get top sex gene symbols}
-# run new function on all regions to get symbols for each list
-lapply(all_regions, get_gene_symbols_sex)
+# run gprofiler function on striatum
+run_gprofiler(tissue = "striatum") # no results to show
 ```
 
 #### Clean up script
@@ -259,7 +196,7 @@ fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
 
-Estimated processing time was 181 minutes but I went to seminar and was troubleshootingso does not take that long.
+Estimated processing time is 22 minutes.
 
 #### Software versions
 

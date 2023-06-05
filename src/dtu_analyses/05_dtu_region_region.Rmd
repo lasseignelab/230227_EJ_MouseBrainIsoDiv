@@ -23,15 +23,17 @@ First, we need to load in all packages.
 #### Load in packages
 
 ```{r load packages and set seed}
-library(tidyverse)
-library(IsoformSwitchAnalyzeR)
-library(ComplexHeatmap)
-library(viridis)
-library(org.Mm.eg.db)
-library(gprofiler2)
-library(styler)
-library(lintr)
-library(here)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
 
 set.seed(123)
 ```
@@ -40,7 +42,7 @@ set.seed(123)
 
 Next, I want to read in data and get cpm values. Since I'll be doing this for all 3 analyses, I made it an R script that can be run beforehand and saves the data to an RData file. I will also source all of the functions I wrote.
 
-```{r read in data and get tpm values}
+```{r read in data and get cpm values}
 load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 source("functions.R", local = knitr::knit_global())
 ```
@@ -73,8 +75,10 @@ region_region_switchlist <- importRdata(
 )
 
 # save switchlist
-saveRDS(region_region_switchlist, here("data", "switchlist_objects",
-                                       "region_region_switchlist_NOT_ANALYZED.Rds"))
+saveRDS(region_region_switchlist, here(
+  "data", "switchlist_objects",
+  "region_region_switchlist_NOT_ANALYZED.Rds"
+))
 ```
 
 Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
@@ -95,7 +99,10 @@ region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
 extractSwitchSummary(region_region_switchlist_analyzed)
 
 # get gene symbols and save object with gene symbols within function
-get_gene_symbols("region_region")
+get_gene_symbols(
+  tissue = "region_region",
+  save_path = here("data", "switchlist_objects")
+)
 ```
 
 Expected saturn output with sva:
@@ -116,6 +123,7 @@ First, I need to get significant genes and split them out by brain region.
 ```{r make upset plots for overlap by brain region}
 # make vector of brain regions
 all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
+
 # first, get significant isoform switches
 sig_isoform_features <- region_region_switchlist_analyzed$isoformFeatures
 sig_isoform_features <- dplyr::filter(
@@ -138,9 +146,7 @@ sig_isoform_gene_list <- list(
 )
 ```
 
-I also can indicate not just overlapping, but specifically which genes are DTU and have overlap?
-
-I want to get a list of genes for each comparison.
+I also can indicate not just overlapping, but specifically which genes are DTU and have overlap. So, I want to get a list of genes for each comparison.
 
 ```{r get list of genes for each comparison}
 # make vector of comparisons
@@ -158,12 +164,12 @@ Once I have these, I can combine them into a list for plotting.
 ```{r setup overlap of comparisons}
 # make into list - needed to remove NAs which are genes with no gene names
 sig_overlap_list <- list(
-  cere_cort = na.omit(sig_isoform_genes_cere_cort),
-  cere_hipp = na.omit(sig_isoform_genes_cere_hipp),
-  cere_stri = na.omit(sig_isoform_genes_cere_stri),
-  cort_hipp = na.omit(sig_isoform_genes_cort_hipp),
-  cort_stri = na.omit(sig_isoform_genes_cort_stri),
-  hipp_stri = na.omit(sig_isoform_genes_hipp_stri)
+  `cerebellum vs. cortex` = na.omit(sig_isoform_genes_cere_cort),
+  `cerebellum vs. hippocampus` = na.omit(sig_isoform_genes_cere_hipp),
+  `cerebellum vs. striatum` = na.omit(sig_isoform_genes_cere_stri),
+  `cortex vs. hippocampus` = na.omit(sig_isoform_genes_cort_hipp),
+  `cortex vs. striatum` = na.omit(sig_isoform_genes_cort_stri),
+  `hippocampus vs. striatum` = na.omit(sig_isoform_genes_hipp_stri)
 )
 ```
 
@@ -178,7 +184,9 @@ sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_region_upset.png"))
+pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"),
+  width = 12, height = 6
+)
 upset_plot <- UpSet(sig_overlap_list_comb_mat,
   comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
   comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
@@ -201,7 +209,41 @@ Making volcano plots is a classic way to show the relationship between fold chan
 
 ```{r volcano plot}
 # use function on all comparisons
-mapply(create_volcano_plot_comp, comparison_arg_1, comparison_arg_2)
+create_volcano_plot_comp(
+  tissue1 = "cerebellum",
+  tissue2 = "cortex",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
+
+create_volcano_plot_comp(
+  tissue1 = "cerebellum",
+  tissue2 = "hippocampus",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
+
+create_volcano_plot_comp(
+  tissue1 = "cerebellum",
+  tissue2 = "striatum",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
+
+create_volcano_plot_comp(
+  tissue1 = "cortex",
+  tissue2 = "hippocampus",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
+
+create_volcano_plot_comp(
+  tissue1 = "cortex",
+  tissue2 = "striatum",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
+
+create_volcano_plot_comp(
+  tissue1 = "hippocampus",
+  tissue2 = "striatum",
+  save_path = here("results", "plots", "satuRn_volcano")
+)
 ```
 
 ## GO Anlaysis of Gene Sets
@@ -218,12 +260,35 @@ bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 Now I can run gprofiler.
 
 ```{r gprofiler2}
-run_plot_gprofiler(sig_isoform_genes_cere_cort)
-run_plot_gprofiler(sig_isoform_genes_cere_hipp)
-run_plot_gprofiler(sig_isoform_genes_cere_stri)
-run_plot_gprofiler(sig_isoform_genes_cort_hipp)
-run_plot_gprofiler(sig_isoform_genes_cort_stri)
-run_plot_gprofiler(sig_isoform_genes_hipp_stri)
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_cere_cort,
+  save_path = here("results", "plots", "gprofiler2")
+)
+
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_cere_hipp,
+  save_path = here("results", "plots", "gprofiler2")
+)
+
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_cere_stri,
+  save_path = here("results", "plots", "gprofiler2")
+)
+
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_cort_hipp,
+  save_path = here("results", "plots", "gprofiler2")
+)
+
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_cort_stri,
+  save_path = here("results", "plots", "gprofiler2")
+)
+
+run_plot_gprofiler(
+  tissue_obj = sig_isoform_genes_hipp_stri,
+  save_path = here("results", "plots", "gprofiler2")
+)
 ```
 
 There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
@@ -248,7 +313,7 @@ fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
 
-I was able to run everything in 10 minutes, but this included some debugging so it will likely be less.
+I was able to run everything in 8 minutes.
 
 #### Software versions
 
