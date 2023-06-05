@@ -105,7 +105,9 @@ for (i in dtu_files) {
 
 All gene names should be GENE IDS directly from objects instead of importing and converting the other lists I think so nothing is lost. But I still need to convert the transcript IDs to gene for DTE.
 
-Biomart did a much better job, but not perfect. Later can go back to counts files and get gene IDs from that?
+Biomart did a much better job, but not perfect. 
+
+
 
 ```{r prep data}
 # make results into a list
