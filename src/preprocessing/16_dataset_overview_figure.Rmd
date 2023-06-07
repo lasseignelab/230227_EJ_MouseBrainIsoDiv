@@ -13,6 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata.
 
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+#### Load in packages
+
 
 ```{r load packages}
 suppressPackageStartupMessages({library(tidyverse)
@@ -21,6 +29,7 @@ library(lintr)
 library(here)})
 ```
 
+#### Load in data
 
 ```{r load in data}
 
@@ -31,38 +40,51 @@ counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[,-1]) > 0, ]
 gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[,-1]) > 0, -1]
 ```
 
+## Plot things!!
 
 ```{r barplot txs}
+# get number of novel transcripts
 txs <- sum(!is.na(str_extract(counts_drop0$isoform_id, "tx*...")))
 
+# create data frame
 transcript_data <- data.frame(
-  novelty = c("novel","annotated") ,  
+  transcript_novelty = c("novel","annotated") ,  
   count = c(txs, nrow(counts_drop0)-txs)
   )
 
 # barplot
-ggplot(transcript_data, aes(x=novelty, y=count, fill=novelty)) + 
+ggplot(transcript_data, aes(x=transcript_novelty, y=count,
+                            fill=transcript_novelty)) + 
   geom_bar(position = 'dodge', stat='identity') +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25) +
-  ggtitle("Transcript Novelty")
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25)
+
+# save
+ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
+       width = 3, height = 4)
 
 ```
 
 ```{r barplot genes}
+# get number of unique genes
 genes <- unique(gene_counts_drop0$GENEID)
 
+# get novel unique genes
 gns <- sum(!is.na(str_extract(genes, "gene*...")))
 
+# make into data frame
 gene_data <- data.frame(
-  novelty = c("novel","annotated") ,  
+  gene_novelty = c("novel","annotated") ,  
   count = c(gns, length(genes)-gns)
   )
 
 # barplot
-ggplot(gene_data, aes(x=novelty, y=count, fill=novelty)) + 
+ggplot(gene_data, aes(x=gene_novelty, y=count, fill=gene_novelty)) + 
   geom_bar(position = 'dodge', stat='identity') +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25) +
-  ggtitle("Gene Novelty")
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25)
+
+# save
+ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+       width = 3, height = 4)
 ```
 
 transcripts per gene
@@ -79,10 +101,68 @@ ggplot(tx_per_gene, aes(x=`transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlim(0, 25)
 
+ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+
 ```
 
 
+```{r plot metadata histograms}
+
+# reads per sample
+ggplot(sample_collection_metadata, aes(x=total_reads)) + 
+  geom_histogram(bins = 10)
+
+# RIN per sample
+ggplot(sample_collection_metadata, aes(x=RIN)) + 
+  geom_histogram()
+
+# median length per sample
+ggplot(sample_collection_metadata, aes(x=med_len)) + 
+  geom_histogram()
+
+# N50 per sample
+ggplot(sample_collection_metadata, aes(x=N50)) + 
+  geom_histogram()
+
+```
+
+what are the most highly expressed novel transcripts??
 
 
+
+
+
+
+
+
+
+#### Clean up script
+
+```{r tidy script}
+style_file("DESeq2_region_region.Rmd")
+lint("DESeq2_region_region.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
 
 
