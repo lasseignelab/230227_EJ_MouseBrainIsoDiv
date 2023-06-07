@@ -171,8 +171,8 @@ Expected results:
 #### Clean up script
 
 ```{r tidy script}
-style_file("DESeq2_region_others.Rmd")
-lint("DESeq2_region_others.Rmd",
+style_file("11_DESeq2_region_others.Rmd")
+lint("11_DESeq2_region_others.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
     object_name_linter = NULL,
