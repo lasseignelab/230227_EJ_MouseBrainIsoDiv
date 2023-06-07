@@ -52,43 +52,37 @@ plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
 
 # this function is for getting gene symbols for all genes of a tissue
 # save_path for this should be here("data", "switchlist_objects")
-get_gene_symbols <- function(tissue, save_path) {
-  # assign name
-  assign("temp_switchlist", get(paste0(tissue, "_switchlist_analyzed")))
+
+
+# Rewriting get_gene_symbols
+get_gene_symbols <- function(switchlist_obj) {
   # pull shorter gene IDs
-  temp_switchlist[["isoformFeatures"]]$shorter <-
-    str_extract(temp_switchlist[["isoformFeatures"]]$gene_id,
+  switchlist_obj[["isoformFeatures"]]$shorter <-
+    str_extract(switchlist_obj[["isoformFeatures"]]$gene_id,
                 pattern = "ENSMUSG..........."
     )
   # get gene symbols from annotation dbi
   temp_gene_symbols <- AnnotationDbi::select(
     org.Mm.eg.db,
-    keys = unique(temp_switchlist[["isoformFeatures"]]$shorter),
+    keys = unique(switchlist_obj[["isoformFeatures"]]$shorter),
     columns = c("SYMBOL", "ENSEMBL", "GENETYPE"), keytype = "ENSEMBL"
   )
   # add symbols and biotypes to object
-  temp_switchlist[["isoformFeatures"]] <-
-    left_join(temp_switchlist[["isoformFeatures"]],
+  switchlist_obj[["isoformFeatures"]] <-
+    left_join(switchlist_obj[["isoformFeatures"]],
               temp_gene_symbols,
               by = c("shorter" = "ENSEMBL")
     )
   # add to correct columns
-  temp_switchlist[["isoformFeatures"]]$gene_name <-
-    temp_switchlist[["isoformFeatures"]]$SYMBOL
-  temp_switchlist[["isoformFeatures"]]$gene_biotype <-
-    temp_switchlist[["isoformFeatures"]]$GENETYPE
+  switchlist_obj[["isoformFeatures"]]$gene_name <-
+    switchlist_obj[["isoformFeatures"]]$SYMBOL
+  switchlist_obj[["isoformFeatures"]]$gene_biotype <-
+    switchlist_obj[["isoformFeatures"]]$GENETYPE
   # remove extra columns
-  temp_switchlist[["isoformFeatures"]]$shorter <- NULL
-  temp_switchlist[["isoformFeatures"]]$SYMBOL <- NULL
-  temp_switchlist[["isoformFeatures"]]$GENETYPE <- NULL
-  # rename object
-  assign(paste0(tissue, "_switchlist_analyzed"),
-         temp_switchlist,
-         envir = .GlobalEnv
-  )
-  saveRDS(temp_switchlist, 
-          paste0(save_path, "/", tissue, "_switchlist_saturn.Rds")
-  )
+  switchlist_obj[["isoformFeatures"]]$shorter <- NULL
+  switchlist_obj[["isoformFeatures"]]$SYMBOL <- NULL
+  switchlist_obj[["isoformFeatures"]]$GENETYPE <- NULL
+  return(switchlist_obj)
 }
 
 # this function is for filtering genes that are tissue in condition 1 or 2

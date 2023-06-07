@@ -98,10 +98,14 @@ region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
 
 extractSwitchSummary(region_region_switchlist_analyzed)
 
-# get gene symbols and save object with gene symbols within function
-get_gene_symbols(
-  tissue = "region_region",
-  save_path = here("data", "switchlist_objects")
+# get gene symbols and save object with gene symbols
+region_region_switchlist_saturn <- get_gene_symbols(
+  switchlist_obj = region_region_switchlist_analyzed
+)
+
+saveRDS(
+  region_region_switchlist_saturn, 
+  here("data", "switchlist_objects", "region_region_switchlist_saturn.Rds")
 )
 ```
 
