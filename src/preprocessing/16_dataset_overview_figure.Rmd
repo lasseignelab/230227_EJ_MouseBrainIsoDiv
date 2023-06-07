@@ -1,0 +1,88 @@
+---
+title: "Dataset Overview Figure"
+author: "Emma Jones"
+date: "2023-06-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset Overview Figure
+
+The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata.
+
+
+```{r load packages}
+suppressPackageStartupMessages({library(tidyverse)
+library(styler)
+library(lintr)
+library(here)})
+```
+
+
+```{r load in data}
+
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+
+counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[,-1]) > 0, ]
+
+gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[,-1]) > 0, -1]
+```
+
+
+```{r barplot txs}
+txs <- sum(!is.na(str_extract(counts_drop0$isoform_id, "tx*...")))
+
+transcript_data <- data.frame(
+  novelty = c("novel","annotated") ,  
+  count = c(txs, nrow(counts_drop0)-txs)
+  )
+
+# barplot
+ggplot(transcript_data, aes(x=novelty, y=count, fill=novelty)) + 
+  geom_bar(position = 'dodge', stat='identity') +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25) +
+  ggtitle("Transcript Novelty")
+
+```
+
+```{r barplot genes}
+genes <- unique(gene_counts_drop0$GENEID)
+
+gns <- sum(!is.na(str_extract(genes, "gene*...")))
+
+gene_data <- data.frame(
+  novelty = c("novel","annotated") ,  
+  count = c(gns, length(genes)-gns)
+  )
+
+# barplot
+ggplot(gene_data, aes(x=novelty, y=count, fill=novelty)) + 
+  geom_bar(position = 'dodge', stat='identity') +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.25) +
+  ggtitle("Gene Novelty")
+```
+
+transcripts per gene
+
+```{r get transcripts per gene}
+
+gene_matches <- merged_counts[, 1:2]
+
+tx_per_gene <- gene_matches %>% 
+  group_by(GENEID) %>% 
+  summarise(`transcript count`=n(),.groups = 'drop')
+
+ggplot(tx_per_gene, aes(x=`transcript count`)) + 
+  geom_histogram(binwidth = 1) +
+  xlim(0, 25)
+
+```
+
+
+
+
+
+
