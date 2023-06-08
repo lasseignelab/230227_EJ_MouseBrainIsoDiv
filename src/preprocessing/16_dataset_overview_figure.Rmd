@@ -119,6 +119,9 @@ ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
 ggplot(sample_collection_metadata, aes(x = total_reads)) +
   geom_histogram(bins = 10)
 
+ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
+       width = 6, height = 4)
+
 # RIN per sample
 ggplot(sample_collection_metadata, aes(x = RIN)) +
   geom_histogram()
@@ -137,6 +140,53 @@ what are the most highly expressed novel transcripts??
 ```{r pull highest expressed transcripts}
 novel_counts <- merged_counts_iso[merged_counts_iso$isoform_id %like% "tx", ]
 novel_counts$means <- apply(novel_counts[, -1], 1, mean)
+
+novel_tx_count_means <- novel_counts[,c(1,42)]
+
+# compare to annotated
+annotated_counts <- merged_counts_iso[!merged_counts_iso$isoform_id %like% "tx", ]
+annotated_counts$means <- apply(annotated_counts[, -1], 1, mean)
+
+annotated_tx_count_means <- annotated_counts[,c(1,42)]
+
+# plot - need to data wrangle
+merged_counts_iso_means <- merged_counts_iso
+merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
+
+merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
+
+ggplot(merged_counts_iso_means, aes(x = means)) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = means)) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(log10(means)))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
 ```
 
 actually, lets see if that agrees when I do to cpm normalized counts
@@ -144,7 +194,20 @@ actually, lets see if that agrees when I do to cpm normalized counts
 ```{r cpm iso}
 novel_cpm <- cpm_iso[cpm_iso$isoform_id %like% "tx", ]
 novel_cpm$means <- apply(novel_cpm[, -1], 1, mean)
+
+novel_tx_cpm_means <- novel_cpm[,c(1,42)]
 ```
+
+
+Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
+
+
+```{r read in the gtf file}
+annotation <- read_table(here("data", "nextflow", "bambu", "extended_annotations.gtf"), col_names = FALSE)
+
+```
+
+Here I am m manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
 
 
 #### Clean up script
