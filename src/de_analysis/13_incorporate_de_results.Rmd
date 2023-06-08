@@ -331,8 +331,8 @@ switchPlotTopSwitches(striatum_sex_switchlist_orf_dte,
 #### Clean up script
 
 ```{r tidy script}
-style_file("incorporate_de_results.Rmd")
-lint("incorporate_de_results.Rmd",
+style_file("13_incorporate_de_results.Rmd")
+lint("13_incorporate_de_results.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
     object_name_linter = NULL,

@@ -78,6 +78,11 @@ plotPCA(vsd, intgroup = c("tissue"))
 plotPCA(vsd, intgroup = c("med_len"))
 
 plotPCA(vsd, intgroup = c("RIN"))
+
+vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue"))
+
+ggsave(here("results", "plots", "pca", "vst_tissue_pca.png"),
+       plot = vst_tissue_pca)
 ```
 
 Next, I can run DESeq2. I don't think I need to include anything other than tissue and sex based on these plots. I'm leaving sex because I'm interested in it, thought I know it may not have a lot of sig differences.
@@ -184,8 +189,8 @@ Expected results:
 #### Clean up script
 
 ```{r tidy script}
-style_file("DESeq2_region_region.Rmd")
-lint("DESeq2_region_region.Rmd",
+style_file("10_DESeq2_region_region.Rmd")
+lint("10_DESeq2_region_region.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
     object_name_linter = NULL,
