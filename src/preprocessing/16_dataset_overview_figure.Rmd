@@ -21,7 +21,6 @@ ptm <- proc.time()
 
 #### Load in packages
 
-
 ```{r load packages}
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -207,8 +206,29 @@ annotation <- read_table(here("data", "nextflow", "bambu", "extended_annotations
 
 ```
 
-Here I am m manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
+Here I am manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
 
+### Biological replicate agreement
+
+Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill.
+
+```{r biological replicate agreement}
+
+ggplot(cpm, aes(x = log2(sample06), y = log2(sample14))) + geom_point()
+
+ggplot(cpm, aes(x = log10(sample06), y = log10(sample14))) + geom_point()
+
+ggplot(cpm, aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
+
+ggplot(log2(cpm+1), aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
+
+cor(cpm$sample06, cpm$sample16, method = "pearson")
+
+ggplot(log10(cpm+1), aes(x = sample06, y = sample14)) + 
+  geom_hex(binwidth = c(0.08, 0.13)) +
+  scale_fill_viridis_c(limits = c(0,500))
+
+```
 
 #### Clean up script
 
