@@ -49,37 +49,209 @@ source("functions.R", local = knitr::knit_global())
 
 Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new switchAnalyzeRlist object with metadata for sex.
 
-```{r create metadata and create object for sex}
-# make sex design
-sex_design <- data.frame(
+```{r make design matrix}
+# make sex design for combined regions
+sex_design_combined <- data.frame(
   sampleID = sample_collection_metadata$sample_id,
   condition = sample_collection_metadata$sex
 )
+
+# set the design experiment for sex for each region
+tissues <- c(
+  "cerebellum",
+  "cortex",
+  "hippocampus",
+  "striatum"
+)
+designs <- list()
+# create designs list
+for (tissue in tissues) {
+  temp_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id[
+      sample_collection_metadata$tissue == tissue
+    ],
+    condition = sample_collection_metadata$sex[
+      sample_collection_metadata$tissue == tissue
+    ]
+  )
+  designs[[tissue]] <- temp_design
+}
+```
+
+```{r make switchlist for sex combined}
 # make switchlist
-sex_switchlist <- importRdata(
+sex_switchlist <- make_switchlist_saturn(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
-  designMatrix = sex_design,
-  isoformExonAnnoation = here(
-    "data", "nextflow", "bambu", "extended_annotations.gtf"
-  ),
-  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
+  designMatrix = sex_design_combined,
+  isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+  isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+  reduceToSwitchingGenes = FALSE
+)
+
+extractSwitchSummary(sex_switchlist)
+```
+
+```{r make switchlists for sex by region}
+counts_list <- list()
+for(tissue in tissues) {
+  subset_counts <- subset(
+    merged_counts_iso,
+    select = c(
+      "isoform_id",
+      sample_collection_metadata$sample_id[
+        sample_collection_metadata$tissue == tissue
+      ]
+    )
+  )
+  counts_list[[tissue]] <- subset_counts
+}
+cpm_list <- list()
+for(tissue in tissues) {
+  # subset cpm
+  subset_cpm <- subset(
+    cpm_iso,
+    select = c(
+      "isoform_id",
+      sample_collection_metadata$sample_id[
+        sample_collection_metadata$tissue == tissue
+      ]
+    )
+  )
+  # drop rows with 0 cpm
+  subset_cpm <- subset_cpm[rowSums(subset_cpm[, -1]) != 0, ]
+  cpm_list[[tissue]] <- subset_cpm
+}
+region_sex_switchlist_list <- list()
+for(tissue in tissues) {
+  tryCatch({
+    switchlist_obj <- make_switchlist_saturn(
+      isoformCountMatrix = counts_list[[tissue]],
+      isoformRepExpression = cpm_list[[tissue]],
+      designMatrix = designs[[tissue]],
+      isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+      isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+      reduceToSwitchingGenes = FALSE
+    )
+    region_sex_switchlist_list[[tissue]] <- switchlist_obj
+  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+}
+```
+
+
+```{r save sex combined switchlist}
+saveRDS(
+  sex_switchlist, 
+  here("data", "switchlist_objects", "raw", "sex_switchlist.Rds")
 )
 ```
 
-Now that I have my object, I can run a DTU analysis.
 
-```{r run satuRn}
-# filter data
-sex_switchlist <- preFilter(sex_switchlist, geneExpressionCutoff = NULL)
-# run satuRn
-sex_switchlist_analyzed <- isoformSwitchTestSatuRn(
-  switchAnalyzeRlist = sex_switchlist,
-  reduceToSwitchingGenes = TRUE
+```{r save sex by region switchlists}
+saveRDS(
+  region_sex_switchlist_list, 
+  here("data", "switchlist_objects", "raw", "region_sex_switchlist_list.Rds")
 )
-extractSwitchSummary(sex_switchlist_analyzed)
 ```
+
+```{r filter for significance}
+#sex combined
+sex_switchlist_sig_features <- dplyr::filter(
+  sex_switchlist$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+# sex_region
+region_sex_sig_features_list <- list()
+for(tissue in tissues) {
+  tryCatch({
+    temp_sig_features <- dplyr::filter(
+      region_sex_switchlist_list[[tissue]]$isoformFeatures,
+      abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+    )
+    region_sex_sig_features_list[[tissue]] <- temp_sig_features
+  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+}
+```
+
+```{r save sex combinde sig features}
+write.csv(
+  sex_switchlist_sig_features, 
+  here(
+    "results",
+    "tcResults",
+    "dtu_transcripts",
+    "sex_switchlist_sig_features.csv"
+  ), 
+  row.names=FALSE
+)
+```
+
+```{r save sex region sig features}
+for(i in 1:length(region_sex_sig_features_list)) {
+  tissue_name <- names(region_sex_sig_features_list)[i]
+  write.csv(
+    region_sex_sig_features_list[[tissue_name]], 
+    here(
+      "results",
+      "tcResults",
+      "dtu_transcripts",
+      paste0(
+        tissue_name,
+        "_sex_sig_features.csv"
+      )
+    ), 
+    row.names=FALSE
+  )
+}
+```
+
+```{r collapse to gene level}
+#sex combined
+sex_switchlist_sig_genes <- unique(sex_switchlist_sig_features$gene_name)
+
+# sex_region
+region_sex_sig_genes_list <- list()
+for(i in 1:length(region_sex_sig_features_list)) {
+  tryCatch({
+    tissue_name <- names(region_sex_sig_features_list)[i]
+    tissue_sig_genes <- unique(region_sex_sig_features_list[[i]]$gene_name)
+    region_sex_sig_genes_list[[tissue_name]] <- tissue_sig_genes
+  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+}
+```
+
+```{r save sig genes sex combined}
+write.csv(
+  sex_switchlist_sig_genes, 
+  here(
+    "results",
+    "tcResults",
+    "dtu_genes",
+    "sex_switchlist_sig_genes.csv"
+  ), 
+  row.names=FALSE
+)
+```
+
+```{r save sig genes sex regions}
+for(i in 1:length(region_sex_sig_genes_list)) {
+  tissue_name <- names(region_sex_sig_genes_list)[i]
+  write.csv(
+    region_sex_sig_genes_list[[tissue_name]], 
+    here(
+      "results",
+      "tcResults",
+      "dtu_genes",
+      paste0(
+        tissue_name,
+        "_sex_sig_genes.csv"
+      )
+    ), 
+    row.names=FALSE
+  )
+}
+```
+
 
 Only 4 genes were considered switching, so I will also try splitting by brain region.
 

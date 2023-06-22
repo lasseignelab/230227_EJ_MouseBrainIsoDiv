@@ -48,131 +48,165 @@ source("functions.R", local = knitr::knit_global())
 
 First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions. Then, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with DEXSeq. I've made this into a function to make it faster.
 
-Once switchAnalyzeRlists are made, you can run the DEXSeq isoform switch test. You also need to prefilter the data before running the test, but I added all that to the my function so all it needs is to run.
+Once switchAnalyzeRlists are made, you can run the satuRn isoform switch test. You also need to prefilter the data before running the test, but I added all that to the my function so all it needs is to run.
 
-```{r make region vs all objects}
-# run function for making switchlist on all brain regions
-make_switchlist_run_saturn(
-  tissue = "cerebellum",
-  save_path = here("data", "switchlist_objects")
+```{r make design matrix}
+tissues <- c(
+  "cerebellum",
+  "cortex",
+  "hippocampus",
+  "striatum"
 )
-
-make_switchlist_run_saturn(
-  tissue = "cortex",
-  save_path = here("data", "switchlist_objects")
-)
-
-make_switchlist_run_saturn(
-  tissue = "hippocampus",
-  save_path = here("data", "switchlist_objects")
-)
-
-make_switchlist_run_saturn(
-  tissue = "striatum",
-  save_path = here("data", "switchlist_objects")
-)
-
-# check switch summary for each analysis
-extractSwitchSummary(cerebellum_switchlist_analyzed)
-extractSwitchSummary(cortex_switchlist_analyzed)
-extractSwitchSummary(hippocampus_switchlist_analyzed)
-extractSwitchSummary(striatum_switchlist_analyzed)
+designs <- list()
+for (tissue in tissues) {
+  temp_design <- data.frame(
+    sampleID = sample_collection_metadata$sample_id,
+    condition = sample_collection_metadata$tissue == tissue
+  )
+  
+  temp_design["condition"][temp_design["condition"] == TRUE] <- tissue
+  temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
+  designs[[tissue]] <- temp_design
+}
 ```
 
-Expected results:
-cerebellum vs other	186	136	129
-cortex vs other	29	15	21	
-hippocampus vs other	64	61	48	
-other vs striatum	3	2	2	
+Make a switchlist, which is an object required for running isoformswitchanalyzer.
 
+Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
+
+```{r add fasta of transcripts to object}
+region_all_switchlist_list <- list()
+for(tissue in tissues) {
+  switchlist_obj <- make_switchlist_saturn(
+    isoformCountMatrix = merged_counts_iso,
+    isoformRepExpression = cpm_iso,
+    designMatrix = designs[[tissue]],
+    isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+    isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+    reduceToSwitchingGenes = FALSE
+  )
+  region_all_switchlist_list[[tissue]] <- switchlist_obj
+}
+
+# sumarize number of isoforms, switches, and genes
+extractSwitchSummary(region_all_switchlist_list$cerebellum)
+extractSwitchSummary(region_all_switchlist_list$cortex)
+extractSwitchSummary(region_all_switchlist_list$hippocampus)
+extractSwitchSummary(region_all_switchlist_list$striatum)
+```
+
+```{r add gene symbols}
+# get gene symbols and save object with gene symbols
+for(tissue in tissues) {
+  temp_switchlist <- get_gene_symbols(
+    switchlist_obj = region_all_switchlist_list[[tissue]]
+  )
+  region_all_switchlist_list[[tissue]] <- temp_switchlist
+}
+```
+
+```{r save switchlist}
+saveRDS(
+  region_all_switchlist_list, 
+  here("data", "switchlist_objects", "raw", "region_all_switchlist_list.Rds")
+)
+```
+
+
+```{r filter for significance}
+region_all_sig_features_list <- list()
+for(tissue in tissues) {
+  temp_sig_features <- dplyr::filter(
+    region_all_switchlist_list[[tissue]]$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  region_all_sig_features_list[[tissue]] <- temp_sig_features
+}
+```
+
+```{r save sig features}
+for(i in 1:length(region_all_sig_features_list)) {
+  tissue_name <- names(region_all_sig_features_list)[i]
+  write.csv(
+    region_all_sig_features_list[[tissue_name]], 
+    here(
+      "results",
+      "tcResults",
+      "dtu_transcripts",
+      paste0(
+        tissue_name,
+        "_other_sig_features.csv"
+      )
+    ), 
+    row.names=FALSE
+  )
+}
+```
+
+```{r collapse to gene level}
+region_all_sig_genes_list <- list()
+for(i in 1:length(region_all_sig_features_list)) {
+  tissue_name <- names(region_all_sig_features_list)[i]
+  tissue_sig_genes <- unique(region_all_sig_features_list[[i]]$gene_name)
+  region_all_sig_genes_list[[tissue_name]] <- tissue_sig_genes
+}
+```
+
+```{r save sig genes}
+for(i in 1:length(region_all_sig_genes_list)) {
+  tissue_name <- names(region_all_sig_genes_list)[i]
+  write.csv(
+    region_all_sig_genes_list[[tissue_name]], 
+    here(
+      "results",
+      "tcResults",
+      "dtu_genes",
+      paste0(
+        tissue_name,
+        "_other_sig_genes.csv"
+      )
+    ), 
+    row.names=FALSE
+  )
+}
+```
 
 These switchlists are fine, but I'm going to apply a function for adding gene names to make downstream analysis better and more interpretable.
 
-```{r add gene names}
-# run function on all brain regions
-get_gene_symbols(
-  tissue = "cerebellum",
-  save_path = here("data", "switchlist_objects")
-)
-
-get_gene_symbols(
-  tissue = "cortex",
-  save_path = here("data", "switchlist_objects")
-)
-
-get_gene_symbols(
-  tissue = "hippocampus",
-  save_path = here("data", "switchlist_objects")
-)
-
-get_gene_symbols(
-  tissue = "striatum",
-  save_path = here("data", "switchlist_objects")
-)
-```
-
 ### Make plots for tissue:all DTU
-
-Now that those objects are saved, I need to make plots for them. To do that, I want to extract the significant genes.
-I will start with UpSet plots (using ComplexHeatmap for color) to show overlap of significant genes.
-
-```{r extract sigificant tissue:all genes}
-# get significant genes
-get_sig_genes(
-  tissue_switchlist = cerebellum_switchlist_analyzed,
-  save_path = here("results", "dtu_genes")
-)
-get_sig_genes(
-  tissue_switchlist = cortex_switchlist_analyzed,
-  save_path = here("results", "dtu_genes")
-)
-get_sig_genes(
-  tissue_switchlist = hippocampus_switchlist_analyzed,
-  save_path = here("results", "dtu_genes")
-)
-get_sig_genes(
-  tissue_switchlist = striatum_switchlist_analyzed,
-  save_path = here("results", "dtu_genes")
-)
-
-# make all into list
-all_gene_list <- list(
-  cerebellum = na.omit(cere_sig_genes),
-  cortex = na.omit(cort_sig_genes),
-  hippocampus = na.omit(hipp_sig_genes),
-  striatum = na.omit(stri_sig_genes)
-)
-```
 
 Now, with the list created I can create a ComplexHeatmap UpSet plot.
 
 #### Make UpSet plots
 
 ```{r complexheatmap tissue:all UpSet genes}
+for(tissue in tissues) {
+  region_all_sig_genes_list[[tissue]] <- na.omit(region_all_sig_genes_list[[tissue]])
+}
 # make UpSet plot (ComplexHeatmap)
 # create matrix
-all_gene_list_mat <- list_to_matrix(all_gene_list)
+all_gene_list_mat <- list_to_matrix(region_all_sig_genes_list)
 
 # generate combination matrix
 all_gene_list_comb_mat <- make_comb_mat(all_gene_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
 UpSet(all_gene_list_comb_mat,
-  pt_size = unit(3, "mm"),
-  comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
+      pt_size = unit(3, "mm"),
+      comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
 )
-pdf(here("results", "plots", "upset_plots", "region_others_gene_upset.pdf"))
+pdf(here("results", "tcResults", "plots", "upset_plots", "region_others_gene_upset.pdf"))
 upset_gene <- UpSet(all_gene_list_comb_mat,
-  comb_order = order(-comb_size(all_gene_list_comb_mat)),
-  comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
-  top_annotation = upset_top_annotation(
-    all_gene_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(
-    all_gene_list_comb_mat,
-    add_numbers = TRUE
-  )
+                    comb_order = order(-comb_size(all_gene_list_comb_mat)),
+                    comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
+                    top_annotation = upset_top_annotation(
+                      all_gene_list_comb_mat,
+                      add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(
+                      all_gene_list_comb_mat,
+                      add_numbers = TRUE
+                    )
 )
 
 draw(upset_gene, column_title = "Overlap of DTU genes by brain region")

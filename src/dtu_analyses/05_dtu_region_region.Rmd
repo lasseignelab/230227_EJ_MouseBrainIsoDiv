@@ -60,9 +60,10 @@ exp_design <- data.frame(
 
 Make a switchlist, which is an object required for running isoformswitchanalyzer.
 
+Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
+
 ```{r add fasta of transcripts to object}
-# make switchlist with sva
-region_region_switchlist <- importRdata(
+region_region_switchlist_analyzed <- make_switchlist_saturn(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
   designMatrix = exp_design,
@@ -71,41 +72,62 @@ region_region_switchlist <- importRdata(
     "extended_annotations.gtf"
   ),
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
-  showProgress = FALSE
+  reduceToSwitchingGenes = FALSE
 )
 
-# save switchlist
-saveRDS(region_region_switchlist, here(
-  "data", "switchlist_objects",
-  "region_region_switchlist_NOT_ANALYZED.Rds"
-))
+# sumarize number of isoforms, switches, and genes
+extractSwitchSummary(region_region_switchlist_analyzed)
 ```
 
-Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
-
-```{r run saturn}
-# filter data and disabling gene expression cutoff
-# this results in 44386 isoforms left
-region_region_switchlist <- preFilter(region_region_switchlist,
-  geneExpressionCutoff = NULL
-)
-
-# run satuRn
-region_region_switchlist_analyzed <- isoformSwitchTestSatuRn(
-  switchAnalyzeRlist = region_region_switchlist,
-  reduceToSwitchingGenes = TRUE
-)
-
-extractSwitchSummary(region_region_switchlist_analyzed)
-
+```{r add gene symbols}
 # get gene symbols and save object with gene symbols
-region_region_switchlist_saturn <- get_gene_symbols(
+region_region_switchlist_analyzed <- get_gene_symbols(
   switchlist_obj = region_region_switchlist_analyzed
 )
+```
 
+```{r save switchlist}
 saveRDS(
-  region_region_switchlist_saturn, 
-  here("data", "switchlist_objects", "region_region_switchlist_saturn.Rds")
+  region_region_switchlist_analyzed, 
+  here("data", "switchlist_objects", "raw", "region_region_switchlist_analyzed.Rds")
+)
+```
+
+
+```{r filter for significance}
+region_region_sig_features <- dplyr::filter(
+  region_region_switchlist_analyzed$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+```
+
+```{r save sig features}
+write.csv(
+  region_region_sig_features, 
+  here(
+    "results",
+    "tcResults",
+    "dtu_transcripts",
+    "region_region_sig_features.csv"
+  ), 
+  row.names=FALSE
+)
+```
+
+```{r collapse to gene level}
+region_region_sig_genes <- unique(region_region_sig_features$gene_name)
+```
+
+```{r save sig genes}
+write.csv(
+  region_region_sig_genes, 
+  here(
+    "results",
+    "tcResults",
+    "dtu_genes",
+    "region_region_sig_genes.csv"
+  ), 
+  row.names=FALSE
 )
 ```
 
@@ -121,89 +143,54 @@ Combined	925	820	570
 
 ### Make UpSet Plots
 
-The goal of these plots is to show overlap between significantly differentially used isoforms across conditions.
-First, I need to get significant genes and split them out by brain region.
-
-```{r make upset plots for overlap by brain region}
-# make vector of brain regions
-all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-
-# first, get significant isoform switches
-sig_isoform_features <- region_region_switchlist_analyzed$isoformFeatures
-sig_isoform_features <- dplyr::filter(
-  sig_isoform_features, abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-)
-
-# pull just genes
-sig_isoform_genes <- sig_isoform_features %>%
-  distinct(gene_id, condition_1, condition_2, .keep_all = TRUE)
-
-# use function to filter genes in condition 1 OR condition 2
-lapply(all_regions, filter_genes_or)
-
-# make into list
-sig_isoform_gene_list <- list(
-  cerebellum = sig_isoform_genes_cere,
-  cortex = sig_isoform_genes_cort,
-  hippocampus = sig_isoform_genes_hipp,
-  striatum = sig_isoform_genes_stri
-)
-```
-
 I also can indicate not just overlapping, but specifically which genes are DTU and have overlap. So, I want to get a list of genes for each comparison.
 
 ```{r get list of genes for each comparison}
 # make vector of comparisons
-comparison_arg_1 <- c(rep("cerebellum", 3), rep("cortex", 2), "hippocampus")
-comparison_arg_2 <- c(
-  "cortex", "hippocampus", "striatum", "hippocampus",
-  "striatum", "striatum"
+comparisons <- c(
+  "cerebellum_cortex",
+  "cerebellum_hippocampus",
+  "cerebellum_striatum",
+  "cortex_hippocampus",
+  "cortex_striatum",
+  "hippocampus_striatum"
 )
+
 # use function to get list of genes for each comparison
-mapply(filter_genes_comp, comparison_arg_1, comparison_arg_2)
-```
-
-Once I have these, I can combine them into a list for plotting.
-
-```{r setup overlap of comparisons}
-# make into list - needed to remove NAs which are genes with no gene names
-sig_overlap_list <- list(
-  `cerebellum vs. cortex` = na.omit(sig_isoform_genes_cere_cort),
-  `cerebellum vs. hippocampus` = na.omit(sig_isoform_genes_cere_hipp),
-  `cerebellum vs. striatum` = na.omit(sig_isoform_genes_cere_stri),
-  `cortex vs. hippocampus` = na.omit(sig_isoform_genes_cort_hipp),
-  `cortex vs. striatum` = na.omit(sig_isoform_genes_cort_stri),
-  `hippocampus vs. striatum` = na.omit(sig_isoform_genes_hipp_stri)
+sig_overlap_list <- filter_genes(
+  comparisons = comparisons,
+  switchlist_obj = region_region_switchlist_analyzed,
+  sig_isoform_features = region_region_sig_features
 )
-```
-
-Now that the data is prepped, I can plot a complexheatmap UpSet plot. Here, color indicates degree of overlap being examined.
-
-```{r make complexheatmap UpSet plot for all comparisons}
 # make UpSet plot (ComplexHeatmap)
 # create matrix
 sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 
 # generate combination matrix
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
+```
 
+```{r create and save upset plot}
 # make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"),
-  width = 12, height = 6
+pdf(here("results", "tcResults", "plots", "upset_plots", "region_region_upset.pdf"),
+    width = 12, height = 6
 )
 upset_plot <- UpSet(sig_overlap_list_comb_mat,
-  comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
-  comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
-  top_annotation = upset_top_annotation(sig_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(sig_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
+                    comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(sig_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(sig_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
 )
 draw(upset_plot)
 dev.off()
 ```
+
+Now that the data is prepped, I can plot a complexheatmap UpSet plot. Here, color indicates degree of overlap being examined.
+
 
 I think this is the most informative use of an UpSet plot.
 
@@ -213,40 +200,97 @@ Making volcano plots is a classic way to show the relationship between fold chan
 
 ```{r volcano plot}
 # use function on all comparisons
-create_volcano_plot_comp(
-  tissue1 = "cerebellum",
-  tissue2 = "cortex",
-  save_path = here("results", "plots", "satuRn_volcano")
+cerebellum_cortex_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "cerebellum",
+  condition2 = "cortex"
 )
 
-create_volcano_plot_comp(
-  tissue1 = "cerebellum",
-  tissue2 = "hippocampus",
-  save_path = here("results", "plots", "satuRn_volcano")
+cerebellum_hippocampus_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "cerebellum",
+  condition2 = "hippocampus"
 )
 
-create_volcano_plot_comp(
-  tissue1 = "cerebellum",
-  tissue2 = "striatum",
-  save_path = here("results", "plots", "satuRn_volcano")
+cerebellum_striatum_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "cerebellum",
+  condition2 = "striatum"
 )
 
-create_volcano_plot_comp(
-  tissue1 = "cortex",
-  tissue2 = "hippocampus",
-  save_path = here("results", "plots", "satuRn_volcano")
+cortex_hippocampus_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "cortex",
+  condition2 = "hippocampus"
 )
 
-create_volcano_plot_comp(
-  tissue1 = "cortex",
-  tissue2 = "striatum",
-  save_path = here("results", "plots", "satuRn_volcano")
+cortex_striatum_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "cortex",
+  condition2 = "striatum"
 )
 
-create_volcano_plot_comp(
-  tissue1 = "hippocampus",
-  tissue2 = "striatum",
-  save_path = here("results", "plots", "satuRn_volcano")
+hippocampus_striatum_volcano <- create_volcano_plot_comp(
+  switchlist = region_region_switchlist_analyzed,
+  condition1 = "hippocampus",
+  condition2 = "striatum"
+)
+```
+
+```{r save volcano plots}
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_cortex_volcano.png"
+  ),
+  plot = cerebellum_cortex_volcano
+)
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_hippocampus_volcano.png"
+  ),
+  plot = cerebellum_hippocampus_volcano
+)
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_striatum_volcano.png"
+  ),
+  plot = cerebellum_striatum_volcano
+)
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cortex_hippocampus_volcano.png"
+  ),
+  plot = cortex_hippocampus_volcano
+)
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cortex_striatum_volcano.png"
+  ),
+  plot = cortex_striatum_volcano
+)
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "hippocampus_striatum_volcano.png"
+  ),
+  plot = hippocampus_striatum_volcano
 )
 ```
 
@@ -257,7 +301,7 @@ The nest step of doing DTU is a GO analysis with my gene sets. I am going to use
 I need to get the correct number of background genes, so this is all genes that were tested for significance, whether significant or not.
 
 ```{r get correct list of background genes}
-bg_genes <- unique(region_region_switchlist$isoformFeatures$gene_id)
+bg_genes <- unique(region_region_switchlist_analyzed$isoformFeatures$gene_id)
 bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
 ```
 
@@ -265,35 +309,43 @@ Now I can run gprofiler.
 
 ```{r gprofiler2}
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_cere_cort,
+  gene_list = sig_overlap_list$cerebellum_cortex,
+  name = "cerebellum_cortex",
   save_path = here("results", "plots", "gprofiler2")
 )
 
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_cere_hipp,
+  gene_list = sig_overlap_list$cerebellum_hippocampus,
+  name = "cerebellum_hippocampus",
   save_path = here("results", "plots", "gprofiler2")
 )
 
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_cere_stri,
+  gene_list = sig_overlap_list$cerebellum_striatum,
+  name = "cerebellum_striatum",
   save_path = here("results", "plots", "gprofiler2")
 )
 
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_cort_hipp,
+  gene_list = sig_overlap_list$cortex_hippocampus,
+  name = "cortex_hippocampus",
   save_path = here("results", "plots", "gprofiler2")
 )
 
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_cort_stri,
+  gene_list = sig_overlap_list$cortex_striatum,
+  name = "cortex_striatum",
   save_path = here("results", "plots", "gprofiler2")
 )
 
 run_plot_gprofiler(
-  tissue_obj = sig_isoform_genes_hipp_stri,
+  gene_list = sig_overlap_list$hippocampus_striatum,
+  name = "hippocampus_striatum",
   save_path = here("results", "plots", "gprofiler2")
 )
 ```
+
+
 
 There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
 
