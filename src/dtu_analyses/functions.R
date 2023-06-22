@@ -48,10 +48,37 @@ plot_pca <- function(metadata, firstPC, secondPC, color, shape) {
   }
 }
 
-######################### 05_dtu_region_region script ##########################
+######################### 05-07 scripts ##########################
+# This function is for creating the swithlist.
+make_switchlist_saturn <- function(isoformCountMatrix,
+                                   isoformRepExpression,
+                                   designMatrix,
+                                   isoformExonAnnoation,
+                                   isoformNtFasta,
+                                   reduceToSwitchingGenes) {
+  # create switchlist
+  temp_switchlist <- importRdata(
+    isoformCountMatrix = isoformCountMatrix,
+    isoformRepExpression = isoformRepExpression,
+    designMatrix = designMatrix,
+    isoformExonAnnoation = isoformExonAnnoation,
+    isoformNtFasta = isoformNtFasta,
+    showProgress = FALSE
+  )
+  # filter switchlist
+  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestSatuRn(
+    switchAnalyzeRlist = temp_switchlist,
+    reduceToSwitchingGenes = reduceToSwitchingGenes
+  )
+  return(switchlist_analyzed)
+}
+
 
 # this function is for getting gene symbols for all genes of a tissue
 # save_path for this should be here("data", "switchlist_objects")
+
 
 
 # Rewriting get_gene_symbols
@@ -85,57 +112,42 @@ get_gene_symbols <- function(switchlist_obj) {
   return(switchlist_obj)
 }
 
-# this function is for filtering genes that are tissue in condition 1 or 2
-filter_genes_or <- function(tissue) {
-  # subset genes of interest
-  sig_genes_subset <- filter(
-    sig_isoform_genes,
-    condition_1 == tissue | condition_2 == tissue
-  )
-  sig_genes_subset <- unique(sig_genes_subset$gene_id)
-  # name object
-  name <- substr(tissue, 1, 4)
-  assign(paste0("sig_isoform_genes_", name),
-    sig_genes_subset,
-    envir = .GlobalEnv
-  )
-}
-
 # this function is for filtering genes for each comparison
 # specifying tissue1 for condition 1 and tissue2 in condition 2
-filter_genes_comp <- function(tissue1, tissue2) {
-  # subset genes of interest
-  sig_genes_subset <- filter(
-    sig_isoform_genes,
-    condition_1 == tissue1 & condition_2 == tissue2
-  )
-  sig_genes_subset <- unique(sig_genes_subset$gene_name)
-  # name object
-  name_1 <- substr(tissue1, 1, 4)
-  name_2 <- substr(tissue2, 1, 4)
-  assign(paste0("sig_isoform_genes_", name_1, "_", name_2),
-         sig_genes_subset,
-         envir = .GlobalEnv
-  )
-  write.table(sig_genes_subset, 
-              file = here("results", "dtu_genes", 
-                          paste0(name_1, "_", name_2, ".txt")
-              ), 
-              row.names = FALSE, col.names = FALSE, quote = FALSE)
+filter_genes <- function(comparisons, switchlist_obj, sig_isoform_features) {
+  sig_overlap_list <- list()
+  for (comparison in comparisons) {
+    # set up conditions for filtering
+    con_1 <- str_split_1(comparison, "_")[1]
+    con_2 <- str_split_1(comparison, "_")[2]
+    # pull just genes
+    sig_isoform_genes <- sig_isoform_features %>%
+      distinct(gene_id, condition_1, condition_2, .keep_all = TRUE)
+    # subset genes of interest
+    sig_genes_subset <- filter(
+      sig_isoform_genes,
+      condition_1 == con_1 & condition_2 == con_2
+    )
+    sig_genes_subset <- unique(sig_genes_subset$gene_name)
+    sig_genes_subset <- na.omit(sig_genes_subset)
+    sig_overlap_list[[comparison]] <- sig_genes_subset
+  }
+  return(sig_overlap_list)
 }
-
-# this function is for creating a volcano plot
-# specifying tissue1 for condition 1 and tissue2 in condition 2
-# save_path is here("results", "plots", "satuRn_volcano")
-create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
-  # create subset
-  analyzed_subset <- dplyr::filter(
-    region_region_switchlist_analyzed$isoformFeatures,
-    condition_1 == tissue1 & condition_2 == tissue2
-  )
+  
+create_volcano_plot <- function(switchlist, condition1=NULL, condition2=NULL) {
+  if(!is.null(condition1) & !is.null(condition2)) {
+    # create subset
+    switchlist_data <- dplyr::filter(
+      switchlist$isoformFeatures,
+      condition_1 == condition1 & condition_2 == condition2
+    )
+  } else {
+    switchlist_data <- switchlist$isoformFeatures
+  }
   # plot
   volcano <- ggplot(
-    data = analyzed_subset,
+    data = switchlist_data,
     aes(x = dIF, y = -log10(isoform_switch_q_value))
   ) +
     geom_point(aes(color = abs(dIF) > 0.1 & isoform_switch_q_value < 0.05),
@@ -171,27 +183,19 @@ create_volcano_plot_comp <- function(tissue1, tissue2, save_path) {
     ) +
     guides(colour = guide_legend(override.aes = list(size = 4))) +
     ggtitle(paste0(
-      tissue1, " vs. ", tissue2,
+      condition1, " vs. ", condition2,
       " differentially used isoforms"
     ))
-  # save
-  ggsave(
-    paste0(
-      save_path,
-      "/", tissue1, "_", tissue2, "_volcano.png"
-    ),
-    plot = volcano, width = 6, height = 4
-  )
+  volcano
 }
 
 # this function is for runnning gprofiler
-run_plot_gprofiler <- function(tissue_obj, save_path) {
-  # get names
-  name <- deparse(substitute(tissue_obj))
-  name <- substr(name, nchar(name) - 9 + 1, nchar(name))
+run_plot_gprofiler <- function(gene_list,
+                               name,
+                               save_path) {
   # run gprofiler2
   gostres <- gost(
-    query = tissue_obj,
+    query = gene_list,
     organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
     measure_underrepresentation = FALSE, evcodes = FALSE,
@@ -226,10 +230,8 @@ make_switchlist_run_saturn <- function(tissue, save_path) {
     isoformCountMatrix = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix = temp_design,
-    isoformExonAnnoation = here(
-      "data", "nextflow", "bambu", "extended_annotations.gtf"
-    ),
-    isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+    isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+    isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
     showProgress = FALSE
   )
   # filter switchlist
@@ -237,7 +239,7 @@ make_switchlist_run_saturn <- function(tissue, save_path) {
   # run satuRn
   switchlist_analyzed <- isoformSwitchTestSatuRn(
     switchAnalyzeRlist = temp_switchlist,
-    reduceToSwitchingGenes = FALSE
+    reduceToSwitchingGenes = TRUE
   )
   # rename object
   assign(paste0(tissue, "_switchlist_analyzed"),
