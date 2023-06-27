@@ -1,0 +1,51 @@
+---
+title: "Analyze C.elegans Data"
+author: "Emma Jones"
+date: "2023-06-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r import isoform expression from salmon}
+
+salmonQuant <- importIsoformExpression(
+    parentDir = here("data", "salmon"),
+    addIsofomIdAsColumn = TRUE
+)
+
+```
+
+run gffread
+```{bash}
+cd /data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/
+
+gffread caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gff3 -T -o caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf
+
+```
+
+
+```{r make switchlist}
+
+worm_metadata <- read_csv("/data/project/lasseigne_lab/EmmaJones/worm_data/SraRunTable.txt")
+
+myDesign <- data.frame(
+    sampleID = paste0(worm_metadata$Run, "_quant"),
+    condition = worm_metadata$sex)
+)
+
+aSwitchList <- importRdata(
+    isoformCountMatrix   = salmonQuant$counts,
+    isoformRepExpression = salmonQuant$abundance,
+    designMatrix         = myDesign,
+    isoformExonAnnoation = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf",
+    isoformNtFasta       = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.mRNA_transcripts.fa",
+    showProgress = FALSE
+)
+```
