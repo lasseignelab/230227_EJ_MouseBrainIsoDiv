@@ -90,10 +90,10 @@ deseq2_single_region(
 ```
 
 Expected results:
-[1] "cerebellum had 5916 significant DE genes"
-[1] "cortex had 1969 significant DE genes"
-[1] "hippocampus had 861 significant DE genes"
-[1] "striatum had 2010 significant DE genes"
+[1] "cerebellum had 2147 significant DE genes"
+[1] "cortex had 541 significant DE genes"
+[1] "hippocampus had 395 significant DE genes"
+[1] "striatum had 744 significant DE genes"
 
 ## Do DESeq2 at the isoform level. Note: THIS WILL TREAT TRANSCRIPTS AS SEPARATE GENES
 
@@ -160,13 +160,13 @@ deseq2_single_region(
 )
 ```
 Expected results: 
-[1] "cerebellum had 6682 significant DE transcripts"
+[1] "cerebellum had 3315 significant DE transcripts"
 
-[1] "cortex had 1591 significant DE transcripts"
+[1] "cortex had 587 significant DE transcripts"
 
-[1] "hippocampus had 747 significant DE transcripts"
+[1] "hippocampus had 438 significant DE transcripts"
 
-[1] "striatum had 1770 significant DE transcripts"
+[1] "striatum had 868 significant DE transcripts"
 
 #### Clean up script
 
