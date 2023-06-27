@@ -154,6 +154,9 @@ merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
 
 merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
 
+```
+
+```{r actually plot}
 ggplot(merged_counts_iso_means, aes(x = means)) +
   geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
                  fill = "#52BCA3", alpha = 0.3)
@@ -228,6 +231,16 @@ ggplot(log10(cpm+1), aes(x = sample06, y = sample14)) +
   geom_hex(binwidth = c(0.08, 0.13)) +
   scale_fill_viridis_c(limits = c(0,500))
 
+```
+
+
+```{r extract top 50 expressed novel transcripts}
+
+novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means),]
+
+top50_txs <- head(novel_tx_cpm_means$isoform_id, 50)
+
+write.table(top50_txs, here("data", "interproscan", "top50_txs.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
 ```
 
 #### Clean up script
