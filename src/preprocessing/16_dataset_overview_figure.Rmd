@@ -1,0 +1,283 @@
+---
+title: "Dataset Overview Figure"
+author: "Emma Jones"
+date: "2023-06-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset Overview Figure
+
+The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata.
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+#### Load in packages
+
+```{r load packages}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(data.table)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+```
+
+#### Load in data
+
+```{r load in data}
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+
+counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
+
+gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, -1]
+```
+
+## Plot things!!
+
+```{r barplot txs}
+# get number of novel transcripts
+txs <- sum(!is.na(str_extract(counts_drop0$isoform_id, "tx*...")))
+
+# create data frame
+transcript_data <- data.frame(
+  transcript_novelty = c("novel", "annotated"),
+  count = c(txs, nrow(counts_drop0) - txs)
+)
+
+# barplot
+ggplot(transcript_data, aes(
+  x = transcript_novelty, y = count,
+  fill = transcript_novelty
+)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  geom_text(aes(label = count),
+    position = position_dodge(width = 0.9),
+    vjust = -0.25
+  )
+
+# save
+ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
+  width = 3, height = 4
+)
+```
+
+```{r barplot genes}
+# get number of unique genes
+genes <- unique(gene_counts_drop0$GENEID)
+
+# get novel unique genes
+gns <- sum(!is.na(str_extract(genes, "gene*...")))
+
+# make into data frame
+gene_data <- data.frame(
+  gene_novelty = c("novel", "annotated"),
+  count = c(gns, length(genes) - gns)
+)
+
+# barplot
+ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  geom_text(aes(label = count),
+    position = position_dodge(width = 0.9), vjust = -0.25
+  )
+
+# save
+ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+  width = 3, height = 4
+)
+```
+
+transcripts per gene
+
+```{r get transcripts per gene}
+gene_matches <- merged_counts[, 1:2]
+
+tx_per_gene <- gene_matches %>%
+  group_by(GENEID) %>%
+  summarise(`transcript count` = n(), .groups = "drop")
+
+ggplot(tx_per_gene, aes(x = `transcript count`)) +
+  geom_histogram(binwidth = 1) +
+  xlim(0, 25)
+
+ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+```
+
+
+```{r plot metadata histograms}
+# reads per sample
+ggplot(sample_collection_metadata, aes(x = total_reads)) +
+  geom_histogram(bins = 10)
+
+ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
+       width = 6, height = 4)
+
+# RIN per sample
+ggplot(sample_collection_metadata, aes(x = RIN)) +
+  geom_histogram()
+
+# median length per sample
+ggplot(sample_collection_metadata, aes(x = med_len)) +
+  geom_histogram()
+
+# N50 per sample
+ggplot(sample_collection_metadata, aes(x = N50)) +
+  geom_histogram()
+
+# geom bar for reads per tissue
+ggplot(sample_collection_metadata, aes(y = total_reads, x = tissue, fill = tissue)) +
+  geom_bar(stat = 'identity')
+
+ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
+       width = 6, height = 4)
+
+```
+
+what are the most highly expressed novel transcripts??
+
+```{r pull highest expressed transcripts}
+novel_counts <- merged_counts_iso[merged_counts_iso$isoform_id %like% "tx", ]
+novel_counts$means <- apply(novel_counts[, -1], 1, mean)
+
+novel_tx_count_means <- novel_counts[,c(1,42)]
+
+# compare to annotated
+annotated_counts <- merged_counts_iso[!merged_counts_iso$isoform_id %like% "tx", ]
+annotated_counts$means <- apply(annotated_counts[, -1], 1, mean)
+
+annotated_tx_count_means <- annotated_counts[,c(1,42)]
+
+# plot - need to data wrangle
+merged_counts_iso_means <- merged_counts_iso
+merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
+
+merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
+
+```
+
+```{r actually plot}
+ggplot(merged_counts_iso_means, aes(x = means)) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = means)) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_density(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
+ggplot(merged_counts_iso_means, aes(x = log10(means))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
+
+ggplot(merged_counts_iso_means, aes(x = log10(log10(means)))) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
+                 fill = "#52BCA3", alpha = 0.3) +
+  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
+                 fill = "#99C945", alpha = 0.3)
+```
+
+actually, lets see if that agrees when I do to cpm normalized counts
+
+```{r cpm iso}
+novel_cpm <- cpm_iso[cpm_iso$isoform_id %like% "tx", ]
+novel_cpm$means <- apply(novel_cpm[, -1], 1, mean)
+
+novel_tx_cpm_means <- novel_cpm[,c(1,42)]
+```
+
+
+Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
+
+
+```{r read in the gtf file}
+annotation <- read_table(here("data", "nextflow", "bambu", "extended_annotations.gtf"), col_names = FALSE)
+
+```
+
+Here I am manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
+
+### Biological replicate agreement
+
+Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill.
+
+```{r biological replicate agreement}
+
+ggplot(cpm, aes(x = log2(sample06), y = log2(sample14))) + geom_point()
+
+ggplot(cpm, aes(x = log10(sample06), y = log10(sample14))) + geom_point()
+
+ggplot(cpm, aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
+
+ggplot(log2(cpm+1), aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
+
+cor(cpm$sample06, cpm$sample16, method = "pearson")
+
+ggplot(log10(cpm+1), aes(x = sample06, y = sample14)) + 
+  geom_hex(binwidth = c(0.08, 0.13)) +
+  scale_fill_viridis_c(limits = c(0,500))
+
+```
+
+
+```{r extract top 50 expressed novel transcripts}
+
+novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means),]
+
+top50_txs <- head(novel_tx_cpm_means$isoform_id, 50)
+
+write.table(top50_txs, here("data", "interproscan", "top50_txs.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("16_dataset_overview_figure.Rmd")
+lint("16_dataset_overview_figure.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
+
+

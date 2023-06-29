@@ -28,7 +28,6 @@ suppressPackageStartupMessages({
   library(IsoformSwitchAnalyzeR)
   library(ComplexHeatmap)
   library(viridis)
-  library(biomaRt)
   library(styler)
   library(lintr)
   library(here)
@@ -37,56 +36,66 @@ suppressPackageStartupMessages({
 # install package; need to add to docker later if used in paper
 devtools::install_github("yanlinlin82/ggvenn")
 library(ggvenn)
-
-# make biomart object
-mart <- useMart(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 ```
 
+The biomart code stopped working
 
-```{r load in data}
+```{r load in DGE data}
 # DGE
 dge_files <- list.files(here("results", "de_genes"))
 # loop in files
 for (i in dge_files) {
   temp <- read.csv(
-    here("results", "de_genes", i), header = FALSE
+    here("results", "de_genes", i),
+    header = FALSE
   )
-  genes <- str_extract(temp$V1,
-                pattern = "ENSMUSG...........|gene....*")
+  genes <- temp$V1
   assign(paste0(str_sub(i, end = -5), "_dge_genes"),
     genes,
     envir = .GlobalEnv
   )
 }
+```
+
+Next, we need to pull in the transcript counts files
+
+```{r pull in DTE data}
+transcript_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_transcript.txt"),
+  header = TRUE
+)
+
+tx_gene_names <- transcript_counts[, 1:2]
 
 # DTE
 dte_files <- list.files(here("results", "de_transcripts"))
 # loop in files
 for (i in dte_files) {
   temp <- read.csv(
-    here("results", "de_transcripts", i), header = FALSE
+    here("results", "de_transcripts", i),
+    header = FALSE
   )
   transcripts <- temp$V1
-  transcripts <- str_extract(transcripts,
-                pattern = "ENSMUST...........|tx....*")
-  genes <- getBM(attributes = c('ensembl_transcript_id',
-                                'ensembl_gene_id'),
-             filters = 'ensembl_transcript_id', 
-             values = transcripts,
-             mart = mart)
-  genes <- unique(genes)
+  genes <- tx_gene_names$GENEID[tx_gene_names$TXNAME %in% transcripts]
   assign(paste0(str_sub(i, end = -5), "_dte_genes"),
-    genes$ensembl_gene_id,
+    genes,
     envir = .GlobalEnv
   )
 }
+```
 
+```{r pull in DTU data}
 # DTU
 dtu_files <- list.files(here("data", "switchlist_objects", "de_added"))
+
 # loop in files
 for (i in dtu_files) {
   temp <- readRDS(
     here("data", "switchlist_objects", "de_added", i)
+  )
+  assign(paste0(str_sub(i, end = -12), "_switchlist"),
+    temp,
+    envir = .GlobalEnv
   )
   sig_temp <- dplyr::filter(
     temp$isoformFeatures,
@@ -94,70 +103,259 @@ for (i in dtu_files) {
   )
   genes <- sig_temp$gene_id
   genes <- unique(genes)
-  genes <- str_extract(genes,
-                pattern = "ENSMUSG...........|gene....*")
   assign(paste0(str_sub(i, end = -12), "_dtu_genes"),
     genes,
     envir = .GlobalEnv
   )
 }
+
+# pull out single comparison lists
+
+sig_region_region <- dplyr::filter(
+  region_region_switchlist$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+
+# cerebellum cortex
+cerebellum_cortex_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "cortex"
+)
+
+cerebellum_cortex_dtu_genes <- cerebellum_cortex_subset$gene_id
+
+# cerebellum hippocampus
+
+cerebellum_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "hippocampus"
+)
+
+cerebellum_hippocampus_dtu_genes <- cerebellum_hippocampus_subset$gene_id
+
+# cerebellum striatum
+
+cerebellum_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "striatum"
+)
+
+cerebellum_striatum_dtu_genes <- cerebellum_striatum_subset$gene_id
+
+# cortex hippocampus
+
+cortex_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "hippocampus"
+)
+
+cortex_hippocampus_dtu_genes <- cortex_hippocampus_subset$gene_id
+
+# cortex striatum
+
+cortex_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "striatum"
+)
+
+cortex_striatum_dtu_genes <- cortex_striatum_subset$gene_id
+
+# hippocampus striatum
+
+hippocampus_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "hippocampus" & condition_2 == "striatum"
+)
+
+hippocampus_striatum_dtu_genes <- hippocampus_striatum_subset$gene_id
 ```
 
-All gene names should be GENE IDS directly from objects instead of importing and converting the other lists I think so nothing is lost. But I still need to convert the transcript IDs to gene for DTE.
-
-Biomart did a much better job, but not perfect. 
-
-
+Now that everything is extracted, we need to make it into lists.
 
 ```{r prep data}
 # make results into a list
-cerebellum_list <- list(`cerebellum DGE` = cerebellum_dge_genes,
-                 `cerebellum DTE` = cerebellum_dte_genes,
-           `cerebellum DTU` = cerebellum_dtu_genes)
+cerebellum_list <- list(
+  `cerebellum DGE` = cerebellum_dge_genes,
+  `cerebellum DTE` = cerebellum_dte_genes,
+  `cerebellum DTU` = cerebellum_dtu_genes
+)
 
-cortex_list <- list(`cortex DGE` = cortex_dge_genes,
-                 `cortex DTE` = cortex_dte_genes,
-           `cortex DTU` = cortex_dtu_genes)
+cortex_list <- list(
+  `cortex DGE` = cortex_dge_genes,
+  `cortex DTE` = cortex_dte_genes,
+  `cortex DTU` = cortex_dtu_genes
+)
 
-hippocampus_list <- list(`hippocampus DGE` = hippocampus_dge_genes,
-                 `hippocampus DTE` = hippocampus_dte_genes,
-           `hippocampus DTU` = hippocampus_dtu_genes)
+hippocampus_list <- list(
+  `hippocampus DGE` = hippocampus_dge_genes,
+  `hippocampus DTE` = hippocampus_dte_genes,
+  `hippocampus DTU` = hippocampus_dtu_genes
+)
 
-striatum_list <- list(`striatum DGE` = striatum_dge_genes,
-                 `striatum DTE` = striatum_dte_genes,
-           `striatum DTU` = striatum_dtu_genes)
+striatum_list <- list(
+  `striatum DGE` = striatum_dge_genes,
+  `striatum DTE` = striatum_dte_genes,
+  `striatum DTU` = striatum_dtu_genes
+)
 ```
 
+```{r get region region lists}
+cerebellum_cortex_list <- list(
+  `cerebellum cortex DGE` = cerebellum_cortex_dge_genes,
+  `cerebellum cortex DTE` = cerebellum_cortex_dte_genes,
+  `cerebellum cortex DTU` = cerebellum_cortex_dtu_genes
+)
+
+cerebellum_hippocampus_list <- list(
+  `cerebellum hippocampus DGE` = cerebellum_hippocampus_dge_genes,
+  `cerebellum hippocampus DTE` = cerebellum_hippocampus_dte_genes,
+  `cerebellum hippocampus DTU` = cerebellum_hippocampus_dtu_genes
+)
+
+cerebellum_striatum_list <- list(
+  `cerebellum striatum DGE` = cerebellum_striatum_dge_genes,
+  `cerebellum striatum DTE` = cerebellum_striatum_dte_genes,
+  `cerebellum striatum DTU` = cerebellum_striatum_dtu_genes
+)
+
+cortex_hippocampus_list <- list(
+  `cortex hippocampus DGE` = cortex_hippocampus_dge_genes,
+  `cortex hippocampus DTE` = cortex_hippocampus_dte_genes,
+  `cortex hippocampus DTU` = cortex_hippocampus_dtu_genes
+)
+
+cortex_striatum_list <- list(
+  `cortex striatum DGE` = cortex_striatum_dge_genes,
+  `cortex striatum DTE` = cortex_striatum_dte_genes,
+  `cortex striatum DTU` = cortex_striatum_dtu_genes
+)
+
+hippocampus_striatum_list <- list(
+  `hippocampus striatum DGE` = striatum_hippocampus_dge_genes,
+  `hippocampus striatum DTE` = hippocampus_striatum_dte_genes,
+  `hippocampus striatum DTU` = hippocampus_striatum_dtu_genes
+)
+```
+
+To do: add save_path argument to function
+
 ```{r make compare plot}
-
-make_comparison_plots <- function(comparison_list) {
-
-   # plot venn diagram
-  ggvenn(
+make_comparison_plots <- function(comparison_list, save_path) {
+  # plot venn diagram
+  venn <- ggvenn(
     comparison_list,
     fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
     stroke_size = 0.5,
     set_name_size = 4
   )
-  
+
+  ggsave(here(
+    save_path, "venn_diagrams",
+    paste0(str_sub(deparse(substitute(comparison_list)),
+      end = -6
+    ), "_dge_dte_dtu.pdf")
+  ), plot = venn)
+
   # create matrix
   for_plot_mat <- list_to_matrix(comparison_list)
-  
+
   # generate combination matrix
   for_plot_comb_mat <- make_comb_mat(for_plot_mat)
-  
+
   # make UpSet plot (ComplexHeatmap)
-  UpSet(
+  pdf(
+    here(
+      save_path, "upset_plots",
+      paste0(str_sub(deparse(substitute(comparison_list)),
+        end = -6
+      ), "_dge_dte_dtu.pdf")
+    ),
+    width = 8, height = 6
+  )
+
+  upset <- UpSet(
     for_plot_comb_mat,
     comb_order = order(-comb_size(for_plot_comb_mat)),
-    comb_col = c("#5D69B1", "#52BCA3", "#99C945")[comb_degree(for_plot_comb_mat)],
+    comb_col = c("#5D69B1", "#52BCA3", "#99C945")[comb_degree(
+      for_plot_comb_mat
+    )],
     top_annotation = upset_top_annotation(for_plot_comb_mat,
-                                          add_numbers = TRUE),
+      add_numbers = TRUE
+    ),
     right_annotation = upset_right_annotation(for_plot_comb_mat,
-                                              add_numbers = TRUE)
+      add_numbers = TRUE
+    )
   )
-}
 
-make_comparison_plots(cerebellum_list)
+  draw(upset)
+  dev.off()
+
+  list(venn, upset)
+}
 ```
 
+Now plot!!!
+
+```{r run plotting function}
+make_comparison_plots(cerebellum_list, save_path = here("results", "plots"))
+
+make_comparison_plots(cortex_list, save_path = here("results", "plots"))
+
+make_comparison_plots(hippocampus_list, save_path = here("results", "plots"))
+
+make_comparison_plots(striatum_list, save_path = here("results", "plots"))
+
+# beep boop
+
+make_comparison_plots(cerebellum_cortex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cerebellum_hippocampus_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cerebellum_striatum_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_hippocampus_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_striatum_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(hippocampus_striatum_list,
+  save_path = here("results", "plots")
+)
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("15_compare_DTU_DGE.Rmd")
+lint("15_compare_DTU_DGE.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
