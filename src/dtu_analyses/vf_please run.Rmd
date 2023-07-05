@@ -75,6 +75,8 @@ region_region_switchlist <- importRdata(
   isoformNtFasta = here("data", "gffread", "isoform_sequences.fa")
 )
 
+saveRDS(region_region_switchlist, "/data/project/lasseigne_lab/VictoriaFlanary/EJ_code_review/region_region_switchlist_ej.Rds")
+
 # filter switchlist
 region_region_switchlist <- preFilter(region_region_switchlist,
                                       geneExpressionCutoff = NULL)
@@ -87,6 +89,9 @@ switchlist_analyzed_true <- isoformSwitchTestSatuRn(
 
 extractSwitchSummary(switchlist_analyzed_true)
 
+saveRDS(switchlist_analyzed_true, "/data/project/lasseigne_lab/VictoriaFlanary/EJ_code_review/switchlist_analyzed_true_ej.Rds")
+
+
 # run satuRn, with reduce to switching genes equal to false
 switchlist_analyzed_false <- isoformSwitchTestSatuRn(
   switchAnalyzeRlist = region_region_switchlist,
@@ -94,6 +99,14 @@ switchlist_analyzed_false <- isoformSwitchTestSatuRn(
 )
 
 extractSwitchSummary(switchlist_analyzed_false)
+
+## rerun vf
+switchlist_analyzed_false_vf <- isoformSwitchTestSatuRn(
+  switchAnalyzeRlist = region_region_switchlist_vf,
+  reduceToSwitchingGenes = FALSE
+)
+
+extractSwitchSummary(switchlist_analyzed_false_vf)
 
 ```
 
@@ -121,3 +134,24 @@ cortex vs hippocampus	41	32	31
 cortex vs striatum	273	182	187	
 hippocampus vs striatum	72	67	50	
 Combined	1002	819	648	
+
+after rounding
+
+cerebellum vs cortex	475	331	319	
+cerebellum vs hippocampus	175	129	120	
+cerebellum vs striatum	548	419	355	
+cortex vs hippocampus	41	32	31	
+cortex vs striatum	273	182	187	
+hippocampus vs striatum	72	67	50	
+Combined	1002	819	648	
+
+```{r round the sva after 10 decimal points}
+
+region_region_switchlist_analyzed[["designMatrix"]][,3:12] <- round(region_region_switchlist_analyzed[["designMatrix"]][,3:12], digits = 11)
+
+region_region_switchlist_vf[["designMatrix"]][,3:12] <- round(region_region_switchlist_vf[["designMatrix"]][,3:12], digits = 11)
+
+waldo::compare(region_region_switchlist_analyzed[["designMatrix"]], region_region_switchlist_vf[["designMatrix"]])
+
+diffs <- waldo::compare(region_region_switchlist_analyzed[["isoformRepExpression"]], region_region_switchlist_vf[["isoformRepExpression"]])
+```
