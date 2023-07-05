@@ -234,6 +234,18 @@ ggsave(paste0(
 ), width = 6, height = 4)
 ```
 
+We can also make switchplots! To do that I need to annotate the open reading frames, but they are already annotated with the salmon import.
+
+```{r make switchplots}
+switchPlotTopSwitches(worm_switchlist_dexseq,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "raw",
+    "worm"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+```
+
 #### Clean up script
 
 ```{r tidy script}
