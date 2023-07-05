@@ -140,6 +140,8 @@ ggplot(sample_collection_metadata, aes(y = total_reads, x = tissue, fill = tissu
 ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
        width = 6, height = 4)
 
+sum(sample_collection_metadata$total_reads)
+
 ```
 
 what are the most highly expressed novel transcripts??
@@ -235,12 +237,19 @@ ggplot(log2(cpm+1), aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
 
 cor(cpm$sample06, cpm$sample16, method = "pearson")
 
+cor.test(cpm$sample09, cpm$sample14, method = "pearson")
+
 ggplot(log10(cpm+1), aes(x = sample06, y = sample14)) + 
   geom_hex(binwidth = c(0.08, 0.13)) +
   scale_fill_viridis_c(limits = c(0,500))
 
-```
+ggplot(log2(cpm+1), aes(x = sample06, y = sample14)) + 
+  geom_hex(binwidth = c(0.3, 0.4)) +
+  scale_fill_viridis_c(limits = c(0,600)) +
+  geom_abline(slope = 1, intercept = 0)
 
+```
+cor 0.9304667, p-value < 2.2e-16
 
 ```{r extract top 50 expressed novel transcripts}
 
