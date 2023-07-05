@@ -9,51 +9,358 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Differential Transcript Usage in Worm
 
+For code review, I am tracking the amount of time that this analysis will take.
 
-
-```{r import isoform expression from salmon}
-
-salmonQuant <- importIsoformExpression(
-    parentDir = here("data", "salmon"),
-    addIsofomIdAsColumn = TRUE
-)
-
+```{r proc time}
+ptm <- proc.time()
 ```
 
-```{r make switchlist}
 
-worm_metadata <- read_csv("/data/project/lasseigne_lab/EmmaJones/worm_data/SraRunTable.txt")
+The purpose of this script is to examine differential transcript usage by sex in short-read c elegans data.
 
-myDesign <- data.frame(
-    sampleID = paste0(worm_metadata$Run, "_quant"),
-    condition = worm_metadata$sex)
+Load in packages
 
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Ce.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
 
+set.seed(123)
+```
+
+Also load in any functions you may need! Lots of these are specific to my other analysis, but I am at least keeping the plotting.
+
+```{r load in functions}
+source("../dtu_analyses/functions.R", local = knitr::knit_global())
+```
+
+First, to load in the data we need to load in the isoform expression data from the salmon quant outputs. I have them saved in data/salmon.
+
+```{r import isoform expression from salmon}
+salmon_quant <- importIsoformExpression(
+  parentDir = here("data", "salmon"),
+  addIsofomIdAsColumn = TRUE
+)
+```
+
+Now we want to import the metadata and make a design matrix.
+
+```{r import metadata and create design}
+worm_metadata <-
+  read_csv("/data/project/lasseigne_lab/EmmaJones/worm_data/SraRunTable.txt")
+
+worm_design <- data.frame(
+  sampleID = paste0(worm_metadata$Run, "_quant"),
+  condition = worm_metadata$sex
+)
+```
+
+Now, we can create a switchlist.
+
+```{r create switchlst}
 worm_switchlist <- importRdata(
-    isoformCountMatrix   = salmonQuant$counts,
-    isoformRepExpression = salmonQuant$abundance,
-    designMatrix         = myDesign,
-    isoformExonAnnoation = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.canonical_geneset.gtf",
-    isoformNtFasta       = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.mRNA_transcripts.fa",
-    showProgress = FALSE
+  isoformCountMatrix = salmon_quant$counts,
+  isoformRepExpression = salmon_quant$abundance,
+  designMatrix = worm_design,
+  isoformExonAnnoation = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.canonical_geneset.gtf",
+  isoformNtFasta = "/data/project/lasseigne_lab/GENOME_dir/C_elegans_WBPS18/caenorhabditis_elegans.PRJNA13758.WBPS18.mRNA_transcripts.fa",
+  showProgress = FALSE
 )
 
 worm_switchlist <- preFilter(worm_switchlist, geneExpressionCutoff = NULL)
+```
 
-worm_switchlist_saturn <- isoformSwitchTestSatuRn(
-    switchAnalyzeRlist = worm_switchlist,
-    reduceToSwitchingGenes = FALSE
-  )
-
-extractSwitchSummary(worm_switchlist_saturn)
-
+```{r run dexseq}
 worm_switchlist_dexseq <- isoformSwitchTestDEXSeq(
-    switchAnalyzeRlist = worm_switchlist,
-    reduceToSwitchingGenes = FALSE
-  )
+  switchAnalyzeRlist = worm_switchlist,
+  reduceToSwitchingGenes = FALSE
+)
 
 extractSwitchSummary(worm_switchlist_dexseq)
 ```
+
 expected results: hermaphrodite vs male	41	41	34	
+
+```{r add gene symbols}
+# pull shorter gene IDs
+worm_switchlist_dexseq[["isoformFeatures"]]$shorter <-
+  str_extract(worm_switchlist_dexseq[["isoformFeatures"]]$gene_id,
+    pattern = "WBGene........"
+  )
+
+# get gene symbols from annotation dbi
+gene_symbols <- AnnotationDbi::select(
+  org.Ce.eg.db,
+  keys = str_sub(unique(worm_switchlist_dexseq[["isoformFeatures"]]$gene_id),
+    end = -3
+  ),
+  columns = c("SYMBOL", "ENSEMBL"), keytype = "WORMBASE"
+)
+# add symbols to object
+worm_switchlist_dexseq[["isoformFeatures"]] <-
+  left_join(worm_switchlist_dexseq[["isoformFeatures"]],
+    gene_symbols,
+    by = c("shorter" = "ENSEMBL")
+  )
+# add to correct columns
+worm_switchlist_dexseq[["isoformFeatures"]]$gene_name <-
+  worm_switchlist_dexseq[["isoformFeatures"]]$SYMBOL
+
+# remove extra columns
+worm_switchlist_dexseq[["isoformFeatures"]]$SYMBOL <- NULL
+worm_switchlist_dexseq[["isoformFeatures"]]$shorter <- NULL
+worm_switchlist_dexseq[["isoformFeatures"]]$WORMBASE <- NULL
+```
+
+Then, we want to save the analyzed switchlist for later use.
+
+```{r save switchlist}
+saveRDS(
+  worm_switchlist_dexseq,
+  here(
+    "data", "switchlist_objects", "raw",
+    "worm_switchlist_analyzed.Rds"
+  )
+)
+```
+
+Next, I will filter for significance.
+
+```{r filter for significance}
+worm_sig_features <- dplyr::filter(
+  worm_switchlist_dexseq$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+```
+
+```{r save sig transcripts}
+write.csv(
+  worm_sig_features,
+  here(
+    "results",
+    "dtu_transcripts",
+    "worm_sig_features.csv"
+  ),
+  row.names = FALSE
+)
+```
+
+We can also do this at the gene level, to make more direct comparisons with DGE.
+
+```{r collapse to gene level}
+worm_sig_genes <- unique(worm_sig_features$gene_name)
+```
+
+And save this output as well.
+
+```{r save sig genes}
+write.csv(
+  worm_sig_genes,
+  here(
+    "results",
+    "dtu_genes",
+    "worm_sig_genes.csv"
+  ),
+  row.names = FALSE
+)
+```
+
+To plot, I will only make a volcano plot. There is not anything to compare to with the upset plot.
+
+```{r create volcano plot}
+worm_sex_volcano <- create_volcano_plot(
+  switchlist = worm_switchlist_dexseq
+) + ggtitle("hermaphrodite vs male differentially used isoforms")
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "worm_volcano",
+    "sex_volcano.png"
+  ),
+  plot = worm_sex_volcano
+)
+```
+
+I can run gprofiler, need background genes first.
+
+```{r get correct list of background genes}
+bg_genes <- unique(worm_switchlist_dexseq$isoformFeatures$gene_id)
+bg_genes <- str_extract(bg_genes, "WBGene........")
+```
+
+```{r run gprofiler}
+# run gprofiler
+gostres <- gost(
+  query = worm_sig_genes,
+  organism = "celegans", ordered_query = FALSE,
+  multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
+  measure_underrepresentation = FALSE, evcodes = FALSE,
+  user_threshold = 0.05, correction_method = "g_SCS",
+  domain_scope = "custom", custom_bg = bg_genes,
+  numeric_ns = "", sources = NULL, as_short_link = FALSE
+)
+# plot
+gostplot(gostres, capped = TRUE, interactive = TRUE)
+
+# save
+ggsave(paste0(
+  here("results", "plots", "gprofiler2"),
+  "/worm_sex_gostres.png"
+), width = 6, height = 4)
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("dtu_whole_worm.Rmd")
+
+lint("dtu_whole_worm.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+
+#### Software versions
+
+My software versions will be commented below.
+
+```{r versions}
+sessionInfo()
+```
+
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] grid      stats4    stats     graphics  grDevices utils     datasets  methods  
+[9] base     
+
+other attached packages:
+ [1] here_1.0.1                    lintr_3.0.2                  
+ [3] styler_1.9.1                  gprofiler2_0.2.1             
+ [5] org.Mm.eg.db_3.17.0           viridis_0.6.2                
+ [7] viridisLite_0.4.1             ComplexHeatmap_2.16.0        
+ [9] IsoformSwitchAnalyzeR_1.99.17 pfamAnalyzeR_1.0.0           
+[11] sva_3.48.0                    genefilter_1.82.0            
+[13] mgcv_1.8-42                   nlme_3.1-162                 
+[15] satuRn_1.8.0                  DEXSeq_1.46.0                
+[17] RColorBrewer_1.1-3            AnnotationDbi_1.62.0         
+[19] DESeq2_1.40.0                 SummarizedExperiment_1.30.0  
+[21] GenomicRanges_1.52.0          GenomeInfoDb_1.36.0          
+[23] IRanges_2.34.0                S4Vectors_0.38.0             
+[25] MatrixGenerics_1.12.0         matrixStats_0.63.0           
+[27] Biobase_2.60.0                BiocGenerics_0.46.0          
+[29] BiocParallel_1.34.0           limma_3.56.0                 
+[31] lubridate_1.9.2               forcats_1.0.0                
+[33] stringr_1.5.0                 dplyr_1.1.2                  
+[35] purrr_1.0.1                   readr_2.1.4                  
+[37] tidyr_1.3.0                   tibble_3.2.1                 
+[39] ggplot2_3.4.2                 tidyverse_2.0.0              
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.0                 later_1.3.0                  
+  [3] BiocIO_1.10.0                 bitops_1.0-7                 
+  [5] filelock_1.0.2                R.oo_1.25.0                  
+  [7] rex_1.2.1                     XML_3.99-0.14                
+  [9] lifecycle_1.0.3               rprojroot_2.0.3              
+ [11] edgeR_3.42.0                  doParallel_1.0.17            
+ [13] vroom_1.6.3                   processx_3.8.0               
+ [15] lattice_0.21-8                ensembldb_2.24.0             
+ [17] magrittr_2.0.3                plotly_4.10.1                
+ [19] rmarkdown_2.21                remotes_2.4.2                
+ [21] yaml_2.3.7                    httpuv_1.6.9                 
+ [23] pbapply_1.7-0                 DBI_1.1.3                    
+ [25] zlibbioc_1.46.0               R.cache_0.16.0               
+ [27] R.utils_2.12.2                AnnotationFilter_1.24.0      
+ [29] RCurl_1.98-1.12               rappdirs_0.3.3               
+ [31] circlize_0.4.15               GenomeInfoDbData_1.2.10      
+ [33] annotate_1.78.0               codetools_0.2-19             
+ [35] DelayedArray_0.25.0           xml2_1.3.4                   
+ [37] tidyselect_1.2.0              shape_1.4.6                  
+ [39] futile.logger_1.4.3           locfdr_1.1-8                 
+ [41] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [43] jsonlite_1.8.4                GetoptLong_1.0.5             
+ [45] ellipsis_0.3.2                survival_3.5-5               
+ [47] iterators_1.0.14              foreach_1.5.2                
+ [49] tools_4.3.0                   progress_1.2.2               
+ [51] Rcpp_1.0.10                   glue_1.6.2                   
+ [53] gridExtra_2.3                 xfun_0.39                    
+ [55] withr_2.5.0                   formatR_1.14                 
+ [57] BiocManager_1.30.20           fastmap_1.1.1                
+ [59] boot_1.3-28.1                 fansi_1.0.4                  
+ [61] callr_3.7.3                   digest_0.6.31                
+ [63] timechange_0.2.0              R6_2.5.1                     
+ [65] mime_0.12                     colorspace_2.1-0             
+ [67] biomaRt_2.56.0                RSQLite_2.3.1                
+ [69] R.methodsS3_1.8.2             utf8_1.2.3                   
+ [71] generics_0.1.3                data.table_1.14.8            
+ [73] tximeta_1.18.0                rtracklayer_1.60.0           
+ [75] htmlwidgets_1.6.2             prettyunits_1.1.1            
+ [77] httr_1.4.5                    pkgconfig_2.0.3              
+ [79] gtable_0.3.3                  blob_1.2.4                   
+ [81] hwriter_1.3.2.1               XVector_0.40.0               
+ [83] htmltools_0.5.5               geneplotter_1.78.0           
+ [85] ProtGenerics_1.32.0           clue_0.3-64                  
+ [87] scales_1.2.1                  cyclocomp_1.1.0              
+ [89] png_0.1-8                     knitr_1.42                   
+ [91] lambda.r_1.2.4                rstudioapi_0.14              
+ [93] tzdb_0.3.0                    reshape2_1.4.4               
+ [95] rjson_0.2.21                  curl_5.0.0                   
+ [97] cachem_1.0.8                  GlobalOptions_0.1.2          
+ [99] BiocVersion_3.17.1            parallel_4.3.0               
+[101] desc_1.4.2                    restfulr_0.0.15              
+[103] pillar_1.9.0                  vctrs_0.6.2                  
+[105] promises_1.2.0.1              dbplyr_2.3.2                 
+[107] xtable_1.8-4                  cluster_2.1.4                
+[109] tximport_1.28.0               evaluate_0.20                
+[111] VennDiagram_1.7.3             GenomicFeatures_1.52.0       
+[113] cli_3.6.1                     locfit_1.5-9.7               
+[115] compiler_4.3.0                futile.options_1.0.1         
+[117] Rsamtools_2.16.0              rlang_1.1.1                  
+[119] crayon_1.5.2                  ps_1.7.4                     
+[121] plyr_1.8.8                    stringi_1.7.12               
+[123] munsell_0.5.0                 Biostrings_2.68.0            
+[125] lazyeval_0.2.2                Matrix_1.5-4                 
+[127] BSgenome_1.68.0               hms_1.1.3                    
+[129] bit64_4.0.5                   KEGGREST_1.40.0              
+[131] statmod_1.5.0                 shiny_1.7.4                  
+[133] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
+[135] memoise_2.0.1                 bit_4.0.5                    
+[137] xmlparsedata_1.0.5 
