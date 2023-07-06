@@ -135,7 +135,7 @@ for (tissue in tissues) {
 }
 ```
 
-Save signficiant features
+Save significant features
 
 ```{r save sig features}
 for (i in seq_along(region_all_sig_features_list)) {
@@ -166,10 +166,12 @@ for (i in seq_along(region_all_sig_features_list)) {
 }
 ```
 
+Now, save these genes.
+
 ```{r save sig genes}
 for (i in seq_along(region_all_sig_genes_list)) {
   tissue_name <- names(region_all_sig_genes_list)[i]
-  write.csv(
+  write.table(
     region_all_sig_genes_list[[tissue_name]],
     here(
       "results",
@@ -179,7 +181,9 @@ for (i in seq_along(region_all_sig_genes_list)) {
         "_other_sig_genes.csv"
       )
     ),
-    row.names = FALSE
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE
   )
 }
 ```

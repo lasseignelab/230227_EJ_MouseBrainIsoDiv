@@ -172,6 +172,8 @@ expected cortex results: F vs M	22	19	14
 
 expected striatum results: F vs M	11	7	7	
 
+ATTENTION NEEDED: NEED TO ADD GENE SYMBOLS HERE!!!!!
+
 Now, we want to save our data.
 
 ```{r save sex combined switchlist}
@@ -275,14 +277,16 @@ for (i in seq_along(region_sex_sig_features_list)) {
 Save the combined genes only into results.
 
 ```{r save sig genes sex combined}
-write.csv(
+write.table(
   sex_switchlist_sig_genes,
   here(
     "results",
     "dtu_genes",
     "sex_switchlist_sig_genes.csv"
   ),
-  row.names = FALSE
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
 )
 ```
 
@@ -291,7 +295,7 @@ Also save the genes for each region.
 ```{r save sig genes sex regions}
 for (i in seq_along(region_sex_sig_genes_list)) {
   tissue_name <- names(region_sex_sig_genes_list)[i]
-  write.csv(
+  write.table(
     region_sex_sig_genes_list[[tissue_name]],
     here(
       "results",
@@ -301,7 +305,9 @@ for (i in seq_along(region_sex_sig_genes_list)) {
         "_sex_sig_genes.csv"
       )
     ),
-    row.names = FALSE
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE
   )
 }
 ```
