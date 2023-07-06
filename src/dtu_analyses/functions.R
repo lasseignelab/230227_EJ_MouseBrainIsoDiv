@@ -75,6 +75,31 @@ make_switchlist_saturn <- function(isoformCountMatrix,
   return(switchlist_analyzed)
 }
 
+# This function is for creating the swithlist with DEXSeq.
+make_switchlist_dexseq <- function(isoformCountMatrix,
+                                   isoformRepExpression,
+                                   designMatrix,
+                                   isoformExonAnnoation,
+                                   isoformNtFasta,
+                                   reduceToSwitchingGenes) {
+  # create switchlist
+  temp_switchlist <- importRdata(
+    isoformCountMatrix = isoformCountMatrix,
+    isoformRepExpression = isoformRepExpression,
+    designMatrix = designMatrix,
+    isoformExonAnnoation = isoformExonAnnoation,
+    isoformNtFasta = isoformNtFasta,
+    showProgress = FALSE
+  )
+  # filter switchlist
+  temp_switchlist <- preFilter(temp_switchlist, geneExpressionCutoff = NULL)
+  # run satuRn
+  switchlist_analyzed <- isoformSwitchTestDEXSeq(
+    switchAnalyzeRlist = temp_switchlist,
+    reduceToSwitchingGenes = reduceToSwitchingGenes
+  )
+  return(switchlist_analyzed)
+}
 
 # this function is for getting gene symbols for all genes of a tissue
 # save_path for this should be here("data", "switchlist_objects")

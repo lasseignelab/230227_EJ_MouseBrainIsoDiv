@@ -125,7 +125,7 @@ for(tissue in tissues) {
 region_sex_switchlist_list <- list()
 for(tissue in tissues) {
   tryCatch({
-    switchlist_obj <- make_switchlist_saturn(
+    switchlist_obj <- make_switchlist_dexseq(
       isoformCountMatrix = counts_list[[tissue]],
       isoformRepExpression = cpm_list[[tissue]],
       designMatrix = designs[[tissue]],
