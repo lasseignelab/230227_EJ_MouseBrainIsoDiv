@@ -11,7 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Dataset Overview Figure
 
-The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata.
+The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata. It takes less than 3 minutes to run and is not finished but is mainly on the shelf for now.
+
+---
+Remaining to do:
+- create new docker with hexbin package
+- What about nanopore stats/ long-read information
+- Transcripts lengths etc
+- Consider turning into a table
+- X-axis is squished in panel E
+- Remove underscores from labels
+- Change default transcript/gene colors so they do not look like tissue colors
+- delete useless code
+---
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -119,7 +131,8 @@ ggplot(sample_collection_metadata, aes(x = total_reads)) +
   geom_histogram(bins = 10)
 
 ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
-       width = 6, height = 4)
+  width = 6, height = 4
+)
 
 # RIN per sample
 ggplot(sample_collection_metadata, aes(x = RIN)) +
@@ -134,12 +147,17 @@ ggplot(sample_collection_metadata, aes(x = N50)) +
   geom_histogram()
 
 # geom bar for reads per tissue
-ggplot(sample_collection_metadata, aes(y = total_reads, x = tissue, fill = tissue)) +
-  geom_bar(stat = 'identity')
+ggplot(
+  sample_collection_metadata,
+  aes(y = total_reads, x = tissue, fill = tissue)
+) +
+  geom_bar(stat = "identity")
 
 ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
-       width = 6, height = 4)
+  width = 6, height = 4
+)
 
+sum(sample_collection_metadata$total_reads)
 ```
 
 what are the most highly expressed novel transcripts??
@@ -148,55 +166,75 @@ what are the most highly expressed novel transcripts??
 novel_counts <- merged_counts_iso[merged_counts_iso$isoform_id %like% "tx", ]
 novel_counts$means <- apply(novel_counts[, -1], 1, mean)
 
-novel_tx_count_means <- novel_counts[,c(1,42)]
+novel_tx_count_means <- novel_counts[, c(1, 42)]
 
 # compare to annotated
-annotated_counts <- merged_counts_iso[!merged_counts_iso$isoform_id %like% "tx", ]
+annotated_counts <-
+  merged_counts_iso[!merged_counts_iso$isoform_id %like% "tx", ]
 annotated_counts$means <- apply(annotated_counts[, -1], 1, mean)
 
-annotated_tx_count_means <- annotated_counts[,c(1,42)]
+annotated_tx_count_means <- annotated_counts[, c(1, 42)]
 
 # plot - need to data wrangle
 merged_counts_iso_means <- merged_counts_iso
 merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
 
 merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
-
 ```
+
+In this code chunk I am trying to parse out exactly the relationship between novel and annotated transcript expression values, but it is hard to see both at once.
 
 ```{r actually plot}
 ggplot(merged_counts_iso_means, aes(x = means)) +
-  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3)
+  geom_histogram(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = means)) +
-  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3)
+  geom_density(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3)
+  geom_histogram(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3)
+  geom_density(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3)
+  geom_density(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(data = subset(merged_counts_iso_means, novel == FALSE),
-                 fill = "#99C945", alpha = 0.3)
+  geom_density(
+    data = subset(merged_counts_iso_means, novel == FALSE),
+    fill = "#99C945", alpha = 0.3
+  )
 ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
-                 fill = "#99C945", alpha = 0.3)
+  geom_histogram(
+    data = subset(merged_counts_iso_means, novel == FALSE),
+    fill = "#99C945", alpha = 0.3
+  )
 
 ggplot(merged_counts_iso_means, aes(x = log10(log10(means)))) +
-  geom_histogram(data = subset(merged_counts_iso_means, novel == TRUE),
-                 fill = "#52BCA3", alpha = 0.3) +
-  geom_histogram(data = subset(merged_counts_iso_means, novel == FALSE),
-                 fill = "#99C945", alpha = 0.3)
+  geom_histogram(
+    data = subset(merged_counts_iso_means, novel == TRUE),
+    fill = "#52BCA3", alpha = 0.3
+  ) +
+  geom_histogram(
+    data = subset(merged_counts_iso_means, novel == FALSE),
+    fill = "#99C945", alpha = 0.3
+  )
 ```
 
 actually, lets see if that agrees when I do to cpm normalized counts
@@ -205,16 +243,16 @@ actually, lets see if that agrees when I do to cpm normalized counts
 novel_cpm <- cpm_iso[cpm_iso$isoform_id %like% "tx", ]
 novel_cpm$means <- apply(novel_cpm[, -1], 1, mean)
 
-novel_tx_cpm_means <- novel_cpm[,c(1,42)]
+novel_tx_cpm_means <- novel_cpm[, c(1, 42)]
 ```
-
 
 Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
 
-
 ```{r read in the gtf file}
-annotation <- read_table(here("data", "nextflow", "bambu", "extended_annotations.gtf"), col_names = FALSE)
-
+annotation <- read_table(
+  here("data", "nextflow", "bambu", "extended_annotations.gtf"),
+  col_names = FALSE
+)
 ```
 
 Here I am manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
@@ -224,37 +262,53 @@ Here I am manually looking up the chr locataions of the toel novel genes. I shou
 Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill.
 
 ```{r biological replicate agreement}
+ggplot(cpm, aes(x = log2(sample06), y = log2(sample14))) +
+  geom_point()
 
-ggplot(cpm, aes(x = log2(sample06), y = log2(sample14))) + geom_point()
+ggplot(cpm, aes(x = log10(sample06), y = log10(sample14))) +
+  geom_point()
 
-ggplot(cpm, aes(x = log10(sample06), y = log10(sample14))) + geom_point()
+ggplot(cpm, aes(x = sample06, y = sample14, alpha = 0.1)) +
+  geom_point()
 
-ggplot(cpm, aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
-
-ggplot(log2(cpm+1), aes(x = sample06, y = sample14, alpha = 0.1)) + geom_point()
+ggplot(log2(cpm + 1), aes(x = sample06, y = sample14, alpha = 0.1)) +
+  geom_point()
 
 cor(cpm$sample06, cpm$sample16, method = "pearson")
 
-ggplot(log10(cpm+1), aes(x = sample06, y = sample14)) + 
-  geom_hex(binwidth = c(0.08, 0.13)) +
-  scale_fill_viridis_c(limits = c(0,500))
+cor.test(cpm$sample09, cpm$sample14, method = "pearson")
 
+ggplot(log10(cpm + 1), aes(x = sample06, y = sample14)) +
+  geom_hex(binwidth = c(0.08, 0.13)) +
+  scale_fill_viridis_c(limits = c(0, 500))
+
+ggplot(log2(cpm + 1), aes(x = sample06, y = sample14)) +
+  geom_hex(binwidth = c(0.3, 0.4)) +
+  scale_fill_viridis_c(limits = c(0, 600)) +
+  geom_abline(slope = 1, intercept = 0)
 ```
 
+Expected results: cor 0.9304667, p-value < 2.2e-16
+
+I can also extract the top 50 expressed transcripts for interproscan, though we dont get much information out of this.
 
 ```{r extract top 50 expressed novel transcripts}
-
-novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means),]
+novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means), ]
 
 top50_txs <- head(novel_tx_cpm_means$isoform_id, 50)
 
-write.table(top50_txs, here("data", "interproscan", "top50_txs.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(top50_txs,
+  here("data", "interproscan", "top50_txs.txt"),
+  quote = FALSE,
+  row.names = FALSE, col.names = FALSE
+)
 ```
 
 #### Clean up script
 
 ```{r tidy script}
 style_file("16_dataset_overview_figure.Rmd")
+
 lint("16_dataset_overview_figure.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,
@@ -271,6 +325,7 @@ fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
 
+It says -26 minutes, but I know from timing it myself it only takes 2 minutes to run.
 
 #### Software versions
 
@@ -280,4 +335,57 @@ My software versions will be commented below.
 sessionInfo()
 ```
 
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
 
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] here_1.0.1        lintr_3.0.2       styler_1.9.1      data.table_1.14.8
+ [5] lubridate_1.9.2   forcats_1.0.0     stringr_1.5.0     dplyr_1.1.2      
+ [9] purrr_1.0.1       readr_2.1.4       tidyr_1.3.0       tibble_3.2.1     
+[13] ggplot2_3.4.2     tidyverse_2.0.0  
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.0        viridisLite_0.4.2       farver_2.1.1           
+ [4] blob_1.2.4              R.utils_2.12.2          Biostrings_2.68.0      
+ [7] bitops_1.0-7            fastmap_1.1.1           RCurl_1.98-1.12        
+[10] lazyeval_0.2.2          rex_1.2.1               digest_0.6.31          
+[13] timechange_0.2.0        lifecycle_1.0.3         processx_3.8.0         
+[16] KEGGREST_1.40.0         RSQLite_2.3.1           magrittr_2.0.3         
+[19] compiler_4.3.0          rlang_1.1.1             tools_4.3.0            
+[22] utf8_1.2.3              yaml_2.3.7              knitr_1.42             
+[25] labeling_0.4.2          bit_4.0.5               xmlparsedata_1.0.5     
+[28] xml2_1.3.4              R.cache_0.16.0          withr_2.5.0            
+[31] BiocGenerics_0.46.0     desc_1.4.2              R.oo_1.25.0            
+[34] grid_4.3.0              stats4_4.3.0            fansi_1.0.4            
+[37] colorspace_2.1-0        scales_1.2.1            cli_3.6.1              
+[40] rmarkdown_2.21          crayon_1.5.2            ragg_1.2.5             
+[43] generics_0.1.3          remotes_2.4.2           rstudioapi_0.14        
+[46] httr_1.4.5              tzdb_0.3.0              DBI_1.1.3              
+[49] cachem_1.0.8            zlibbioc_1.46.0         AnnotationDbi_1.62.0   
+[52] XVector_0.40.0          vctrs_0.6.3             callr_3.7.3            
+[55] IRanges_2.34.0          hms_1.1.3               S4Vectors_0.38.0       
+[58] bit64_4.0.5             systemfonts_1.0.4       cyclocomp_1.1.0        
+[61] hexbin_1.28.3           glue_1.6.2              ps_1.7.4               
+[64] stringi_1.7.12          gtable_0.3.3            GenomeInfoDb_1.36.0    
+[67] munsell_0.5.0           pillar_1.9.0            htmltools_0.5.5        
+[70] GenomeInfoDbData_1.2.10 R6_2.5.1                textshaping_0.3.6      
+[73] rprojroot_2.0.3         lattice_0.21-8          evaluate_0.20          
+[76] Biobase_2.60.0          png_0.1-8               R.methodsS3_1.8.2      
+[79] memoise_2.0.1           xfun_0.39               pkgconfig_2.0.3 

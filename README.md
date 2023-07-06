@@ -1,6 +1,6 @@
 README
 ================
-2023-06-07
+2023-07-06
 
 # Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
 
@@ -37,14 +37,19 @@ isoform usage differences across brain region and sex.
     ## │   ├── compare_satuRn_DEXSeq_results.Rmd
     ## │   ├── functions.R
     ## │   ├── isoformswitchanalyzer_overflow.Rmd
-    ## │   └── size_power.R
-    ## └── preprocessing
-    ##     ├── 00_run_nanoseq.sh
-    ##     ├── 02_get_genome_annotations.sh
-    ##     ├── 03_create_isoform_fa.sh
-    ##     ├── 20010631.c0158.err.txt
-    ##     ├── 20010631.c0158.out.txt
-    ##     └── README
+    ## │   ├── size_power.R
+    ## │   └── vf_please run.Rmd
+    ## ├── preprocessing
+    ## │   ├── 00_run_nanoseq.sh
+    ## │   ├── 02_get_genome_annotations.sh
+    ## │   ├── 03_create_isoform_fa.sh
+    ## │   ├── 16_dataset_overview_figure.Rmd
+    ## │   ├── 20010631.c0158.err.txt
+    ## │   ├── 20010631.c0158.out.txt
+    ## │   └── README
+    ## └── worm_analysis
+    ##     ├── 17_dtu_whole_worm.Rmd
+    ##     └── salmon_quant.sh
 
 ### Reproducibility
 
@@ -149,6 +154,21 @@ depends on scripts 00-14. The purpose of this script is to compare genes
 with differential gene expression, differential transcript usage, and
 differential transcript expression. Run back in github docker. It is not
 currently finished.
+
+***Script 16: de_analysis/16_dataset_overview_figure.Rmd*** - The
+purpose of this script is to provide a dataset overview to serve as
+manuscript figure 1. It is dependent on scripts 00 and 01 to get sample
+metadata. It takes less than 3 minutes to run and is not finished but is
+mainly on the shelf for now.
+
+***Script 17: worm_analysis/17_dtu_whole_worm.Rmd*** - The purpose of
+this script is to examine differential transcript usage by sex in
+short-read c elegans data. I am especially interested in comparing this
+DTU to my own mouse data to look for evolutionary conserved genes with
+sex specific splicing. The entire script takes less than 10 minutes to
+run. Must be run in at least docker 1.3 to include c elegans annotation.
+This script does not depend on any other code, with the exception of
+functions.R, which can be sourced.
 
 #### Other Scripts
 
