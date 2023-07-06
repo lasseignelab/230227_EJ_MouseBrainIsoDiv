@@ -1,0 +1,28 @@
+---
+title: "Compare worm and mouse DTU"
+author: "Emma Jones"
+date: "2023-07-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The purpose of this script is to compare DTU between mouse and worm
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Ce.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
