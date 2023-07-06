@@ -17,7 +17,6 @@ For code review, I am tracking the amount of time that this analysis will take.
 ptm <- proc.time()
 ```
 
-
 #### Load in packages
 
 ```{r load packages}
@@ -46,7 +45,7 @@ source("functions.R", local = knitr::knit_global())
 
 ## DTU for one region versus all other regions
 
-First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions. Then, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with DEXSeq. I've made this into a function to make it faster.
+First, I need to update my design matrix because I need to make pairwise comparisons for each region versus all other regions. Then, I can make a new switchAnalyzeRlist object. This is required to run an isoform switch test with satuRn or DEXSeq. I've made this into a function to make it faster.
 
 Once switchAnalyzeRlists are made, you can run the satuRn isoform switch test. You also need to prefilter the data before running the test, but I added all that to the my function so all it needs is to run.
 
@@ -63,7 +62,7 @@ for (tissue in tissues) {
     sampleID = sample_collection_metadata$sample_id,
     condition = sample_collection_metadata$tissue == tissue
   )
-  
+
   temp_design["condition"][temp_design["condition"] == TRUE] <- tissue
   temp_design["condition"][temp_design["condition"] == FALSE] <- "other"
   designs[[tissue]] <- temp_design
@@ -76,33 +75,35 @@ Now, I can run satuRn. Because my data includes counts of less than 1, I still w
 
 ```{r add fasta of transcripts to object}
 region_all_switchlist_list <- list()
-for(tissue in tissues) {
+
+for (tissue in tissues) {
   switchlist_obj <- make_switchlist_saturn(
     isoformCountMatrix = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix = designs[[tissue]],
-
     isoformExonAnnoation = here(
-    "data", "nextflow", "bambu",
-    "extended_annotations.gtf"
+      "data", "nextflow", "bambu",
+      "extended_annotations.gtf"
     ),
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     reduceToSwitchingGenes = FALSE
   )
-  
+
   region_all_switchlist_list[[tissue]] <- switchlist_obj
 }
 
-# sumarize number of isoforms, switches, and genes
+# summarize number of isoforms, switches, and genes
 extractSwitchSummary(region_all_switchlist_list$cerebellum)
 extractSwitchSummary(region_all_switchlist_list$cortex)
 extractSwitchSummary(region_all_switchlist_list$hippocampus)
 extractSwitchSummary(region_all_switchlist_list$striatum)
 ```
 
+Now, add gene symbols.
+
 ```{r add gene symbols}
 # get gene symbols and save object with gene symbols
-for(tissue in tissues) {
+for (tissue in tissues) {
   temp_switchlist <- get_gene_symbols(
     switchlist_obj = region_all_switchlist_list[[tissue]]
   )
@@ -110,17 +111,22 @@ for(tissue in tissues) {
 }
 ```
 
-```{r save switchlist}
+Notes: You will get a warning saying "Warning: Detected an unexpected many-to-many relationship between `x` and `y`." this is fine.
+
+Finally, save switchlists.
+
+```{r save switchlists}
 saveRDS(
-  region_all_switchlist_list, 
+  region_all_switchlist_list,
   here("data", "switchlist_objects", "raw", "region_all_switchlist_list.Rds")
 )
 ```
 
+Next, we filter for significance.
 
 ```{r filter for significance}
 region_all_sig_features_list <- list()
-for(tissue in tissues) {
+for (tissue in tissues) {
   temp_sig_features <- dplyr::filter(
     region_all_switchlist_list[[tissue]]$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
@@ -129,11 +135,13 @@ for(tissue in tissues) {
 }
 ```
 
+Save significant features
+
 ```{r save sig features}
-for(i in 1:length(region_all_sig_features_list)) {
+for (i in seq_along(region_all_sig_features_list)) {
   tissue_name <- names(region_all_sig_features_list)[i]
   write.csv(
-    region_all_sig_features_list[[tissue_name]], 
+    region_all_sig_features_list[[tissue_name]],
     here(
       "results",
       "dtu_transcripts",
@@ -141,26 +149,30 @@ for(i in 1:length(region_all_sig_features_list)) {
         tissue_name,
         "_other_sig_features.csv"
       )
-    ), 
-    row.names=FALSE
+    ),
+    row.names = FALSE
   )
 }
 ```
 
+Collapse to gene level
+
 ```{r collapse to gene level}
 region_all_sig_genes_list <- list()
-for(i in 1:length(region_all_sig_features_list)) {
+for (i in seq_along(region_all_sig_features_list)) {
   tissue_name <- names(region_all_sig_features_list)[i]
   tissue_sig_genes <- unique(region_all_sig_features_list[[i]]$gene_name)
   region_all_sig_genes_list[[tissue_name]] <- tissue_sig_genes
 }
 ```
 
+Now, save these genes.
+
 ```{r save sig genes}
-for(i in 1:length(region_all_sig_genes_list)) {
+for (i in seq_along(region_all_sig_genes_list)) {
   tissue_name <- names(region_all_sig_genes_list)[i]
-  write.csv(
-    region_all_sig_genes_list[[tissue_name]], 
+  write.table(
+    region_all_sig_genes_list[[tissue_name]],
     here(
       "results",
       "dtu_genes",
@@ -168,8 +180,10 @@ for(i in 1:length(region_all_sig_genes_list)) {
         tissue_name,
         "_other_sig_genes.csv"
       )
-    ), 
-    row.names=FALSE
+    ),
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE
   )
 }
 ```
@@ -183,8 +197,9 @@ Now, with the list created I can create a ComplexHeatmap UpSet plot.
 #### Make UpSet plots
 
 ```{r complexheatmap tissue:all UpSet genes}
-for(tissue in tissues) {
-  region_all_sig_genes_list[[tissue]] <- na.omit(region_all_sig_genes_list[[tissue]])
+for (tissue in tissues) {
+  region_all_sig_genes_list[[tissue]] <-
+    na.omit(region_all_sig_genes_list[[tissue]])
 }
 # make UpSet plot (ComplexHeatmap)
 # create matrix
@@ -195,21 +210,21 @@ all_gene_list_comb_mat <- make_comb_mat(all_gene_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
 UpSet(all_gene_list_comb_mat,
-      pt_size = unit(3, "mm"),
-      comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
+  pt_size = unit(3, "mm"),
+  comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
 )
 pdf(here("results", "plots", "upset_plots", "region_others_gene_upset.pdf"))
 upset_gene <- UpSet(all_gene_list_comb_mat,
-                    comb_order = order(-comb_size(all_gene_list_comb_mat)),
-                    comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
-                    top_annotation = upset_top_annotation(
-                      all_gene_list_comb_mat,
-                      add_numbers = TRUE
-                    ),
-                    right_annotation = upset_right_annotation(
-                      all_gene_list_comb_mat,
-                      add_numbers = TRUE
-                    )
+  comb_order = order(-comb_size(all_gene_list_comb_mat)),
+  comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
+  top_annotation = upset_top_annotation(
+    all_gene_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(
+    all_gene_list_comb_mat,
+    add_numbers = TRUE
+  )
 )
 
 draw(upset_gene, column_title = "Overlap of DTU genes by brain region")
@@ -220,8 +235,9 @@ Cerebellum has most unique genes overall, but what happens when we extend this t
 
 ```{r extract sigificant tissue:all isoforms}
 unique_sig_isoform_list <- list()
-for(tissue in tissues) {
-  unique_sig_isoform_list[[tissue]] <- unique(region_all_sig_features_list[[tissue]]$isoform_id)
+for (tissue in tissues) {
+  unique_sig_isoform_list[[tissue]] <-
+    unique(region_all_sig_features_list[[tissue]]$isoform_id)
 }
 
 # make UpSet plot (ComplexHeatmap)
@@ -234,16 +250,16 @@ all_isoform_list_comb_mat <- make_comb_mat(all_isoform_list_mat)
 # make UpSet plot (ComplexHeatmap)
 pdf(here("results", "plots", "upset_plots", "region_others_isoform_upset.pdf"))
 upset_isoform <- UpSet(all_isoform_list_comb_mat,
-                    comb_order = order(-comb_size(all_isoform_list_comb_mat)),
-                    comb_col = viridis(4)[comb_degree(all_isoform_list_comb_mat)],
-                    top_annotation = upset_top_annotation(
-                      all_isoform_list_comb_mat,
-                      add_numbers = TRUE
-                    ),
-                    right_annotation = upset_right_annotation(
-                      all_isoform_list_comb_mat,
-                      add_numbers = TRUE
-                    )
+  comb_order = order(-comb_size(all_isoform_list_comb_mat)),
+  comb_col = viridis(4)[comb_degree(all_isoform_list_comb_mat)],
+  top_annotation = upset_top_annotation(
+    all_isoform_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(
+    all_isoform_list_comb_mat,
+    add_numbers = TRUE
+  )
 )
 
 draw(upset_isoform, column_title = "Overlap of DTU isoforms by brain region")
@@ -279,6 +295,8 @@ striatum_all_volcano <- create_volcano_plot(
   condition2 = "other"
 )
 ```
+
+Now, once we have made them, we can save volcano plots.
 
 ```{r save volcano plots}
 ggsave(
