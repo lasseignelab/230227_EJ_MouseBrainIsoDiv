@@ -81,8 +81,11 @@ for(tissue in tissues) {
     isoformCountMatrix = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix = designs[[tissue]],
-    isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
-    isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+    isoformExonAnnoation = here(
+    "data", "nextflow", "bambu",
+    "extended_annotations.gtf"
+    ),
+    isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     reduceToSwitchingGenes = FALSE
   )
   region_all_switchlist_list[[tissue]] <- switchlist_obj
@@ -131,7 +134,6 @@ for(i in 1:length(region_all_sig_features_list)) {
     region_all_sig_features_list[[tissue_name]], 
     here(
       "results",
-      "tcResults",
       "dtu_transcripts",
       paste0(
         tissue_name,
@@ -159,7 +161,6 @@ for(i in 1:length(region_all_sig_genes_list)) {
     region_all_sig_genes_list[[tissue_name]], 
     here(
       "results",
-      "tcResults",
       "dtu_genes",
       paste0(
         tissue_name,
@@ -195,7 +196,7 @@ UpSet(all_gene_list_comb_mat,
       pt_size = unit(3, "mm"),
       comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)]
 )
-pdf(here("results", "tcResults", "plots", "upset_plots", "region_others_gene_upset.pdf"))
+pdf(here("results", "plots", "upset_plots", "region_others_gene_upset.pdf"))
 upset_gene <- UpSet(all_gene_list_comb_mat,
                     comb_order = order(-comb_size(all_gene_list_comb_mat)),
                     comb_col = viridis(4)[comb_degree(all_gene_list_comb_mat)],
@@ -216,48 +217,31 @@ dev.off()
 Cerebellum has most unique genes overall, but what happens when we extend this to isoforms?
 
 ```{r extract sigificant tissue:all isoforms}
-# cerebellum isoforms
-cere_sig_isoforms <- unique(cere_sig_features$isoform_id)
+unique_sig_isoform_list <- list()
+for(tissue in tissues) {
+  unique_sig_isoform_list[[tissue]] <- unique(region_all_sig_features_list[[tissue]]$isoform_id)
+}
 
-# cortex isoforms
-cort_sig_isoforms <- unique(cort_sig_features$isoform_id)
+# make UpSet plot (ComplexHeatmap)
+# create matrix
+all_isoform_list_mat <- list_to_matrix(unique_sig_isoform_list)
 
-# hippocampus isoforms
-hipp_sig_isoforms <- unique(hipp_sig_features$isoform_id)
-
-# striatum isoforms
-stri_sig_isoforms <- unique(stri_sig_features$isoform_id)
-
-# make all into list
-all_isoform_list <- list(
-  cerebellum = na.omit(cere_sig_isoforms),
-  cortex = na.omit(cort_sig_isoforms),
-  hippocampus = na.omit(hipp_sig_isoforms),
-  striatum = na.omit(stri_sig_isoforms)
-)
-```
-
-Now list is made, I can make combination matrix and plot using complexheatmap
-
-```{r plot complexheatmap tissue:all UpSet isoforms}
-# make matrix
-all_isoform_list_mat <- list_to_matrix(all_isoform_list)
-
-# create combination matrix
+# generate combination matrix
 all_isoform_list_comb_mat <- make_comb_mat(all_isoform_list_mat)
 
 # make UpSet plot (ComplexHeatmap)
 pdf(here("results", "plots", "upset_plots", "region_others_isoform_upset.pdf"))
-upset_isoform <- UpSet(
-  all_isoform_list_comb_mat,
-  comb_order = order(-comb_size(all_isoform_list_comb_mat)),
-  comb_col = viridis(4)[comb_degree(all_isoform_list_comb_mat)],
-  top_annotation = upset_top_annotation(all_isoform_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(all_isoform_list_comb_mat,
-    add_numbers = TRUE
-  )
+upset_isoform <- UpSet(all_isoform_list_comb_mat,
+                    comb_order = order(-comb_size(all_isoform_list_comb_mat)),
+                    comb_col = viridis(4)[comb_degree(all_isoform_list_comb_mat)],
+                    top_annotation = upset_top_annotation(
+                      all_isoform_list_comb_mat,
+                      add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(
+                      all_isoform_list_comb_mat,
+                      add_numbers = TRUE
+                    )
 )
 
 draw(upset_isoform, column_title = "Overlap of DTU isoforms by brain region")
@@ -269,37 +253,70 @@ dev.off()
 I also want to make volcano plots to visualize this.
 
 ```{r make volcano plots for region v others}
-# plot
-create_volcano_plot_region(
-  tissue_obj = cerebellum_switchlist_analyzed,
-  save_path = here(
-    "results",
-    "plots", "satuRn_volcano"
-  )
+cerebellum_all_volcano <- create_volcano_plot(
+  switchlist = region_all_switchlist_list$cerebellum,
+  condition1 = "cerebellum",
+  condition2 = "other"
 )
 
-create_volcano_plot_region(
-  tissue_obj = cortex_switchlist_analyzed,
-  save_path = here(
-    "results",
-    "plots", "satuRn_volcano"
-  )
+cortex_all_volcano <- create_volcano_plot(
+  switchlist = region_all_switchlist_list$cortex,
+  condition1 = "cortex",
+  condition2 = "other"
 )
 
-create_volcano_plot_region(
-  tissue_obj = hippocampus_switchlist_analyzed,
-  save_path = here(
-    "results",
-    "plots", "satuRn_volcano"
-  )
+hippocampus_all_volcano <- create_volcano_plot(
+  switchlist = region_all_switchlist_list$hippocampus,
+  condition1 = "hippocampus",
+  condition2 = "other"
 )
 
-create_volcano_plot_region(
-  tissue_obj = striatum_switchlist_analyzed,
-  save_path = here(
+striatum_all_volcano <- create_volcano_plot(
+  switchlist = region_all_switchlist_list$striatum,
+  condition1 = "striatum",
+  condition2 = "other"
+)
+```
+
+```{r save volcano plots}
+ggsave(
+  here(
     "results",
-    "plots", "satuRn_volcano"
-  )
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_all_volcano.png"
+  ),
+  plot = cerebellum_all_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cortex_all_volcano.png"
+  ),
+  plot = cortex_all_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "hippocampus_all_volcano.png"
+  ),
+  plot = hippocampus_all_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "striatum_all_volcano.png"
+  ),
+  plot = striatum_all_volcano
 )
 ```
 
