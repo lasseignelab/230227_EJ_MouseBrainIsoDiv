@@ -28,14 +28,11 @@ suppressPackageStartupMessages({
   library(IsoformSwitchAnalyzeR)
   library(ComplexHeatmap)
   library(viridis)
+  library(ggvenn)
   library(styler)
   library(lintr)
   library(here)
 })
-
-# install package; need to add to docker later if used in paper
-devtools::install_github("yanlinlin82/ggvenn")
-library(ggvenn)
 ```
 
 The biomart code stopped working

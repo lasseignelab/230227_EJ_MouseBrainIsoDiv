@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ## Differential Transcript Usage (DTU) Analysis in Mouse Brain lrRNA-Seq Data
 
 For code review, I am tracking the amount of time that this analysis will take.
@@ -58,11 +57,11 @@ exp_design <- data.frame(
 )
 ```
 
-Make a switchlist, which is an object required for running isoformswitchanalyzer.
+### Run satuRn
 
-Now, I can run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL.
+Now, I can make a switchlists and run satuRn. Because my data includes counts of less than 1, I still want to include them in my analysis. Therefore, I made the geneExpressionCutoff = NULL. This is a custom function from the functions script.
 
-```{r add fasta of transcripts to object}
+```{r make switchlist and run saturn}
 region_region_switchlist_analyzed <- make_switchlist_saturn(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
@@ -75,9 +74,20 @@ region_region_switchlist_analyzed <- make_switchlist_saturn(
   reduceToSwitchingGenes = FALSE
 )
 
-# sumarize number of isoforms, switches, and genes
+# summarize number of isoforms, switches, and genes
 extractSwitchSummary(region_region_switchlist_analyzed)
 ```
+Expected results: 
+
+cerebellum vs cortex	475	331	319	
+cerebellum vs hippocampus	175	129	120	
+cerebellum vs striatum	548	419	355	
+cortex vs hippocampus	41	32	31	
+cortex vs striatum	273	182	187	
+hippocampus vs striatum	72	67	50	
+Combined	1002	819	648	
+
+Next, we want to add gene symbols to the created switchlist object.
 
 ```{r add gene symbols}
 # get gene symbols and save object with gene symbols
@@ -86,13 +96,19 @@ region_region_switchlist_analyzed <- get_gene_symbols(
 )
 ```
 
+Then, we want to save the analyzed switchlist for later use.
+
 ```{r save switchlist}
 saveRDS(
-  region_region_switchlist_analyzed, 
-  here("data", "switchlist_objects", "raw", "region_region_switchlist_analyzed.Rds")
+  region_region_switchlist_analyzed,
+  here(
+    "data", "switchlist_objects", "raw",
+    "region_region_switchlist_analyzed.Rds"
+  )
 )
 ```
 
+Filter genes for significance.
 
 ```{r filter for significance}
 region_region_sig_features <- dplyr::filter(
@@ -101,49 +117,45 @@ region_region_sig_features <- dplyr::filter(
 )
 ```
 
-```{r save sig features}
+Save significant transcripts into results directory.
+
+```{r save sig transcripts}
 write.csv(
-  region_region_sig_features, 
+  region_region_sig_features,
   here(
     "results",
-    "tcResults",
     "dtu_transcripts",
     "region_region_sig_features.csv"
-  ), 
-  row.names=FALSE
+  ),
+  row.names = FALSE
 )
 ```
+
+We can also do this at the gene level, to make more direct comparisons with DGE.
 
 ```{r collapse to gene level}
 region_region_sig_genes <- unique(region_region_sig_features$gene_name)
 ```
 
+And save this output as well.
+
 ```{r save sig genes}
 write.csv(
-  region_region_sig_genes, 
+  region_region_sig_genes,
   here(
     "results",
-    "tcResults",
     "dtu_genes",
     "region_region_sig_genes.csv"
-  ), 
-  row.names=FALSE
+  ),
+  row.names = FALSE
 )
 ```
 
-Expected saturn output with sva:
-
-cerebellum vs cortex	446	332	289	
-cerebellum vs hippocampus	169	129	114	
-cerebellum vs striatum	514	419	321	
-cortex vs hippocampus	40	32	30	
-cortex vs striatum	253	182	167	
-hippocampus vs striatum	70	67	48	
-Combined	925	820	570	
-
 ### Make UpSet Plots
 
-I also can indicate not just overlapping, but specifically which genes are DTU and have overlap. So, I want to get a list of genes for each comparison.
+With UpSet plots, we are interested in specifically how many genes with DTU have overlap. So, I must to get a list of genes for each comparison.
+
+First we have to make data into lists and format it as a combination matrix.
 
 ```{r get list of genes for each comparison}
 # make vector of comparisons
@@ -170,72 +182,71 @@ sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
 ```
 
+Then, we can create and save the upset plot.
+
 ```{r create and save upset plot}
 # make UpSet plot (ComplexHeatmap)
-pdf(here("results", "tcResults", "plots", "upset_plots", "region_region_upset.pdf"),
-    width = 12, height = 6
+pdf(here("results", "plots", "upset_plots", "region_region_upset.pdf"),
+  width = 12, height = 6
 )
 upset_plot <- UpSet(sig_overlap_list_comb_mat,
-                    comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
-                    comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
-                    top_annotation = upset_top_annotation(sig_overlap_list_comb_mat,
-                                                          add_numbers = TRUE
-                    ),
-                    right_annotation = upset_right_annotation(sig_overlap_list_comb_mat,
-                                                              add_numbers = TRUE
-                    )
+  comb_order = order(-comb_size(sig_overlap_list_comb_mat)),
+  comb_col = viridis(6)[comb_degree(sig_overlap_list_comb_mat)],
+  top_annotation = upset_top_annotation(sig_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(sig_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
 )
 draw(upset_plot)
 dev.off()
 ```
 
-Now that the data is prepped, I can plot a complexheatmap UpSet plot. Here, color indicates degree of overlap being examined.
-
-
-I think this is the most informative use of an UpSet plot.
-
 ### Volcano Plots
 
-Making volcano plots is a classic way to show the relationship between fold changes and p values. I will make some here with the differential isoform fraction, instead of the more common differential expression (log2foldchange) seen in DE experiments.
+Making volcano plots is a classic way to show the relationship between fold changes and p values. I will make some here with the differential isoform fraction (dIF), instead of the more common differential expression (log2FC) seen in DGE experiments.
 
 ```{r volcano plot}
 # use function on all comparisons
-cerebellum_cortex_volcano <- create_volcano_plot_comp(
+cerebellum_cortex_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "cerebellum",
   condition2 = "cortex"
 )
 
-cerebellum_hippocampus_volcano <- create_volcano_plot_comp(
+cerebellum_hippocampus_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "cerebellum",
   condition2 = "hippocampus"
 )
 
-cerebellum_striatum_volcano <- create_volcano_plot_comp(
+cerebellum_striatum_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "cerebellum",
   condition2 = "striatum"
 )
 
-cortex_hippocampus_volcano <- create_volcano_plot_comp(
+cortex_hippocampus_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "cortex",
   condition2 = "hippocampus"
 )
 
-cortex_striatum_volcano <- create_volcano_plot_comp(
+cortex_striatum_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "cortex",
   condition2 = "striatum"
 )
 
-hippocampus_striatum_volcano <- create_volcano_plot_comp(
+hippocampus_striatum_volcano <- create_volcano_plot(
   switchlist = region_region_switchlist_analyzed,
   condition1 = "hippocampus",
   condition2 = "striatum"
 )
 ```
+
+Now, we can save the volcano plots.
 
 ```{r save volcano plots}
 ggsave(
@@ -345,14 +356,13 @@ run_plot_gprofiler(
 )
 ```
 
-
-
-There are not a lot of results, and most things are not significant. This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
+This amount of GO is not really seeming beneficial to me, but maybe could be a supplemental figure.
 
 #### Clean up script
 
 ```{r tidy script}
 style_file("05_dtu_region_region.Rmd")
+
 lint("05_dtu_region_region.Rmd",
   linters = linters_with_defaults(
     object_length_linter = NULL,

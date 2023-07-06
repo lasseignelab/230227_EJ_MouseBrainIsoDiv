@@ -63,6 +63,10 @@ HPC user session info: I used the short partition with 1-2 nodes and 80GB per no
 
 ***Script 15: de_analysis/15_compare_DTU_DGE.Rmd*** - This script depends on scripts 00-14. The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. Run back in github docker. It is not currently finished.
 
+***Script 16: de_analysis/16_dataset_overview_figure.Rmd*** - The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata. It takes less than 3 minutes to run and is not finished but is mainly on the shelf for now.
+
+***Script 17: worm_analysis/17_dtu_whole_worm.Rmd*** - The purpose of this script is to examine differential transcript usage by sex in short-read c elegans data. I am especially interested in comparing this DTU to my own mouse data to look for evolutionary conserved genes with sex specific splicing. The entire script takes less than 10 minutes to run. Must be run in at least docker 1.3 to include c elegans annotation. This script does not depend on any other code, with the exception of functions.R, which can be sourced.
+
 #### Other Scripts
 
 ***dtu_analysis/functions.R*** - This is a function script for all Rmd files in the dtu directory.

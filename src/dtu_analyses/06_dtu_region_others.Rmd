@@ -83,7 +83,7 @@ for(tissue in tissues) {
     designMatrix = designs[[tissue]],
     isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
     isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
-    reduceToSwitchingGenes = FALSE
+    reduceToSwitchingGenes = TRUE
   )
   region_all_switchlist_list[[tissue]] <- switchlist_obj
 }
