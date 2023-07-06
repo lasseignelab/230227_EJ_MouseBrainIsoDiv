@@ -26,3 +26,6 @@ suppressPackageStartupMessages({
 
 set.seed(123)
 ```
+
+```{r test chunk}
+```
