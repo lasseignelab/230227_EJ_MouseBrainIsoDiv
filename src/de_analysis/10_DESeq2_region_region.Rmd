@@ -81,8 +81,10 @@ plotPCA(vsd, intgroup = c("RIN"))
 
 vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue"))
 
+# save pca plot
 ggsave(here("results", "plots", "pca", "vst_tissue_pca.png"),
-       plot = vst_tissue_pca)
+  plot = vst_tissue_pca
+)
 ```
 
 Next, I can run DESeq2. I don't think I need to include anything other than tissue and sex based on these plots. I'm leaving sex because I'm interested in it, thought I know it may not have a lot of sig differences.
@@ -97,20 +99,38 @@ dds <- nbinomWaldTest(dds, maxit = 5000) # the more I increase this
 Run function for saving data
 
 ```{r get de results}
-get_de_results("cerebellum", "cortex")
-get_de_results("cerebellum", "hippocampus")
-get_de_results("cerebellum", "striatum")
-get_de_results("cortex", "hippocampus")
-get_de_results("cortex", "striatum")
-get_de_results("striatum", "hippocampus")
+get_de_results(
+  tissue1 = "cerebellum", tissue2 = "cortex",
+  save_path = here("results", "de_genes")
+)
+get_de_results(
+  tissue1 = "cerebellum", tissue2 = "hippocampus",
+  save_path = here("results", "de_genes")
+)
+get_de_results(
+  tissue1 = "cerebellum", tissue2 = "striatum",
+  save_path = here("results", "de_genes")
+)
+get_de_results(
+  tissue1 = "cortex", tissue2 = "hippocampus",
+  save_path = here("results", "de_genes")
+)
+get_de_results(
+  tissue1 = "cortex", tissue2 = "striatum",
+  save_path = here("results", "de_genes")
+)
+get_de_results(
+  tissue1 = "striatum", tissue2 = "hippocampus",
+  save_path = here("results", "de_genes")
+)
 ```
 Expected output: 
-[1] "cerebellum versus cortex had 5702 significant DE genes"
-[1] "cerebellum versus hippocampus had 4687 significant DE genes"
-[1] "cerebellum versus striatum had 5268 significant DE genes"
-[1] "cortex versus hippocampus had 1145 significant DE genes"
-[1] "cortex versus striatum had 2256 significant DE genes"
-[1] "striatum versus hippocampus had 1855 significant DE genes"
+[1] "cerebellum versus cortex had 2201 significant DE genes"
+[1] "cerebellum versus hippocampus had 1935 significant DE genes"
+[1] "cerebellum versus striatum had 2229 significant DE genes"
+[1] "cortex versus hippocampus had 349 significant DE genes"
+[1] "cortex versus striatum had 634 significant DE genes"
+[1] "striatum versus hippocampus had 707 significant DE genes"
 
 ## Do DESeq2 at the isoform level. Note: THIS WILL TREAT TRANSCRIPTS AS SEPARATE GENES
 
@@ -122,18 +142,22 @@ transcript_counts <- read.table(
 )
 
 # rename columns
-colnames(transcript_counts) <- str_extract(colnames(transcript_counts), "sample..")
+colnames(transcript_counts) <- str_extract(
+  colnames(transcript_counts),
+  "sample.."
+)
 
 # remove gene names
-transcript_counts <- transcript_counts[,-2]
+transcript_counts <- transcript_counts[, -2]
 
 # add rownames
-rownames(transcript_counts) <- transcript_counts[,1]
+rownames(transcript_counts) <- transcript_counts[, 1]
 
 # remove isoform_id column
-transcript_counts <- transcript_counts[,-1]
+transcript_counts <- transcript_counts[, -1]
 ```
 
+Now, I need to prep the data for deseq2.
 
 ```{r prep data for deseq2}
 dds_transcripts <- DESeqDataSetFromMatrix(
@@ -163,28 +187,46 @@ Next, I can run DESeq2.
 ```{r run DESeq2}
 dds_transcripts <- estimateSizeFactors(dds_transcripts)
 dds_transcripts <- estimateDispersions(dds_transcripts)
-dds_transcripts <- nbinomWaldTest(dds_transcripts, maxit = 5000) # the more I increase this
-# the less "did not converge" columns you will get
+dds_transcripts <- nbinomWaldTest(dds_transcripts, maxit = 5000)
+# the more I increase maxit the less "did not converge" columns you will get
 ```
 
 Run function for saving data
 
 ```{r get de results}
-get_de_results_transcripts("cerebellum", "cortex")
-get_de_results_transcripts("cerebellum", "hippocampus")
-get_de_results_transcripts("cerebellum", "striatum")
-get_de_results_transcripts("cortex", "hippocampus")
-get_de_results_transcripts("cortex", "striatum")
-get_de_results_transcripts("hippocampus", "striatum")
+get_de_results_transcripts(
+  tissue1 = "cerebellum", tissue2 = "cortex",
+  save_path = here("results", "de_transcripts")
+)
+get_de_results_transcripts(
+  tissue1 = "cerebellum", tissue2 = "hippocampus",
+  save_path = here("results", "de_transcripts")
+)
+get_de_results_transcripts(
+  tissue1 = "cerebellum", tissue2 = "striatum",
+  save_path = here("results", "de_transcripts")
+)
+get_de_results_transcripts(
+  tissue1 = "cortex", tissue2 = "hippocampus",
+  save_path = here("results", "de_transcripts")
+)
+get_de_results_transcripts(
+  tissue1 = "cortex", tissue2 = "striatum",
+  save_path = here("results", "de_transcripts")
+)
+get_de_results_transcripts(
+  tissue1 = "striatum", tissue2 = "hippocampus",
+  save_path = here("results", "de_transcripts")
+)
 ```
 
 Expected results:
-[1] "cerebellum versus cortex had 6033 significant DE transcripts"
-[1] "cerebellum versus hippocampus had 4871 significant DE transcripts"
-[1] "cerebellum versus striatum had 5591 significant DE transcripts"
-[1] "cortex versus hippocampus had 897 significant DE transcripts"
-[1] "cortex versus striatum had 1866 significant DE transcripts"
-[1] "hippocampus versus striatum had 1657 significant DE transcripts"
+[1] "cerebellum versus cortex had 3218 significant DE transcripts"
+[1] "cerebellum versus hippocampus had 2719 significant DE transcripts"
+[1] "cerebellum versus striatum had 3195 significant DE transcripts"
+[1] "cortex versus hippocampus had 386 significant DE transcripts"
+[1] "cortex versus striatum had 780 significant DE transcripts"
+[1] "hippocampus versus striatum had 840 significant DE transcripts"
 
 #### Clean up script
 

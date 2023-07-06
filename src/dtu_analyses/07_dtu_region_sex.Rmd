@@ -84,9 +84,9 @@ sex_switchlist <- make_switchlist_saturn(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
   designMatrix = sex_design_combined,
-  isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
-  isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
-  reduceToSwitchingGenes = FALSE
+    isoformExonAnnoation = "data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+    isoformNtFasta = "data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+  reduceToSwitchingGenes = TRUE
 )
 
 extractSwitchSummary(sex_switchlist)
@@ -129,9 +129,9 @@ for(tissue in tissues) {
       isoformCountMatrix = counts_list[[tissue]],
       isoformRepExpression = cpm_list[[tissue]],
       designMatrix = designs[[tissue]],
-      isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
-      isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
-      reduceToSwitchingGenes = FALSE
+    isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
+    isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
+      reduceToSwitchingGenes = TRUE
     )
     region_sex_switchlist_list[[tissue]] <- switchlist_obj
   }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})

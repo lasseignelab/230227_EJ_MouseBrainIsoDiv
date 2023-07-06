@@ -81,6 +81,7 @@ for(tissue in tissues) {
     isoformCountMatrix = merged_counts_iso,
     isoformRepExpression = cpm_iso,
     designMatrix = designs[[tissue]],
+
     isoformExonAnnoation = here(
     "data", "nextflow", "bambu",
     "extended_annotations.gtf"
@@ -88,6 +89,7 @@ for(tissue in tissues) {
     isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
     reduceToSwitchingGenes = FALSE
   )
+  
   region_all_switchlist_list[[tissue]] <- switchlist_obj
 }
 
