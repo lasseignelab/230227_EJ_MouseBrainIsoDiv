@@ -172,7 +172,22 @@ expected cortex results: F vs M	22	19	14
 
 expected striatum results: F vs M	11	7	7	
 
-ATTENTION NEEDED: NEED TO ADD GENE SYMBOLS HERE!!!!!
+```{r add gene symbols}
+#sex combined
+sex_switchlist <- get_gene_symbols(
+  switchlist_obj = sex_switchlist
+)
+
+# sex_region
+for(tissue in tissues) {
+  tryCatch({
+    temp_switchlist <- get_gene_symbols(
+      switchlist_obj = region_sex_switchlist_list[[tissue]]
+    )
+    region_sex_switchlist_list[[tissue]] <- temp_switchlist
+  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+}
+```
 
 Now, we want to save our data.
 
@@ -225,6 +240,7 @@ write.csv(
   sex_switchlist_sig_features,
   here(
     "results",
+    "tcResults",
     "dtu_transcripts",
     "sex_switchlist_sig_features.csv"
   ),
@@ -240,7 +256,7 @@ for (i in seq_along(region_sex_sig_features_list)) {
   write.csv(
     region_sex_sig_features_list[[tissue_name]],
     here(
-      "results",
+      "results","tcResults",
       "dtu_transcripts",
       paste0(
         tissue_name,
@@ -280,7 +296,7 @@ Save the combined genes only into results.
 write.table(
   sex_switchlist_sig_genes,
   here(
-    "results",
+    "results","tcResults",
     "dtu_genes",
     "sex_switchlist_sig_genes.csv"
   ),
@@ -298,7 +314,7 @@ for (i in seq_along(region_sex_sig_genes_list)) {
   write.table(
     region_sex_sig_genes_list[[tissue_name]],
     here(
-      "results",
+      "results","tcResults",
       "dtu_genes",
       paste0(
         tissue_name,
@@ -317,10 +333,91 @@ Alright, now I have some differential used isoforms/genes saved. Let's visualize
 #### Make volcano plots
 
 ```{r volcano plots for sex split by brain region}
-# use function
-create_sex_volcano_plot(
-  tissue_obj = stri_sex_switchlist_analyzed,
-  save_path = here("results", "plots", "satuRn_volcano")
+sex_combined_volcano <- create_volcano_plot(
+  switchlist = sex_switchlist,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+cerebellum_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$cerebellum,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+cortex_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$cortex,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+hippocampus_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$hippocampus,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+striatum_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$striatum,
+  condition1 = "F",
+  condition2 = "M"
+)
+```
+
+```{r save volcano plots}
+ggsave(
+  here(
+    "results",
+    "tcResults",
+    "plots",
+    "satuRn_volcano",
+    "sex_combined_volcano.png"
+  ),
+  plot = sex_combined_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "tcResults",
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_sex_volcano.png"
+  ),
+  plot = cerebellum_sex_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "tcResults",
+    "plots",
+    "satuRn_volcano",
+    "cortex_sex_volcano.png"
+  ),
+  plot = cortex_sex_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "tcResults",
+    "plots",
+    "satuRn_volcano",
+    "hippocampus_sex_volcano.png"
+  ),
+  plot = hippocampus_sex_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "tcResults",
+    "plots",
+    "satuRn_volcano",
+    "striatum_sex_volcano.png"
+  ),
+  plot = striatum_sex_volcano
 )
 ```
 
@@ -328,17 +425,20 @@ I removed the UpSetPlot code because there were only 3 genes considered switchin
 
 #### GO Analysis using gprofiler2
 
-Before doing GO analysis, I need to pull out significant genes. GO analysis does not currently work at the isoform level (at least for gprofiler2).
 
-```{r pull out signficant genes}
-get_cut_sig_genes(tissue = "striatum")
+```{r get correct list of background genes}
+bg_genes <- unique(sex_switchlist$isoformFeatures$gene_id)
+bg_genes <- str_extract(combined_bg_genes, "ENSMUSG...........")
 ```
 
 Now, perform go analysis with gprofiler2, but this gives no results.
 
 ```{r go analysis}
-# run gprofiler function on striatum
-run_gprofiler(tissue = "striatum") # no results to show
+run_plot_gprofiler(
+  gene_list = region_sex_sig_genes_list$cerebellum,
+  name = "cerebellum_sex",
+  save_path = here("results", "tcResults", "plots", "gprofiler2")
+)
 ```
 
 #### Clean up script
