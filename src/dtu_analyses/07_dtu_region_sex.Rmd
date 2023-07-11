@@ -56,7 +56,6 @@ sex_design_combined <- data.frame(
   condition = sample_collection_metadata$sex
 )
 
-
 # set the design experiment for sex for each region
 tissues <- c(
   "cerebellum",
@@ -240,7 +239,6 @@ write.csv(
   sex_switchlist_sig_features,
   here(
     "results",
-    "tcResults",
     "dtu_transcripts",
     "sex_switchlist_sig_features.csv"
   ),
@@ -256,7 +254,7 @@ for (i in seq_along(region_sex_sig_features_list)) {
   write.csv(
     region_sex_sig_features_list[[tissue_name]],
     here(
-      "results","tcResults",
+      "results",
       "dtu_transcripts",
       paste0(
         tissue_name,
@@ -296,7 +294,7 @@ Save the combined genes only into results.
 write.table(
   sex_switchlist_sig_genes,
   here(
-    "results","tcResults",
+    "results",
     "dtu_genes",
     "sex_switchlist_sig_genes.csv"
   ),
@@ -314,7 +312,7 @@ for (i in seq_along(region_sex_sig_genes_list)) {
   write.table(
     region_sex_sig_genes_list[[tissue_name]],
     here(
-      "results","tcResults",
+      "results",
       "dtu_genes",
       paste0(
         tissue_name,
@@ -364,11 +362,12 @@ striatum_sex_volcano <- create_volcano_plot(
 )
 ```
 
+Once the ggplot objects are created, we can save the volcano plots.
+
 ```{r save volcano plots}
 ggsave(
   here(
     "results",
-    "tcResults",
     "plots",
     "satuRn_volcano",
     "sex_combined_volcano.png"
@@ -379,7 +378,6 @@ ggsave(
 ggsave(
   here(
     "results",
-    "tcResults",
     "plots",
     "satuRn_volcano",
     "cerebellum_sex_volcano.png"
@@ -390,7 +388,6 @@ ggsave(
 ggsave(
   here(
     "results",
-    "tcResults",
     "plots",
     "satuRn_volcano",
     "cortex_sex_volcano.png"
@@ -401,7 +398,6 @@ ggsave(
 ggsave(
   here(
     "results",
-    "tcResults",
     "plots",
     "satuRn_volcano",
     "hippocampus_sex_volcano.png"
@@ -412,7 +408,6 @@ ggsave(
 ggsave(
   here(
     "results",
-    "tcResults",
     "plots",
     "satuRn_volcano",
     "striatum_sex_volcano.png"
@@ -421,10 +416,9 @@ ggsave(
 )
 ```
 
-I removed the UpSetPlot code because there were only 3 genes considered switching in a single brain region (striatum).
-
 #### GO Analysis using gprofiler2
 
+Finally, one can do GO analysis with gprofiler2 to see if gene lists have any enrichment for certain terms.
 
 ```{r get correct list of background genes}
 bg_genes <- unique(sex_switchlist$isoformFeatures$gene_id)
@@ -437,7 +431,7 @@ Now, perform go analysis with gprofiler2, but this gives no results.
 run_plot_gprofiler(
   gene_list = region_sex_sig_genes_list$cerebellum,
   name = "cerebellum_sex",
-  save_path = here("results", "tcResults", "plots", "gprofiler2")
+  save_path = here("results", "plots", "gprofiler2")
 )
 ```
 
