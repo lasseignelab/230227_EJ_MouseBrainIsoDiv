@@ -173,14 +173,16 @@ worm_sig_genes <- unique(worm_sig_features$gene_name)
 And save this output as well.
 
 ```{r save sig genes}
-write.csv(
+write.table(
   worm_sig_genes,
   here(
     "results",
     "dtu_genes",
     "worm_sig_genes.csv"
   ),
-  row.names = FALSE
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
 )
 ```
 
