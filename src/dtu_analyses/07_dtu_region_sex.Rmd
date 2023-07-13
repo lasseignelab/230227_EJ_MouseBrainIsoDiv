@@ -416,24 +416,6 @@ ggsave(
 )
 ```
 
-#### GO Analysis using gprofiler2
-
-Finally, one can do GO analysis with gprofiler2 to see if gene lists have any enrichment for certain terms.
-
-```{r get correct list of background genes}
-bg_genes <- unique(sex_switchlist$isoformFeatures$gene_id)
-bg_genes <- str_extract(combined_bg_genes, "ENSMUSG...........")
-```
-
-Now, perform go analysis with gprofiler2, but this gives no results.
-
-```{r go analysis}
-run_plot_gprofiler(
-  gene_list = region_sex_sig_genes_list$cerebellum,
-  name = "cerebellum_sex",
-  save_path = here("results", "plots", "gprofiler2")
-)
-```
 
 #### Clean up script
 
