@@ -46,15 +46,14 @@ source("functions.R", local = knitr::knit_global())
 #### Read in Data
 
 ```{r load in switchlist objects}
-files <- list.files(here("data", "switchlist_objects"),
-  pattern = "switchlist_saturn.Rds"
+files <- list.files(here("data", "switchlist_objects", "raw")
 )
-# loop in files
-for (i in files) {
+# loop in files, but not worm
+for (i in files[1:4]) {
   temp <- readRDS(
-    here("data", "switchlist_objects", i)
+    here("data", "switchlist_objects", "raw", i)
   )
-  assign(paste0(str_sub(i, end = -12), "_analyzed"),
+  assign(paste(str_sub(i, end = -5)),
     temp,
     envir = .GlobalEnv
   )
@@ -62,6 +61,8 @@ for (i in files) {
 ```
 
 To visualize the top switching events, we need to add open reading frames for all switching genes. This function will also save all the open reading frames to the switchlist object as well.
+
+NOTE TO SELF: NEED TO FIX THIS
 
 ```{r add open reading frames}
 # apply function for creating open reading frames and saving them
@@ -90,12 +91,24 @@ add_save_orfs(
   save_path = here("data", "switchlist_objects", "orf_added")
 )
 
-# for sex-specific, only need to do striatum because it had only sig results
+# for sex-specific, only need to do striatum, cortex, and cerebellum because they had only sig results
+
 add_save_orfs_sex(
   region = "striatum",
   save_path = here("data", "switchlist_objects", "orf_added")
 )
+
+add_save_orfs_sex(
+  region = "cortex",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
+
+add_save_orfs_sex(
+  region = "cerebellum",
+  save_path = here("data", "switchlist_objects", "orf_added")
+)
 ```
+
 Now, we can save the isoform switching events plots.
 
 ```{r plot isoform switch events for striatum}
