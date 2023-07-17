@@ -34,7 +34,6 @@ set.seed(123)
 ```
 
 
-
 ```{r read in data}
 worm_switchlist_analyzed <- readRDS("/data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_objects/raw/worm_switchlist_analyzed.Rds")
 
@@ -44,17 +43,111 @@ sex_switchlist <- readRDS("/data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/sw
 
 ```
 
-Need to filter for significant genes
+Instead of the switchlists - we can also load in dtu genes.
 
-```{r }
-cerebellum_cortex_list <- list(
-  `worm sex DTU` = cerebellum_cortex_dge_genes,
-  `mouse sex DTU` = cerebellum_cortex_dte_genes,
-  `mouse cerebellum sex DTU` = cerebellum_cortex_dtu_genes,
-  `mouse cortex sex DTU` = cerebellum_cortex_dtu_genes,
-  `mouse striatum sex DTU` = cerebellum_cortex_dtu_genes
-)
+```{r also load in dtu genes}
+# DTU
+dtu_files <- list.files(here("results", "dtu_genes"))
+# loop in files
+for (i in dtu_files) {
+  temp <- read.csv(
+    here("results", "dtu_genes", i),
+    header = FALSE
+  )
+  genes <- temp$V1
+  assign(paste0(str_sub(i, end = -5)),
+    genes,
+    envir = .GlobalEnv
+  )
+}
 ```
+
+Now, we need to convert the known mouse to worm orthologs
+
+```{r convert mouse to worm}
+# this function is for converting mouse gene names to worm gene names
+convert_mouse_to_worm <- function(gene_list) {
+  worm <- useMart("ENSEMBL_MART_ENSEMBL",
+    dataset = "celegans_gene_ensembl",
+    host = "https://dec2021.archive.ensembl.org"
+  )
+  mouse <- useMart("ENSEMBL_MART_ENSEMBL",
+    dataset = "mmusculus_gene_ensembl",
+    host = "https://dec2021.archive.ensembl.org"
+  )
+  # use biomaRt to get homologous genes
+  genes <- getLDS(
+    attributes = c("mgi_symbol", "ensembl_gene_id"),
+    filters = "mgi_symbol", values = gene_list, mart = mouse,
+    attributesL = c("wormbase_gene", "external_gene_name"),
+    martL = worm, uniqueRows = TRUE
+  )
+  return(genes)
+}
+
+worm_mouse_sex_genes <- convert_mouse_to_worm(sex_switchlist_sig_genes)
+
+worm_mouse_sex_striatum_genes <- convert_mouse_to_worm(striatum_sex_sig_genes)
+
+```
+
+Now that I think about it, it might be better to convert worm to mouse IDs, since only 1 out of 6 total comparisons is in worm (even though our focus is worm)
+
+```{r convert worm to mouse IDs}
+# this function is for converting worm gene names to mouse gene names
+convert_worm_to_mouse <- function(gene_list) {
+  worm <- useMart("ENSEMBL_MART_ENSEMBL",
+    dataset = "celegans_gene_ensembl",
+    host = "https://dec2021.archive.ensembl.org"
+  )
+  mouse <- useMart("ENSEMBL_MART_ENSEMBL",
+    dataset = "mmusculus_gene_ensembl",
+    host = "https://dec2021.archive.ensembl.org"
+  )
+  # use biomaRt to get homologous genes
+  genes <- getLDS(
+    attributes = c("wormbase_gene", "external_gene_name"),
+    filters = "external_gene_name", values = gene_list, mart = worm,
+    attributesL = c("mgi_symbol", "ensembl_gene_id"),
+    martL = mouse, uniqueRows = TRUE
+  )
+  return(genes)
+}
+
+mouse_worm_sig_genes <- convert_worm_to_mouse(worm_sig_genes)
+```
+
+Alright, now that my conversion functions work both ways, let's quantify exactly how many of my mouse genes even have orthologs. I can make a total list of mouse genes with any sex differences, then out of those, how many have orthologs.
+
+```{r make total list}
+# adding all mouse genes together into one list
+any_mouse_sex_genes <- c(cortex_sex_sig_genes, cerebellum_sex_sig_genes, striatum_sex_sig_genes, sex_switchlist_sig_genes)
+
+```
+
+Get matching worm symbols, what percent is this??
+
+```{r get worm orthologs}
+# use function to get mouse in worm
+worm_any_mouse_sex_genes <- convert_mouse_to_worm(any_mouse_sex_genes)
+
+# what percent have orthologs?
+length(unique(worm_any_mouse_sex_genes$MGI.symbol)) / length(any_mouse_sex_genes)
+
+#48%
+```
+
+48% have orthologs, are these worm IDs found in my worm sex DTU list?
+
+```{r compare the }
+worm_overlap <- intersect(worm_any_mouse_sex_genes$Gene.name, worm_sig_genes)
+```
+
+What about common pathways between the two??
+
+```{r do pathway analysis}
+```
+
 
 ```{r proc time finish}
 fptm <- proc.time() - ptm
