@@ -62,71 +62,37 @@ for (i in files[1:4]) {
 
 To visualize the top switching events, we need to add open reading frames for all switching genes. This function will also save all the open reading frames to the switchlist object as well.
 
-NOTE TO SELF: NEED TO FIX THIS
-
 ```{r add open reading frames}
-# apply function for creating open reading frames and saving them
-add_save_orfs(
-  region = "region_region",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
+# run function for creating open reading frames
+region_region_switchlist_analyzed <- add_orfs(
+  switchlist_object = region_region_switchlist_analyzed)
 
-add_save_orfs(
-  region = "cerebellum",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
+# save object
+saveRDS(region_region_switchlist_analyzed, 
+        file = here("data", "switchlist_objects", "orf_added",
+                    "region_region_switchlist_analyzed.Rds"))
 
-add_save_orfs(
-  region = "cortex",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
+# do same for region vs all
+region_all_switchlist_list <- lapply(region_all_switchlist_list, add_orfs)
 
-add_save_orfs(
-  region = "hippocampus",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
+# save
+saveRDS(region_all_switchlist_list, 
+        file = here("data", "switchlist_objects", "orf_added",
+                    "region_all_switchlist_list.Rds"))
 
-add_save_orfs(
-  region = "striatum",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
+# and finally do for sex
+region_sex_switchlist_list <- lapply(region_sex_switchlist_list, add_orfs)
 
-# for sex-specific, only need to do striatum, cortex, and cerebellum because they had only sig results
+# save
+saveRDS(region_sex_switchlist_list, 
+        file = here("data", "switchlist_objects", "orf_added",
+                    "region_sex_switchlist_list.Rds"))
 
-add_save_orfs_sex(
-  region = "striatum",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
-
-add_save_orfs_sex(
-  region = "cortex",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
-
-add_save_orfs_sex(
-  region = "cerebellum",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
 ```
 
 Now, we can save the isoform switching events plots.
 
 ```{r plot isoform switch events for striatum}
-get_gene_symbols(
-  tissue = "striatum_sex",
-  save_path = here("data", "switchlist_objects", "orf_added")
-)
-# need to do this to get gene symbol for title
-
-# striatum sex
-switchPlotTopSwitches(striatum_sex_switchlist_analyzed,
-  pathToOutput = here(
-    "results", "plots", "switch_plots", "raw",
-    "striatum"
-  ),
-  splitFunctionalConsequences = FALSE
-)
-
 # region region
 switchPlotTopSwitches(region_region_switchlist_analyzed,
   pathToOutput = here(
@@ -137,7 +103,7 @@ switchPlotTopSwitches(region_region_switchlist_analyzed,
 )
 
 # cerebellum
-switchPlotTopSwitches(cerebellum_switchlist_analyzed,
+switchPlotTopSwitches(region_all_switchlist_list[[1]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "raw",
     "cerebellum"
@@ -146,7 +112,7 @@ switchPlotTopSwitches(cerebellum_switchlist_analyzed,
 )
 
 # cortex
-switchPlotTopSwitches(cortex_switchlist_analyzed,
+switchPlotTopSwitches(region_all_switchlist_list[[2]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "raw",
     "cortex"
@@ -155,7 +121,7 @@ switchPlotTopSwitches(cortex_switchlist_analyzed,
 )
 
 # hippocampus
-switchPlotTopSwitches(hippocampus_switchlist_analyzed,
+switchPlotTopSwitches(region_all_switchlist_list[[3]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "raw",
     "hippocampus"
@@ -164,10 +130,37 @@ switchPlotTopSwitches(hippocampus_switchlist_analyzed,
 )
 
 # striatum
-switchPlotTopSwitches(striatum_switchlist_analyzed,
+switchPlotTopSwitches(region_all_switchlist_list[[4]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "raw",
     "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+# striatum sex
+switchPlotTopSwitches(region_sex_switchlist_list[[4]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "raw",
+    "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+# cerebellum
+switchPlotTopSwitches(region_sex_switchlist_list[[1]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "raw",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+# cortex
+switchPlotTopSwitches(region_sex_switchlist_list[[2]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "raw",
+    "cortex"
   ),
   splitFunctionalConsequences = FALSE
 )

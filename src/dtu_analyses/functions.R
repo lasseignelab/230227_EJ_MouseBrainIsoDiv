@@ -313,14 +313,11 @@ compare_switching_genes <- function(switchlist_index) {
 
 ######################### 09_dtu_isoform_switching script ######################
 
-# this function is for adding and saving orfs for brain region
-# save_path is here("data", "switchlist_objects", "orf_added")
-add_save_orfs <- function(region, save_path) {
-  # pull in switchlist
-  assign("switchlist_analyzed", get(paste0(region, "_switchlist_analyzed")))
+# this function is for adding and saving annotated and novel orfs
+add_orfs <- function(switchlist_object) {
   # add open reading frames
   switchlist_analyzed <- addORFfromGTF(
-    switchAnalyzeRlist = switchlist_analyzed,
+    switchAnalyzeRlist = switchlist_object,
     pathToGTF = here(
       "data", "gencode_annotations",
       "gencode.vM31.primary_assembly.annotation.gtf"
@@ -331,15 +328,9 @@ add_save_orfs <- function(region, save_path) {
     switchlist_analyzed,
     analysisAllIsoformsWithoutORF = TRUE
   )
-  # save
-  saveRDS(switchlist_analyzed, paste0(
-    save_path, "/",
-    region, "_switchlist_orf.Rds"
-  ))
-  # assign object
-  assign(paste0(region, "_switchlist_analyzed"), switchlist_analyzed,
-    envir = .GlobalEnv
-  )
+  # return object
+  return(switchlist_analyzed)
+
 }
 
 # this function for adding and saving orfs for brain region (sex-specific)
