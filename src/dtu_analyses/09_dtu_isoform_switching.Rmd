@@ -89,6 +89,7 @@ saveRDS(region_sex_switchlist_list,
                     "region_sex_switchlist_list.Rds"))
 
 ```
+Please Note: this takes about 45 minutes to run.
 
 Now, we can save the isoform switching events plots.
 
