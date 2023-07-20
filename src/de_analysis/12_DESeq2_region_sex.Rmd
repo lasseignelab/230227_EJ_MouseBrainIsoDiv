@@ -9,9 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## DESeq within brain region DE across sexes
+## DESeq across and within brain region DE across sexes
 
-The purpose of this script is to compare expression at the gene and transcript level across sexes within brain regions.
+The purpose of this script is to compare expression at the gene and transcript level across sexes across and within brain regions.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -76,6 +76,30 @@ rownames(transcript_counts) <- transcript_counts[, 1]
 # remove isoform_id column
 transcript_counts <- transcript_counts[, -1]
 ```
+
+### Run DESeq2 across brain regions by sex and gene and transcript level
+
+```{r run deseq2 across brain region by sex at both levels}
+deseq2_all_regions_sex(
+  counts_table = gene_counts,
+  metadata = sample_collection_metadata,
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes"),
+  level = "gene"
+)
+
+deseq2_all_regions_sex(
+  counts_table = transcript_counts,
+  metadata = sample_collection_metadata,
+  object_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts"),
+  level = "transcript"
+)
+```
+
+Expected results: 
+"M vs F had 5 significant DE genes by sex"
+"M vs F had 5 significant DE transcripts by sex"
 
 ### Run DESeq2 with a brain region at gene level
 
