@@ -49,14 +49,14 @@ source("de_functions.R", local = knitr::knit_global())
 
 ```{r load in switchlist orf objects}
 files <- list.files(here("data", "switchlist_objects", "orf_added"),
-  pattern = "switchlist_orf.Rds"
+  pattern = ".Rds"
 )
 # loop in files
 for (i in files) {
   temp <- readRDS(
     here("data", "switchlist_objects", "orf_added", i)
   )
-  assign(paste0(str_sub(i, end = -9), "_orf"),
+  assign(paste0(str_sub(i, end = -14), "_orf"),
     temp,
     envir = .GlobalEnv
   )
@@ -66,8 +66,6 @@ for (i in files) {
 I am adding DESeq results to the region_region switchlist first.
 
 ```{r add gene q value}
-region_region_switchlist_orf$isoformFeatures
-
 features <- region_region_switchlist_orf$isoformFeatures
 
 order_needed <- features[, c("gene_id", "condition_1", "condition_2")]
