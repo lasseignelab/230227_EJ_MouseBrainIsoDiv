@@ -46,8 +46,7 @@ source("functions.R", local = knitr::knit_global())
 #### Read in Data
 
 ```{r load in switchlist objects}
-files <- list.files(here("data", "switchlist_objects", "raw")
-)
+files <- list.files(here("data", "switchlist_objects", "raw"))
 # loop in files, but not worm
 for (i in files[1:4]) {
   temp <- readRDS(
@@ -65,29 +64,51 @@ To visualize the top switching events, we need to add open reading frames for al
 ```{r add open reading frames}
 # run function for creating open reading frames
 region_region_switchlist_analyzed <- add_orfs(
-  switchlist_object = region_region_switchlist_analyzed)
+  switchlist_object = region_region_switchlist_analyzed
+)
 
 # save object
-saveRDS(region_region_switchlist_analyzed, 
-        file = here("data", "switchlist_objects", "orf_added",
-                    "region_region_switchlist_analyzed.Rds"))
+saveRDS(region_region_switchlist_analyzed,
+  file = here(
+    "data", "switchlist_objects", "orf_added",
+    "region_region_switchlist_analyzed.Rds"
+  )
+)
 
 # do same for region vs all
 region_all_switchlist_list <- lapply(region_all_switchlist_list, add_orfs)
 
 # save
-saveRDS(region_all_switchlist_list, 
-        file = here("data", "switchlist_objects", "orf_added",
-                    "region_all_switchlist_list.Rds"))
+saveRDS(region_all_switchlist_list,
+  file = here(
+    "data", "switchlist_objects", "orf_added",
+    "region_all_switchlist_list.Rds"
+  )
+)
 
 # and finally do for sex
 region_sex_switchlist_list <- lapply(region_sex_switchlist_list, add_orfs)
 
 # save
-saveRDS(region_sex_switchlist_list, 
-        file = here("data", "switchlist_objects", "orf_added",
-                    "region_sex_switchlist_list.Rds"))
+saveRDS(region_sex_switchlist_list,
+  file = here(
+    "data", "switchlist_objects", "orf_added",
+    "region_sex_switchlist_list.Rds"
+  )
+)
 
+# don't forget sex overall!
+sex_switchlist_analyzed <- add_orfs(
+  switchlist_object = sex_switchlist
+)
+
+# save object
+saveRDS(sex_switchlist_analyzed,
+  file = here(
+    "data", "switchlist_objects", "orf_added",
+    "sex_switchlist_analyzed.Rds"
+  )
+)
 ```
 Please Note: this takes about 45 minutes to run.
 
@@ -162,6 +183,14 @@ switchPlotTopSwitches(region_sex_switchlist_list[[2]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "raw",
     "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+# across all regions
+switchPlotTopSwitches(sex_switchlist_analyzed,
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "raw"
   ),
   splitFunctionalConsequences = FALSE
 )
