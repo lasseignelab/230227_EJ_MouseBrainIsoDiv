@@ -96,32 +96,38 @@ dds <- nbinomWaldTest(dds, maxit = 5000) # the more I increase this
 # the less "did not converge" columns you will get
 ```
 
-Run function for saving data
+Run function for saving data at gene level
 
-```{r get de results}
+```{r get de results for gene level}
 get_de_results(
   tissue1 = "cerebellum", tissue2 = "cortex",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 get_de_results(
   tissue1 = "cerebellum", tissue2 = "hippocampus",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 get_de_results(
   tissue1 = "cerebellum", tissue2 = "striatum",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 get_de_results(
   tissue1 = "cortex", tissue2 = "hippocampus",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 get_de_results(
   tissue1 = "cortex", tissue2 = "striatum",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 get_de_results(
   tissue1 = "striatum", tissue2 = "hippocampus",
-  save_path = here("results", "de_genes")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_genes")
 )
 ```
 Expected output: 
@@ -196,27 +202,33 @@ Run function for saving data
 ```{r get de results}
 get_de_results_transcripts(
   tissue1 = "cerebellum", tissue2 = "cortex",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 get_de_results_transcripts(
   tissue1 = "cerebellum", tissue2 = "hippocampus",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 get_de_results_transcripts(
   tissue1 = "cerebellum", tissue2 = "striatum",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 get_de_results_transcripts(
   tissue1 = "cortex", tissue2 = "hippocampus",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 get_de_results_transcripts(
   tissue1 = "cortex", tissue2 = "striatum",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 get_de_results_transcripts(
   tissue1 = "striatum", tissue2 = "hippocampus",
-  save_path = here("results", "de_transcripts")
+  data_save_path = here("data", "deseq2_data"),
+  results_save_path = here("results", "de_transcripts")
 )
 ```
 
