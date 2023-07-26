@@ -178,152 +178,136 @@ switchPlotTopSwitches(region_region_switchlist_orf,
 ### Incorporate DE results for region vs others comparisons
 
 ```{r region others gene level}
-format_deseq_results_region(region = "cerebellum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for cerebellum
+region_all_switch_orf[["cerebellum"]] <- incorporate_deseq_results(
+  deseq2_gene_results = cerebellum_gene_res,
+  deseq2_tx_results = cerebellum_transcript_res,
+  switchlist_obj = region_all_switch_orf[["cerebellum"]]
+)
 
-format_deseq_results_region(region = "cortex",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for cortex
+region_all_switch_orf[["cortex"]] <- incorporate_deseq_results(
+  deseq2_gene_results = cortex_gene_res,
+  deseq2_tx_results = cortex_transcript_res,
+  switchlist_obj = region_all_switch_orf[["cortex"]]
+)
 
-format_deseq_results_region(region = "hippocampus",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for hippocampus
+region_all_switch_orf[["hippocampus"]] <- incorporate_deseq_results(
+  deseq2_gene_results = hippocampus_gene_res,
+  deseq2_tx_results = hippocampus_transcript_res,
+  switchlist_obj = region_all_switch_orf[["hippocampus"]]
+)
 
-format_deseq_results_region(region = "striatum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-```
+# format results for striatum
+region_all_switch_orf[["striatum"]] <- incorporate_deseq_results(
+  deseq2_gene_results = striatum_gene_res,
+  deseq2_tx_results = striatum_transcript_res,
+  switchlist_obj = region_all_switch_orf[["striatum"]]
+)
 
-```{r region others transcript level}
-format_deseq_results_region_dte(region = "cerebellum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte(region = "cortex",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte(region = "hippocampus",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte(region = "striatum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# save combined object
+saveRDS(region_all_switch_orf, here(
+  "data", "switchlist_objects", "de_added",
+  "region_all_switchlist_list_orf_de.Rds"
+))
 ```
 
 #### Save new region other plots with signficiance values
 
 ```{r save new plots}
-
-switchPlotTopSwitches(cerebellum_switchlist_orf_dte,
+switchPlotTopSwitches(region_all_switch_orf[["cerebellum"]],
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "cerebellum"
+    "results", "plots", "switch_plots", "de_added", "cerebellum"
   ),
   splitFunctionalConsequences = FALSE
 )
 
-switchPlotTopSwitches(cortex_switchlist_orf_dte,
+switchPlotTopSwitches(region_all_switch_orf[["cortex"]],
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "cortex"
+    "results", "plots", "switch_plots", "de_added", "cortex"
   ),
   splitFunctionalConsequences = FALSE
 )
 
-switchPlotTopSwitches(cerebellum_switchlist_orf_dte,
+switchPlotTopSwitches(region_all_switch_orf[["hippocampus"]],
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "cerebellum"
+    "results", "plots", "switch_plots", "de_added", "hippocampus"
   ),
   splitFunctionalConsequences = FALSE
 )
 
-switchPlotTopSwitches(hippocampus_switchlist_orf_dte,
+switchPlotTopSwitches(region_all_switch_orf[["striatum"]],
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "hippocampus"
+    "results", "plots", "switch_plots", "de_added", "striatum"
   ),
   splitFunctionalConsequences = FALSE
 )
-
-switchPlotTopSwitches(striatum_switchlist_orf_dte,
-  pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "striatum"
-  ),
-  splitFunctionalConsequences = FALSE
-)
-
 ```
 
 ### DESeq2 by sex
 
-Now I need to pull in the results from my individual tissue comparisons by sex. I had edited those original function again to make this a bit easier.
-
-Start with gene-level, then move to transcript-level.
+Now I need to pull in the results from my individual tissue comparisons by sex. I can reuse the same function, just need to change the input for each.
 
 ```{r incorporate deseq2 results by sex for within brain regions}
-format_deseq_results_region_sex(region = "cerebellum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for cerebellum
+region_sex_switch_orf[["cerebellum"]] <- incorporate_deseq_results(
+  deseq2_gene_results = cerebellum_sex_gene_res,
+  deseq2_tx_results = cerebellum_sex_transcript_res,
+  switchlist_obj = region_sex_switch_orf[["cerebellum"]]
+)
 
-format_deseq_results_region_sex(region = "cortex",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for cortex
+region_sex_switch_orf[["cortex"]] <- incorporate_deseq_results(
+  deseq2_gene_results = cortex_sex_gene_res,
+  deseq2_tx_results = cortex_sex_transcript_res,
+  switchlist_obj = region_sex_switch_orf[["cortex"]]
+)
 
-format_deseq_results_region_sex(region = "hippocampus",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for hippocampus
+region_sex_switch_orf[["hippocampus"]] <- incorporate_deseq_results(
+  deseq2_gene_results = hippocampus_sex_gene_res,
+  deseq2_tx_results = hippocampus_sex_transcript_res,
+  switchlist_obj = region_sex_switch_orf[["hippocampus"]]
+)
 
-format_deseq_results_region_sex(region = "striatum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
+# format results for striatum
+region_sex_switch_orf[["striatum"]] <- incorporate_deseq_results(
+  deseq2_gene_results = striatum_sex_gene_res,
+  deseq2_tx_results = striatum_sex_transcript_res,
+  switchlist_obj = region_sex_switch_orf[["striatum"]]
+)
 
-
+# save combined object
+saveRDS(region_sex_switch_orf, here(
+  "data", "switchlist_objects", "de_added",
+  "region_sex_switchlist_list_orf_de.Rds"
+))
 ```
 
-Now can do transcript level.
+Finally, make new plots for the sex-specific switchlists. 
 
-```{r incorporate deseq2 results by sex for within brain regions transcript level}
-format_deseq_results_region_dte_sex(region = "cerebellum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte_sex(region = "cortex",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte_sex(region = "hippocampus",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-format_deseq_results_region_dte_sex(region = "striatum",
-                            save_path = 
-                              here("data", "switchlist_objects", "de_added"))
-
-
-```
-
-Finally, make new plots for these sex. The only signficnat plots are for striatum anyway, so I'm only running the plotting function once.
-
-At some point, we lost the gene names for these sex objects. I will have to re-add the gene names.
-
-```{r plot striatum sex}
-
-get_gene_symbols_mod(tissue = "striatum",
-                     save_path = here("data", "switchlist_objects", "de_added"))
-
-switchPlotTopSwitches(striatum_sex_switchlist_orf_dte,
+```{r plot switchplots for sex}
+switchPlotTopSwitches(region_sex_switch_orf[["cerebellum"]],
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
-    "striatum"
+    "results", "plots", "switch_plots", "de_added", "cerebellum"
   ),
   splitFunctionalConsequences = FALSE
 )
 
+switchPlotTopSwitches(region_sex_switch_orf[["cortex"]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added", "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+
+switchPlotTopSwitches(region_sex_switch_orf[["striatum"]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "de_added", "striatum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
 ```
 
 #### Clean up script
