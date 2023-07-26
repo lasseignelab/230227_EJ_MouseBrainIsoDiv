@@ -34,9 +34,9 @@ set.seed(123)
 #### Load in data
 
 ```{r load in data}
-files <- list.files(here("data", "switchlist_objects", "de_added"),
-  pattern = ".Rds"
-)
+# list files
+files <- list.files(here("data", "switchlist_objects", "de_added"))
+
 # loop in files
 for (i in files) {
   temp <- readRDS(
@@ -47,18 +47,15 @@ for (i in files) {
     envir = .GlobalEnv
   )
 }
+
+# remove temp file
+rm(temp)
 ```
 
 Now that the files are read in, we can extract the amino acid sequences
 
 ```{r extract sequences}
-striatum_sex_analyzed <- extractSequence(
-  striatum_sex_analyzed,
-  pathToOutput = here("data", "switchlist_fasta"),
-  outputPrefix = "striatum_sex",
-  writeToFile = TRUE
-)
-
+# extract sequences for region region
 region_region_analyzed <- extractSequence(
   region_region_analyzed,
   pathToOutput = here("data", "switchlist_fasta"),
@@ -66,35 +63,60 @@ region_region_analyzed <- extractSequence(
   writeToFile = TRUE
 )
 
+# extract sequences for region others
 cerebellum_analyzed <- extractSequence(
-  cerebellum_analyzed,
+  region_all_switchlist_list_analyzed[["cerebellum"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "cerebellum",
   writeToFile = TRUE
 )
 
 cortex_analyzed <- extractSequence(
-  cortex_analyzed,
+  region_all_switchlist_list_analyzed[["cortex"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "cortex",
   writeToFile = TRUE
 )
 
 hippocampus_analyzed <- extractSequence(
-  hippocampus_analyzed,
+  region_all_switchlist_list_analyzed[["hippocampus"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "hippocampus",
   writeToFile = TRUE
 )
 
 striatum_analyzed <- extractSequence(
-  striatum_analyzed,
+  region_all_switchlist_list_analyzed[["striatum"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "striatum",
   writeToFile = TRUE
 )
 ```
 
+Do for sex within regions.
+
+```{r extract sequences for sex within regions}
+cerebellum_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["cerebellum"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cerebellum_sex",
+  writeToFile = TRUE
+)
+
+cortex_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["cortex"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cortex_sex",
+  writeToFile = TRUE
+)
+
+striatum_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["striatum"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum_sex",
+  writeToFile = TRUE
+)
+```
 PFAM!!! Start with region_region comparison switchlist
 
 ```{bash run pfan on region region AA}
