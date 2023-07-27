@@ -1,6 +1,6 @@
 README
 ================
-2023-07-06
+2023-07-27
 
 # Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
 
@@ -37,8 +37,7 @@ isoform usage differences across brain region and sex.
     ## │   ├── compare_satuRn_DEXSeq_results.Rmd
     ## │   ├── functions.R
     ## │   ├── isoformswitchanalyzer_overflow.Rmd
-    ## │   ├── size_power.R
-    ## │   └── vf_please run.Rmd
+    ## │   └── size_power.R
     ## ├── preprocessing
     ## │   ├── 00_run_nanoseq.sh
     ## │   ├── 02_get_genome_annotations.sh
@@ -49,6 +48,7 @@ isoform usage differences across brain region and sex.
     ## │   └── README
     ## └── worm_analysis
     ##     ├── 17_dtu_whole_worm.Rmd
+    ##     ├── 18_compare_worm_mouse.Rmd
     ##     └── salmon_quant.sh
 
 ### Reproducibility
@@ -146,8 +146,8 @@ to run.
 ***Script 14: dtu_analyses/14_protein_domain_info.Rmd*** - This script
 depends on scripts 00-13, and also includes a shell script for running
 perl code. The purpose of this script is to extract nucleotide and amino
-acid sequences and run pfam to annotate the protein domains. IT MUST RUN
-IN PFAM DOCKER!!!
+acid sequences and run pfam to annotate the protein domains. NEEDS TO
+RUN IN PFAM DOCKER!
 
 ***Script 15: de_analysis/15_compare_DTU_DGE.Rmd*** - This script
 depends on scripts 00-14. The purpose of this script is to compare genes
@@ -161,6 +161,14 @@ manuscript figure 1. It is dependent on scripts 00 and 01 to get sample
 metadata. It takes less than 3 minutes to run and is not finished but is
 mainly on the shelf for now.
 
+#### Other Scripts
+
+***dtu_analysis/functions.R*** - This is a function script for all Rmd
+files in the dtu directory.
+
+***de_analysis/de_functions.R*** - This is a function script for all Rmd
+files in the de directory.
+
 ***Script 17: worm_analysis/17_dtu_whole_worm.Rmd*** - The purpose of
 this script is to examine differential transcript usage by sex in
 short-read c elegans data. I am especially interested in comparing this
@@ -170,13 +178,10 @@ run. Must be run in at least docker 1.3 to include c elegans annotation.
 This script does not depend on any other code, with the exception of
 functions.R, which can be sourced.
 
-#### Other Scripts
-
-***dtu_analysis/functions.R*** - This is a function script for all Rmd
-files in the dtu directory.
-
-***de_analysis/de_functions.R*** - This is a function script for all Rmd
-files in the de directory.
+***Script 18: worm_analysis/18_compare_worm_mouse.Rmd*** - The purpose
+of this script is to compare worm and mouse genes with DTU across sex to
+see if anything is conserved. Nothing was conserved so it was not super
+useful.
 
 ## Lasseigne Lab
 
