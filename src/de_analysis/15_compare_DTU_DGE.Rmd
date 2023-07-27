@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Comparing DTU and DGE
+## Comparing DTU, DTE, and DGE
 
 The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. 
 
@@ -33,9 +33,14 @@ suppressPackageStartupMessages({
   library(lintr)
   library(here)
 })
+
+# source functions
+source("de_functions.R")
 ```
 
-The biomart code stopped working
+### Load in Data
+
+First, we want to load in the DGE data
 
 ```{r load in DGE data}
 # DGE
@@ -54,7 +59,7 @@ for (i in dge_files) {
 }
 ```
 
-Next, we need to pull in the transcript counts files
+Next, we need to pull in the transcript counts files to get gene name information for all transcripts and load in the DTE lists.
 
 ```{r pull in DTE data}
 transcript_counts <- read.table(
@@ -81,38 +86,63 @@ for (i in dte_files) {
 }
 ```
 
-```{r pull in DTU data}
-# DTU
-dtu_files <- list.files(here("data", "switchlist_objects", "de_added"))
+Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
-# loop in files
-for (i in dtu_files) {
-  temp <- readRDS(
-    here("data", "switchlist_objects", "de_added", i)
+```{r load in DTU data}
+# start with region region
+region_region_switchlist <- readRDS(
+  here("data", "switchlist_objects", "de_added", "region_region_orf_de.Rds")
+)
+sig_region_region <- dplyr::filter(
+  region_region_switchlist$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+region_region_dtu_genes <- unique(sig_region_region$gene_id)
+
+# region others
+region_all_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_all_switchlist_list_orf_de.Rds"
   )
-  assign(paste0(str_sub(i, end = -12), "_switchlist"),
-    temp,
-    envir = .GlobalEnv
-  )
+)
+for (i in names(region_all_switchlist_list)) {
   sig_temp <- dplyr::filter(
-    temp$isoformFeatures,
+    region_all_switchlist_list[[i]]$isoformFeatures,
     abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
   )
   genes <- sig_temp$gene_id
   genes <- unique(genes)
-  assign(paste0(str_sub(i, end = -12), "_dtu_genes"),
+  assign(paste0(i, "_dtu_genes"),
     genes,
     envir = .GlobalEnv
   )
 }
 
-# pull out single comparison lists
-
-sig_region_region <- dplyr::filter(
-  region_region_switchlist$isoformFeatures,
-  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+# region sex
+region_sex_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_sex_switchlist_list_orf_de.Rds"
+  )
 )
+for (i in names(region_sex_switchlist_list)) {
+  sig_temp <- dplyr::filter(
+    region_sex_switchlist_list[[i]]$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  genes <- sig_temp$gene_id
+  genes <- unique(genes)
+  assign(paste0(i, "_sex_dtu_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+```
 
+Next, we can pull what we need from each file to make single comparison lists.
+
+```{r pull out comparisons}
 # cerebellum cortex
 cerebellum_cortex_subset <- filter(
   sig_region_region,
@@ -122,7 +152,6 @@ cerebellum_cortex_subset <- filter(
 cerebellum_cortex_dtu_genes <- cerebellum_cortex_subset$gene_id
 
 # cerebellum hippocampus
-
 cerebellum_hippocampus_subset <- filter(
   sig_region_region,
   condition_1 == "cerebellum" & condition_2 == "hippocampus"
@@ -131,7 +160,6 @@ cerebellum_hippocampus_subset <- filter(
 cerebellum_hippocampus_dtu_genes <- cerebellum_hippocampus_subset$gene_id
 
 # cerebellum striatum
-
 cerebellum_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "cerebellum" & condition_2 == "striatum"
@@ -140,7 +168,6 @@ cerebellum_striatum_subset <- filter(
 cerebellum_striatum_dtu_genes <- cerebellum_striatum_subset$gene_id
 
 # cortex hippocampus
-
 cortex_hippocampus_subset <- filter(
   sig_region_region,
   condition_1 == "cortex" & condition_2 == "hippocampus"
@@ -149,7 +176,6 @@ cortex_hippocampus_subset <- filter(
 cortex_hippocampus_dtu_genes <- cortex_hippocampus_subset$gene_id
 
 # cortex striatum
-
 cortex_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "cortex" & condition_2 == "striatum"
@@ -158,7 +184,6 @@ cortex_striatum_subset <- filter(
 cortex_striatum_dtu_genes <- cortex_striatum_subset$gene_id
 
 # hippocampus striatum
-
 hippocampus_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "hippocampus" & condition_2 == "striatum"
@@ -167,36 +192,9 @@ hippocampus_striatum_subset <- filter(
 hippocampus_striatum_dtu_genes <- hippocampus_striatum_subset$gene_id
 ```
 
-Now that everything is extracted, we need to make it into lists.
+Now that everything is extracted, we need to make it into lists. I'll start with region-region direct comparisons.
 
-```{r prep data}
-# make results into a list
-cerebellum_list <- list(
-  `cerebellum DGE` = cerebellum_dge_genes,
-  `cerebellum DTE` = cerebellum_dte_genes,
-  `cerebellum DTU` = cerebellum_dtu_genes
-)
-
-cortex_list <- list(
-  `cortex DGE` = cortex_dge_genes,
-  `cortex DTE` = cortex_dte_genes,
-  `cortex DTU` = cortex_dtu_genes
-)
-
-hippocampus_list <- list(
-  `hippocampus DGE` = hippocampus_dge_genes,
-  `hippocampus DTE` = hippocampus_dte_genes,
-  `hippocampus DTU` = hippocampus_dtu_genes
-)
-
-striatum_list <- list(
-  `striatum DGE` = striatum_dge_genes,
-  `striatum DTE` = striatum_dte_genes,
-  `striatum DTU` = striatum_dtu_genes
-)
-```
-
-```{r get region region lists}
+```{r prep region region lists}
 cerebellum_cortex_list <- list(
   `cerebellum cortex DGE` = cerebellum_cortex_dge_genes,
   `cerebellum cortex DTE` = cerebellum_cortex_dte_genes,
@@ -234,76 +232,69 @@ hippocampus_striatum_list <- list(
 )
 ```
 
-To do: add save_path argument to function
+Next, we can do for the individual regions.
 
-```{r make compare plot}
-make_comparison_plots <- function(comparison_list, save_path) {
-  # plot venn diagram
-  venn <- ggvenn(
-    comparison_list,
-    fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
-    stroke_size = 0.5,
-    set_name_size = 4
-  )
+```{r prep single region data}
+# make results into a list
+cerebellum_list <- list(
+  `cerebellum DGE` = cerebellum_dge_genes,
+  `cerebellum DTE` = cerebellum_dte_genes,
+  `cerebellum DTU` = cerebellum_dtu_genes
+)
 
-  ggsave(here(
-    save_path, "venn_diagrams",
-    paste0(str_sub(deparse(substitute(comparison_list)),
-      end = -6
-    ), "_dge_dte_dtu.pdf")
-  ), plot = venn)
+cortex_list <- list(
+  `cortex DGE` = cortex_dge_genes,
+  `cortex DTE` = cortex_dte_genes,
+  `cortex DTU` = cortex_dtu_genes
+)
 
-  # create matrix
-  for_plot_mat <- list_to_matrix(comparison_list)
+hippocampus_list <- list(
+  `hippocampus DGE` = hippocampus_dge_genes,
+  `hippocampus DTE` = hippocampus_dte_genes,
+  `hippocampus DTU` = hippocampus_dtu_genes
+)
 
-  # generate combination matrix
-  for_plot_comb_mat <- make_comb_mat(for_plot_mat)
-
-  # make UpSet plot (ComplexHeatmap)
-  pdf(
-    here(
-      save_path, "upset_plots",
-      paste0(str_sub(deparse(substitute(comparison_list)),
-        end = -6
-      ), "_dge_dte_dtu.pdf")
-    ),
-    width = 8, height = 6
-  )
-
-  upset <- UpSet(
-    for_plot_comb_mat,
-    comb_order = order(-comb_size(for_plot_comb_mat)),
-    comb_col = c("#5D69B1", "#52BCA3", "#99C945")[comb_degree(
-      for_plot_comb_mat
-    )],
-    top_annotation = upset_top_annotation(for_plot_comb_mat,
-      add_numbers = TRUE
-    ),
-    right_annotation = upset_right_annotation(for_plot_comb_mat,
-      add_numbers = TRUE
-    )
-  )
-
-  draw(upset)
-  dev.off()
-
-  list(venn, upset)
-}
+striatum_list <- list(
+  `striatum DGE` = striatum_dge_genes,
+  `striatum DTE` = striatum_dte_genes,
+  `striatum DTU` = striatum_dtu_genes
+)
 ```
 
-Now plot!!!
+Finally, we want to compare to within brain regions across sex.
 
-```{r run plotting function}
-make_comparison_plots(cerebellum_list, save_path = here("results", "plots"))
+```{r make list for comparing within brain region across sex}
+# make results into a list
+cerebellum_sex_list <- list(
+  `cerebellum sex DGE` = cerebellum_sex_dge_genes,
+  `cerebellum sex DTE` = cerebellum_sex_dte_genes,
+  `cerebellum sex DTU` = cerebellum_sex_dtu_genes
+)
 
-make_comparison_plots(cortex_list, save_path = here("results", "plots"))
+cortex_sex_list <- list(
+  `cortex sex DGE` = cortex_sex_dge_genes,
+  `cortex sex DTE` = cortex_sex_dte_genes,
+  `cortex sex DTU` = cortex_sex_dtu_genes
+)
 
-make_comparison_plots(hippocampus_list, save_path = here("results", "plots"))
+hippocampus_sex_list <- list(
+  `hippocampus sex DGE` = hippocampus_sex_dge_genes,
+  `hippocampus sex DTE` = hippocampus_sex_dte_genes,
+  `hippocampus sex DTU` = hippocampus_sex_dtu_genes
+)
 
-make_comparison_plots(striatum_list, save_path = here("results", "plots"))
+striatum_sex_list <- list(
+  `striatum sex DGE` = striatum_sex_dge_genes,
+  `striatum sex DTE` = striatum_sex_dte_genes,
+  `striatum sex DTU` = striatum_sex_dtu_genes
+)
+```
 
-# beep boop
+### Plotting DGE, DTE, and DTU overlap
 
+I created a make comparision plots function to create venn diagrams and upset plots for overlapping genes.
+
+```{r plot comparisions for region region}
 make_comparison_plots(cerebellum_cortex_list,
   save_path = here("results", "plots")
 )
@@ -325,6 +316,38 @@ make_comparison_plots(cortex_striatum_list,
 )
 
 make_comparison_plots(hippocampus_striatum_list,
+  save_path = here("results", "plots")
+)
+```
+
+I also want to run this function on the single region comparisons.
+
+```{r run plotting function on single brain regions}
+make_comparison_plots(cerebellum_list, save_path = here("results", "plots"))
+
+make_comparison_plots(cortex_list, save_path = here("results", "plots"))
+
+make_comparison_plots(hippocampus_list, save_path = here("results", "plots"))
+
+make_comparison_plots(striatum_list, save_path = here("results", "plots"))
+```
+
+And finally, plot comparisons within brain regions across sex.
+
+```{r plot comps within region across sex}
+make_comparison_plots(cerebellum_sex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_sex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(hippocampus_sex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(striatum_sex_list,
   save_path = here("results", "plots")
 )
 ```
@@ -356,3 +379,115 @@ My software versions will be commented below.
 ```{r versions}
 sessionInfo()
 ```
+
+R version 4.3.0 beta (2023-04-12 r84240)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.2 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] grid      stats4    stats     graphics  grDevices utils     datasets  methods  
+[9] base     
+
+other attached packages:
+ [1] here_1.0.1                    lintr_3.0.2                  
+ [3] styler_1.9.1                  ggvenn_0.1.10                
+ [5] viridis_0.6.2                 viridisLite_0.4.2            
+ [7] ComplexHeatmap_2.16.0         IsoformSwitchAnalyzeR_1.99.17
+ [9] pfamAnalyzeR_1.0.0            sva_3.48.0                   
+[11] genefilter_1.82.0             mgcv_1.8-42                  
+[13] nlme_3.1-162                  satuRn_1.8.0                 
+[15] DEXSeq_1.46.0                 RColorBrewer_1.1-3           
+[17] AnnotationDbi_1.62.0          DESeq2_1.40.0                
+[19] SummarizedExperiment_1.30.0   GenomicRanges_1.52.0         
+[21] GenomeInfoDb_1.36.0           IRanges_2.34.0               
+[23] S4Vectors_0.38.0              MatrixGenerics_1.12.0        
+[25] matrixStats_0.63.0            Biobase_2.60.0               
+[27] BiocGenerics_0.46.0           BiocParallel_1.34.0          
+[29] limma_3.56.0                  lubridate_1.9.2              
+[31] forcats_1.0.0                 stringr_1.5.0                
+[33] dplyr_1.1.2                   purrr_1.0.1                  
+[35] readr_2.1.4                   tidyr_1.3.0                  
+[37] tibble_3.2.1                  ggplot2_3.4.2                
+[39] tidyverse_2.0.0              
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.0                 later_1.3.0                  
+  [3] BiocIO_1.10.0                 bitops_1.0-7                 
+  [5] filelock_1.0.2                R.oo_1.25.0                  
+  [7] rex_1.2.1                     XML_3.99-0.14                
+  [9] lifecycle_1.0.3               rprojroot_2.0.3              
+ [11] edgeR_3.42.0                  doParallel_1.0.17            
+ [13] processx_3.8.0                lattice_0.21-8               
+ [15] ensembldb_2.24.0              magrittr_2.0.3               
+ [17] rmarkdown_2.21                remotes_2.4.2                
+ [19] yaml_2.3.7                    httpuv_1.6.9                 
+ [21] pbapply_1.7-0                 DBI_1.1.3                    
+ [23] zlibbioc_1.46.0               R.cache_0.16.0               
+ [25] R.utils_2.12.2                AnnotationFilter_1.24.0      
+ [27] RCurl_1.98-1.12               rappdirs_0.3.3               
+ [29] circlize_0.4.15               GenomeInfoDbData_1.2.10      
+ [31] annotate_1.78.0               codetools_0.2-19             
+ [33] DelayedArray_0.25.0           xml2_1.3.4                   
+ [35] tidyselect_1.2.0              shape_1.4.6                  
+ [37] futile.logger_1.4.3           locfdr_1.1-8                 
+ [39] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [41] jsonlite_1.8.4                GetoptLong_1.0.5             
+ [43] ellipsis_0.3.2                survival_3.5-5               
+ [45] iterators_1.0.14              foreach_1.5.2                
+ [47] tools_4.3.0                   progress_1.2.2               
+ [49] Rcpp_1.0.10                   glue_1.6.2                   
+ [51] gridExtra_2.3                 xfun_0.39                    
+ [53] withr_2.5.0                   formatR_1.14                 
+ [55] BiocManager_1.30.20           fastmap_1.1.1                
+ [57] boot_1.3-28.1                 fansi_1.0.4                  
+ [59] callr_3.7.3                   digest_0.6.31                
+ [61] timechange_0.2.0              R6_2.5.1                     
+ [63] mime_0.12                     colorspace_2.1-0             
+ [65] biomaRt_2.56.0                RSQLite_2.3.1                
+ [67] R.methodsS3_1.8.2             utf8_1.2.3                   
+ [69] generics_0.1.3                tximeta_1.18.0               
+ [71] rtracklayer_1.60.0            prettyunits_1.1.1            
+ [73] httr_1.4.5                    pkgconfig_2.0.3              
+ [75] gtable_0.3.3                  blob_1.2.4                   
+ [77] hwriter_1.3.2.1               XVector_0.40.0               
+ [79] htmltools_0.5.5               geneplotter_1.78.0           
+ [81] ProtGenerics_1.32.0           clue_0.3-64                  
+ [83] scales_1.2.1                  cyclocomp_1.1.0              
+ [85] png_0.1-8                     knitr_1.42                   
+ [87] lambda.r_1.2.4                rstudioapi_0.14              
+ [89] tzdb_0.3.0                    reshape2_1.4.4               
+ [91] rjson_0.2.21                  curl_5.0.0                   
+ [93] cachem_1.0.8                  GlobalOptions_0.1.2          
+ [95] BiocVersion_3.17.1            parallel_4.3.0               
+ [97] desc_1.4.2                    restfulr_0.0.15              
+ [99] pillar_1.9.0                  vctrs_0.6.3                  
+[101] promises_1.2.0.1              dbplyr_2.3.2                 
+[103] xtable_1.8-4                  cluster_2.1.4                
+[105] tximport_1.28.0               evaluate_0.20                
+[107] VennDiagram_1.7.3             GenomicFeatures_1.52.0       
+[109] cli_3.6.1                     locfit_1.5-9.7               
+[111] fptm futile.options_1.0.1         
+[113] Rsamtools_2.16.0              rlang_1.1.1                  
+[115] crayon_1.5.2                  ps_1.7.4                     
+[117] plyr_1.8.8                    stringi_1.7.12               
+[119] munsell_0.5.0                 Biostrings_2.68.0            
+[121] lazyeval_0.2.2                Matrix_1.5-4                 
+[123] BSgenome_1.68.0               hms_1.1.3                    
+[125] bit64_4.0.5                   KEGGREST_1.40.0              
+[127] statmod_1.5.0                 shiny_1.7.4                  
+[129] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
+[131] memoise_2.0.1                 bit_4.0.5                    
+[133] xmlparsedata_1.0.5     

@@ -413,3 +413,57 @@ incorporate_deseq_results <-
     # return object
     return(switchlist_obj)
   }
+
+# function to make dge, dte, and dtu comparision plots
+make_comparison_plots <- function(comparison_list, save_path) {
+  # plot venn diagram
+  venn <- ggvenn(
+    comparison_list,
+    fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
+    stroke_size = 0.5,
+    set_name_size = 4
+  )
+  # save venn diagram
+  ggsave(here(
+    save_path, "venn_diagrams",
+    paste0(str_sub(deparse(substitute(comparison_list)),
+                   end = -6
+    ), "_dge_dte_dtu.pdf")
+  ), plot = venn)
+  
+  # create matrix
+  for_plot_mat <- list_to_matrix(comparison_list)
+  
+  # generate combination matrix
+  for_plot_comb_mat <- make_comb_mat(for_plot_mat)
+  
+  # make and save UpSet plot (ComplexHeatmap)
+  pdf(
+    here(
+      save_path, "upset_plots",
+      paste0(str_sub(deparse(substitute(comparison_list)),
+                     end = -6
+      ), "_dge_dte_dtu.pdf")
+    ),
+    width = 8, height = 6
+  )
+  # create upset plot object
+  upset <- UpSet(
+    for_plot_comb_mat,
+    comb_order = order(-comb_size(for_plot_comb_mat)),
+    comb_col = c("#5D69B1", "#52BCA3", "#99C945")[comb_degree(
+      for_plot_comb_mat
+    )],
+    top_annotation = upset_top_annotation(for_plot_comb_mat,
+                                          add_numbers = TRUE
+    ),
+    right_annotation = upset_right_annotation(for_plot_comb_mat,
+                                              add_numbers = TRUE
+    )
+  )
+  # draw upset plot
+  draw(upset)
+  dev.off()
+  # return both plots
+  list(venn, upset)
+}
