@@ -196,7 +196,7 @@ perl -I /opt/PfamScan/ pfam_scan.pl \
 
 #### Pull pfam results back into objects
 
-Then add this back to your object.
+Then add this back to your object and save!
 
 ```{r annotate protein domains}
 # region region
@@ -206,6 +206,14 @@ region_region_switchlist_pfam <- analyzePFAM(
     here("results", "PfamScan", "region_region_pfamscan_out.txt")
 )
 
+saveRDS(region_region_switchlist_pfam,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_region_orf_de_pfam.Rds"))
+```
+
+DO for the region vs other comparisons
+
+```{r annotate protein domains for each region vs other comp}
 # cerebellum other
 region_all_switchlist_list_analyzed[["cerebellum"]] <- analyzePFAM(
   switchAnalyzeRlist = region_all_switchlist_list_analyzed[["cerebellum"]],
@@ -238,6 +246,11 @@ region_all_switchlist_list_analyzed[["striatum"]] <- analyzePFAM(
     "striatum_pfamscan_out.txt"
   )
 )
+
+# save!
+saveRDS(region_all_switchlist_list_analyzed,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_all_list_orf_de_pfam.Rds"))
 ```
 
 annotate for sex
@@ -267,6 +280,11 @@ region_all_switchlist_list_analyzed[["striatum"]] <- analyzePFAM(
     "striatum_sex_pfamscan_out.txt"
   )
 )
+
+# save!
+saveRDS(region_sex_switchlist_list_analyzed,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_sex_list_orf_de_pfam.Rds"))
 ```
 
 plot everything
