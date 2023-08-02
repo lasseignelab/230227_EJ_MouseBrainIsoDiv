@@ -34,9 +34,9 @@ set.seed(123)
 #### Load in data
 
 ```{r load in data}
-files <- list.files(here("data", "switchlist_objects", "de_added"),
-  pattern = ".Rds"
-)
+# list files
+files <- list.files(here("data", "switchlist_objects", "de_added"))
+
 # loop in files
 for (i in files) {
   temp <- readRDS(
@@ -47,18 +47,15 @@ for (i in files) {
     envir = .GlobalEnv
   )
 }
+
+# remove temp file
+rm(temp)
 ```
 
 Now that the files are read in, we can extract the amino acid sequences
 
 ```{r extract sequences}
-striatum_sex_analyzed <- extractSequence(
-  striatum_sex_analyzed,
-  pathToOutput = here("data", "switchlist_fasta"),
-  outputPrefix = "striatum_sex",
-  writeToFile = TRUE
-)
-
+# extract sequences for region region
 region_region_analyzed <- extractSequence(
   region_region_analyzed,
   pathToOutput = here("data", "switchlist_fasta"),
@@ -66,35 +63,60 @@ region_region_analyzed <- extractSequence(
   writeToFile = TRUE
 )
 
+# extract sequences for region others
 cerebellum_analyzed <- extractSequence(
-  cerebellum_analyzed,
+  region_all_switchlist_list_analyzed[["cerebellum"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "cerebellum",
   writeToFile = TRUE
 )
 
 cortex_analyzed <- extractSequence(
-  cortex_analyzed,
+  region_all_switchlist_list_analyzed[["cortex"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "cortex",
   writeToFile = TRUE
 )
 
 hippocampus_analyzed <- extractSequence(
-  hippocampus_analyzed,
+  region_all_switchlist_list_analyzed[["hippocampus"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "hippocampus",
   writeToFile = TRUE
 )
 
 striatum_analyzed <- extractSequence(
-  striatum_analyzed,
+  region_all_switchlist_list_analyzed[["striatum"]],
   pathToOutput = here("data", "switchlist_fasta"),
   outputPrefix = "striatum",
   writeToFile = TRUE
 )
 ```
 
+Do for sex within regions.
+
+```{r extract sequences for sex within regions}
+cerebellum_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["cerebellum"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cerebellum_sex",
+  writeToFile = TRUE
+)
+
+cortex_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["cortex"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "cortex_sex",
+  writeToFile = TRUE
+)
+
+striatum_sex_analyzed <- extractSequence(
+  region_sex_switchlist_list_analyzed[["striatum"]],
+  pathToOutput = here("data", "switchlist_fasta"),
+  outputPrefix = "striatum_sex",
+  writeToFile = TRUE
+)
+```
 PFAM!!! Start with region_region comparison switchlist
 
 ```{bash run pfan on region region AA}
@@ -151,10 +173,20 @@ perl -I /opt/PfamScan/ pfam_scan.pl \
 -dir /PfamScan/PfamFiles \
 | tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/striatum_pfamscan_out.txt
 ```
-finally, do striatum split by sex
+finally, do regions split by sex
 
-```{bash run pfamscan on striatum split by sex}
+```{bash run pfamscan on regions split by sex}
 cd /opt/PfamScan/
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cerebellum_sex_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/cerebellum_sex_pfamscan_out.txt
+
+perl -I /opt/PfamScan/ pfam_scan.pl \
+-fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cortex_sex_AA.fasta \
+-dir /PfamScan/PfamFiles \
+| tee /data/user/efjones/230227_EJ_MouseBrainIsoDiv/results/PfamScan/cortex_sex_pfamscan_out.txt
 
 perl -I /opt/PfamScan/ pfam_scan.pl \
 -fasta /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/striatum_sex_AA.fasta \
@@ -164,7 +196,7 @@ perl -I /opt/PfamScan/ pfam_scan.pl \
 
 #### Pull pfam results back into objects
 
-Then add this back to your object.
+Then add this back to your object and save!
 
 ```{r annotate protein domains}
 # region region
@@ -173,50 +205,89 @@ region_region_switchlist_pfam <- analyzePFAM(
   pathToPFAMresultFile =
     here("results", "PfamScan", "region_region_pfamscan_out.txt")
 )
+
+saveRDS(region_region_switchlist_pfam,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_region_orf_de_pfam.Rds"))
+```
+
+DO for the region vs other comparisons
+
+```{r annotate protein domains for each region vs other comp}
 # cerebellum other
-cerebellum_switchlist_pfam <- analyzePFAM(
-  switchAnalyzeRlist = cerebellum_analyzed,
+region_all_switchlist_list_analyzed[["cerebellum"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["cerebellum"]],
   pathToPFAMresultFile = here(
     "results", "PfamScan",
     "cerebellum_pfamscan_out.txt"
   )
 )
 # cortex other
-cortex_switchlist_pfam <- analyzePFAM(
-  switchAnalyzeRlist = cortex_analyzed,
+region_all_switchlist_list_analyzed[["cortex"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["cortex"]],
   pathToPFAMresultFile = here(
     "results", "PfamScan",
     "cortex_pfamscan_out.txt"
   )
 )
 # hippocampus other
-hippocampus_switchlist_pfam <- analyzePFAM(
-  switchAnalyzeRlist = hippocampus_analyzed,
+region_all_switchlist_list_analyzed[["hippocampus"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["hippocampus"]],
   pathToPFAMresultFile = here(
     "results", "PfamScan",
     "hippocampus_pfamscan_out.txt"
   )
 )
 # striatum other
-striatum_switchlist_pfam <- analyzePFAM(
-  switchAnalyzeRlist = striatum_analyzed,
+region_all_switchlist_list_analyzed[["striatum"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["striatum"]],
   pathToPFAMresultFile = here(
     "results", "PfamScan",
     "striatum_pfamscan_out.txt"
   )
 )
+
+# save!
+saveRDS(region_all_switchlist_list_analyzed,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_all_list_orf_de_pfam.Rds"))
+```
+
+annotate for sex
+
+```{r annotate protein domains for sex}
 # striatum sex
-striatum_sex_switchlist_pfam <- analyzePFAM(
-  switchAnalyzeRlist = striatum_sex_analyzed,
+region_sex_switchlist_list_analyzed[["cerebellum"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_sex_switchlist_list_analyzed[["cerebellum"]],
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "cerebellum_sex_pfamscan_out.txt"
+  )
+)
+# striatum sex
+region_all_switchlist_list_analyzed[["cortex"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["cortex"]],
+  pathToPFAMresultFile = here(
+    "results", "PfamScan",
+    "cortex_sex_pfamscan_out.txt"
+  )
+)
+# striatum sex
+region_all_switchlist_list_analyzed[["striatum"]] <- analyzePFAM(
+  switchAnalyzeRlist = region_all_switchlist_list_analyzed[["striatum"]],
   pathToPFAMresultFile = here(
     "results", "PfamScan",
     "striatum_sex_pfamscan_out.txt"
   )
 )
+
+# save!
+saveRDS(region_sex_switchlist_list_analyzed,
+        here("data", "switchlist_objects", "pfam_added",
+             "region_sex_list_orf_de_pfam.Rds"))
 ```
 
 plot everything
-
 
 ```{r plot with protein domain info}
 # region region
@@ -228,7 +299,7 @@ switchPlotTopSwitches(region_region_switchlist_pfam,
   splitFunctionalConsequences = FALSE
 )
 # cerebellum
-switchPlotTopSwitches(cerebellum_switchlist_pfam,
+switchPlotTopSwitches(region_all_switchlist_list_analyzed[["cerebellum"]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "pfam_added",
     "cerebellum"
@@ -236,7 +307,7 @@ switchPlotTopSwitches(cerebellum_switchlist_pfam,
   splitFunctionalConsequences = FALSE
 )
 # cortex
-switchPlotTopSwitches(cortex_switchlist_pfam,
+switchPlotTopSwitches(region_all_switchlist_list_analyzed[["cortex"]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "pfam_added",
     "cortex"
@@ -244,7 +315,7 @@ switchPlotTopSwitches(cortex_switchlist_pfam,
   splitFunctionalConsequences = FALSE
 )
 # hippocampus
-switchPlotTopSwitches(hippocampus_switchlist_pfam,
+switchPlotTopSwitches(region_all_switchlist_list_analyzed[["hippocampus"]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "pfam_added",
     "hippocampus"
@@ -252,15 +323,36 @@ switchPlotTopSwitches(hippocampus_switchlist_pfam,
   splitFunctionalConsequences = FALSE
 )
 # striatum
-switchPlotTopSwitches(striatum_switchlist_pfam,
+switchPlotTopSwitches(region_all_switchlist_list_analyzed[["striatum"]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "pfam_added",
     "striatum"
   ),
   splitFunctionalConsequences = FALSE
 )
+```
+
+Also, switchplot for sex!
+
+```{r switchplot for sex}
+# cerebellum - sex
+switchPlotTopSwitches(region_sex_switchlist_list_analyzed[["cerebellum"]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "cerebellum"
+  ),
+  splitFunctionalConsequences = FALSE
+)
+# cortex - sex
+switchPlotTopSwitches(region_sex_switchlist_list_analyzed[["cortex"]],
+  pathToOutput = here(
+    "results", "plots", "switch_plots", "pfam_added",
+    "cortex"
+  ),
+  splitFunctionalConsequences = FALSE
+)
 # striatum - sex
-switchPlotTopSwitches(striatum_sex_switchlist_pfam,
+switchPlotTopSwitches(region_sex_switchlist_list_analyzed[["striatum"]],
   pathToOutput = here(
     "results", "plots", "switch_plots", "pfam_added",
     "striatum"

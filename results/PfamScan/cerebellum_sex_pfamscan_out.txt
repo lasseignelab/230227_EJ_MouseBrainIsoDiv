@@ -1,0 +1,41 @@
+# pfam_scan.pl,  run at Wed Jul 26 22:08:29 2023
+#
+# Copyright (c) 2009 Genome Research Ltd
+# Freely distributed under the GNU 
+# General Public License
+#
+# Authors: Jaina Mistry (jaina@ebi.ac.uk), 
+#          Rob Finn (rdf@ebi.ac.uk)
+#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>. 
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#      query sequence file: /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cerebellum_sex_AA.fasta
+#        searching against: /PfamScan/PfamFiles/Pfam-A.hmm, with cut off --cut_ga
+#    resolve clan overlaps: on
+#     predict active sites: off
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#
+# <seq id> <alignment start> <alignment end> <envelope start> <envelope end> <hmm acc> <hmm name> <type> <hmm start> <hmm end> <hmm length> <bit score> <E-value> <significance> <clan>
+
+ENSMUST00000020271.13      3    149      1    149 PF04360.15  Serglycin         Family     3   149   149    224.3   6.2e-67   1 No_clan  
+ENSMUST00000160987.8       3    149      1    149 PF04360.15  Serglycin         Family     3   149   149    224.3   6.2e-67   1 No_clan  
+ENSMUST00000066466.13     14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    253.3   2.7e-75   1 CL0016   
+ENSMUST00000066466.13    360    487    360    487 PF08332.13  CaMKII_AD         Domain     1   128   128    201.6   4.3e-60   1 CL0051   
+ENSMUST00000106399.8      14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    254.2   1.4e-75   1 CL0016   
+ENSMUST00000106399.8     380    507    380    507 PF08332.13  CaMKII_AD         Domain     1   128   128    201.5   4.6e-60   1 CL0051   
+ENSMUST00000106402.8      14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    253.2     3e-75   1 CL0016   
+ENSMUST00000106402.8     380    507    380    507 PF08332.13  CaMKII_AD         Domain     1   128   128    201.5   4.6e-60   1 CL0051   
+ENSMUST00000163226.8      14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    254.6   1.1e-75   1 CL0016   
+ENSMUST00000199300.5      14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    253.2   2.8e-75   1 CL0016   
+ENSMUST00000199300.5     346    473    346    473 PF08332.13  CaMKII_AD         Domain     1   128   128    201.6   4.4e-60   1 CL0051   
+ENSMUST00000200171.5      14    272     14    272 PF00069.28  Pkinase           Domain     1   264   264    253.0   3.3e-75   1 CL0016   
+ENSMUST00000200171.5     380    507    380    507 PF08332.13  CaMKII_AD         Domain     1   128   128    201.4     5e-60   1 CL0051   

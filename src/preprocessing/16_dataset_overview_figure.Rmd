@@ -21,7 +21,6 @@ Remaining to do:
 - Consider turning into a table
 - X-axis is squished in panel E
 - Remove underscores from labels
-- Change default transcript/gene colors so they do not look like tissue colors
 - delete useless code
 ---
 
@@ -71,6 +70,7 @@ ggplot(transcript_data, aes(
   fill = transcript_novelty
 )) +
   geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_viridis(discrete = TRUE, begin = 0.3, end = 0.9) +
   geom_text(aes(label = count),
     position = position_dodge(width = 0.9),
     vjust = -0.25
@@ -98,6 +98,7 @@ gene_data <- data.frame(
 # barplot
 ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
   geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_viridis(discrete = TRUE, begin = 0.2, end = 0.6) +
   geom_text(aes(label = count),
     position = position_dodge(width = 0.9), vjust = -0.25
   )
@@ -180,61 +181,6 @@ merged_counts_iso_means <- merged_counts_iso
 merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
 
 merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
-```
-
-In this code chunk I am trying to parse out exactly the relationship between novel and annotated transcript expression values, but it is hard to see both at once.
-
-```{r actually plot}
-ggplot(merged_counts_iso_means, aes(x = means)) +
-  geom_histogram(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = means)) +
-  geom_density(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_histogram(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_density(
-    data = subset(merged_counts_iso_means, novel == FALSE),
-    fill = "#99C945", alpha = 0.3
-  )
-ggplot(merged_counts_iso_means, aes(x = log10(means))) +
-  geom_histogram(
-    data = subset(merged_counts_iso_means, novel == FALSE),
-    fill = "#99C945", alpha = 0.3
-  )
-
-ggplot(merged_counts_iso_means, aes(x = log10(log10(means)))) +
-  geom_histogram(
-    data = subset(merged_counts_iso_means, novel == TRUE),
-    fill = "#52BCA3", alpha = 0.3
-  ) +
-  geom_histogram(
-    data = subset(merged_counts_iso_means, novel == FALSE),
-    fill = "#99C945", alpha = 0.3
-  )
 ```
 
 actually, lets see if that agrees when I do to cpm normalized counts
