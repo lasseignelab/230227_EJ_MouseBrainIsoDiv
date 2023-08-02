@@ -38,8 +38,6 @@ suppressPackageStartupMessages({
   library(readxl)
   library(ComplexHeatmap)
 })
-
-set.seed(123)
 ```
 
 Get functions into your environment
@@ -54,24 +52,13 @@ Load in switchlist objects.
 
 ```{r load in switchlist objects}
 # load object for cerebellum
-cerebellum_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cerebellum_switchlist_saturn.Rds")
-)
-# load object for cortex
-cortex_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "cortex_switchlist_saturn.Rds")
-)
-# load object for hippocampus
-hippocampus_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "hippocampus_switchlist_saturn.Rds")
-)
-# load object for striatum
-striatum_switchlist_analyzed <- readRDS(
-  here("data", "switchlist_objects", "striatum_switchlist_saturn.Rds")
+region_all_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "raw", "region_all_switchlist_list.Rds")
 )
 ```
 
 #### AD Genes
+
 Load in AD gene set
 
 ```{r read AD gene set}
@@ -126,6 +113,7 @@ Now, I am going to pull in CPAM case genes from Lizzy. Note for publishing, we m
 
 ```{r pull in cpam genes}
 cpam_cases <- read_excel(here("doc", "CPAM", "CPAM_Cases.xlsx"))
+
 cpam_genes <- cpam_cases$Gene[-c(1, length(cpam_cases))]
 
 mapped_genes <- convert_human_to_mouse(cpam_genes)
@@ -138,12 +126,11 @@ cpam_mouse <- mapped_genes$Gene.stable.ID.1
 Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this. I made a function to pull out the gene lists, compare, and save objects.
 
 ```{r run analysis}
-# make vector of brain regions
-all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-
 # prep significant gene lists and compare
-lapply(all_regions, compare_switching_genes) # only prints last result (cpam)
+lapply(seq_along(region_all_switchlist_analyzed), compare_switching_genes) 
+# warning: function only prints last result (cpam)
 ```
+
 So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
 
 Either way, I can still make an upset plot for psychiatric genes at minimum.

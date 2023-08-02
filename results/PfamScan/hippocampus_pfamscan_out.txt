@@ -1,4 +1,4 @@
-# pfam_scan.pl,  run at Mon Jun  5 15:59:08 2023
+# pfam_scan.pl,  run at Wed Jul 26 21:59:00 2023
 #
 # Copyright (c) 2009 Genome Research Ltd
 # Freely distributed under the GNU 
@@ -43,12 +43,6 @@ ENSMUST00000001806.10    195    338    194    338 PF01467.29  CTP_transf_like   
 ENSMUST00000001806.10    358    532    358    536 PF01121.23  CoaE              Domain     1   173   180    144.8   2.3e-42   1 CL0023   
 ENSMUST00000107308.4     195    338    194    338 PF01467.29  CTP_transf_like   Domain     2   143   143     37.8   2.2e-09   1 CL0039   
 ENSMUST00000107308.4     358    532    358    536 PF01121.23  CoaE              Domain     1   173   180    144.8   2.3e-42   1 CL0023   
-ENSMUST00000075922.11    282    437    282    439 PF00554.25  RHD_DNA_bind      Domain     1   167   169     73.1   2.7e-20   1 CL0073   
-ENSMUST00000075922.11    446    544    446    545 PF16179.8   RHD_dimer         Domain     1   102   103     95.2   2.2e-27   1 CL0159   
-ENSMUST00000077440.13    206    361    206    363 PF00554.25  RHD_DNA_bind      Domain     1   167   169     72.8   3.3e-20   1 CL0073   
-ENSMUST00000077440.13    370    468    370    469 PF16179.8   RHD_dimer         Domain     1   102   103     94.9   2.8e-27   1 CL0159   
-ENSMUST00000151114.8     300    455    300    457 PF00554.25  RHD_DNA_bind      Domain     1   167   169     72.7   3.7e-20   1 CL0073   
-ENSMUST00000151114.8     464    562    464    563 PF16179.8   RHD_dimer         Domain     1   102   103     94.8     3e-27   1 CL0159   
 ENSMUST00000006053.13      1    812      1    812 PF14724.9   mit_SMPDase       Family     1   816   816   1587.4         0   1 No_clan  
 ENSMUST00000090159.13      1    287      1    288 PF14724.9   mit_SMPDase       Family     1   288   816    588.5  1.9e-176   1 No_clan  
 ENSMUST00000090159.13    287    796    286    796 PF14724.9   mit_SMPDase       Family   318   816   816    908.1  4.8e-273   1 No_clan  
@@ -98,6 +92,35 @@ ENSMUST00000020580.13    802   1207    802   1207 PF00940.22  RNA_pol           
 ENSMUST00000159016.8     389    514    374    515 PF14700.9   RPOL_N            Domain    10   171   335     32.2   7.8e-08   1 No_clan  
 ENSMUST00000159016.8     513    601    509    601 PF14700.9   RPOL_N            Domain   248   335   335     79.0   4.6e-22   1 No_clan  
 ENSMUST00000159016.8     728   1133    728   1133 PF00940.22  RNA_pol           Family     1   426   426    544.4  1.9e-163   1 No_clan  
+ENSMUST00000022947.7      57    229     57    231 PF00092.31  VWA               Domain     1   173   175    158.1   2.8e-46   1 CL0128   
+ENSMUST00000022947.7     242    277    242    277 PF14670.9   FXa_inhibition    Domain     1    36    36     36.5     5e-09   1 CL0001   
+ENSMUST00000022947.7     300    322    300    323 PF12662.10  cEGF              Domain     1    23    24     26.6   4.5e-06   1 CL0001   
+ENSMUST00000022947.7     444    482    444    482 PF07645.18  EGF_CA            Domain     2    42    42     22.7   9.1e-05   1 CL0001   
+ENSMUST00000022947.7     487    523    485    523 PF07645.18  EGF_CA            Domain     4    42    42     16.5    0.0078   1 CL0001   
+ENSMUST00000022947.7     570    605    570    605 PF14670.9   FXa_inhibition    Domain     1    36    36     39.4   6.1e-10   1 CL0001   
+ENSMUST00000022947.7     611    646    609    646 PF07645.18  EGF_CA            Domain     5    42    42     16.4    0.0085   1 CL0001   
+ENSMUST00000022947.7     655    828    655    829 PF00092.31  VWA               Domain     1   174   175    169.1   1.1e-49   1 CL0128   
+ENSMUST00000022947.7     891    934    890    934 PF10393.12  Matrilin_ccoil   Coiled-coil     2    45    45     63.5   1.2e-17   1 No_clan  
+ENSMUST00000226766.2      57    229     57    231 PF00092.31  VWA               Domain     1   173   175    161.7   2.2e-47   1 CL0128   
+ENSMUST00000227759.2      57    229     57    231 PF00092.31  VWA               Domain     1   173   175    158.0   2.9e-46   1 CL0128   
+ENSMUST00000227759.2     242    277    242    277 PF14670.9   FXa_inhibition    Domain     1    36    36     36.4   5.1e-09   1 CL0001   
+ENSMUST00000227759.2     283    318    281    318 PF07645.18  EGF_CA            Domain     5    42    42     25.5   1.2e-05   1 CL0001   
+ENSMUST00000227759.2     321    359    320    359 PF07645.18  EGF_CA            Domain     2    42    42     20.7   0.00039   1 CL0001   
+ENSMUST00000227759.2     444    482    444    482 PF07645.18  EGF_CA            Domain     2    42    42     22.7   9.3e-05   1 CL0001   
+ENSMUST00000227759.2     487    523    485    523 PF07645.18  EGF_CA            Domain     4    42    42     16.5     0.008   1 CL0001   
+ENSMUST00000227759.2     570    605    570    605 PF14670.9   FXa_inhibition    Domain     1    36    36     39.4   6.2e-10   1 CL0001   
+ENSMUST00000227759.2     611    646    609    646 PF07645.18  EGF_CA            Domain     5    42    42     16.4    0.0087   1 CL0001   
+ENSMUST00000227759.2     655    828    655    829 PF00092.31  VWA               Domain     1   174   175    169.1   1.2e-49   1 CL0128   
+ENSMUST00000227759.2     910    953    909    953 PF10393.12  Matrilin_ccoil   Coiled-coil     2    45    45     63.5   1.2e-17   1 No_clan  
+ENSMUST00000228570.2      57    229     57    231 PF00092.31  VWA               Domain     1   173   175    158.4   2.2e-46   1 CL0128   
+ENSMUST00000228570.2     242    277    242    277 PF14670.9   FXa_inhibition    Domain     1    36    36     36.7   4.2e-09   1 CL0001   
+ENSMUST00000228570.2     300    322    300    323 PF12662.10  cEGF              Domain     1    23    24     26.8   3.8e-06   1 CL0001   
+ENSMUST00000228570.2     362    400    361    400 PF07645.18  EGF_CA            Domain     2    42    42     16.4    0.0088   1 CL0001   
+ENSMUST00000228570.2     444    482    444    482 PF07645.18  EGF_CA            Domain     2    42    42     23.0   7.6e-05   1 CL0001   
+ENSMUST00000228570.2     487    523    485    523 PF07645.18  EGF_CA            Domain     4    42    42     16.8    0.0066   1 CL0001   
+ENSMUST00000228570.2     570    605    570    605 PF14670.9   FXa_inhibition    Domain     1    36    36     39.6   5.1e-10   1 CL0001   
+ENSMUST00000228570.2     611    646    609    646 PF07645.18  EGF_CA            Domain     5    42    42     16.6    0.0071   1 CL0001   
+ENSMUST00000228570.2     655    786    655    790 PF00092.31  VWA               Domain     1   131   175    124.9   4.3e-36   1 CL0128   
 ENSMUST00000172107.8       2     43      2     43 PF18253.4   HipN              Domain     1    42    42     68.6   2.9e-19   1 No_clan  
 ENSMUST00000172107.8     317    363    312    365 PF17830.4   STI1              Domain     7    53    55     42.5   4.9e-11   1 No_clan  
 ENSMUST00000060077.7     140    441    140    441 PF01218.21  Coprogen_oxidas   Family     1   303   303    473.6  1.7e-142   1 No_clan  
@@ -136,19 +159,11 @@ ENSMUST00000028106.11    320    362    320    362 PF01839.26  FG-GAP            
 ENSMUST00000028106.11    385    421    385    421 PF01839.26  FG-GAP            Repeat     1    35    35     33.9   2.2e-08   1 CL0186   
 ENSMUST00000028106.11    482    933    482    933 PF08441.15  Integrin_alpha2   Family     1   465   465    430.5    1e-128   1 CL0159   
 ENSMUST00000028106.11   1034   1048   1034   1048 PF00357.23  Integrin_alpha    Family     1    15    15     22.1    0.0001   1 No_clan  
+ENSMUST00000172716.3       5     47      5     47 PF01839.26  FG-GAP            Repeat     1    35    35     41.0   1.3e-10   1 CL0186   
+ENSMUST00000172716.3      70    106     70    106 PF01839.26  FG-GAP            Repeat     1    35    35     37.2     2e-09   1 CL0186   
 ENSMUST00000172791.8     320    362    320    362 PF01839.26  FG-GAP            Repeat     1    35    35     38.6   7.5e-10   1 CL0186   
 ENSMUST00000172791.8     385    421    385    421 PF01839.26  FG-GAP            Repeat     1    35    35     34.9   1.1e-08   1 CL0186   
 ENSMUST00000172791.8     482    587    482    589 PF08441.15  Integrin_alpha2   Family     1   109   465     82.9   2.7e-23   1 CL0159   
-ENSMUST00000068415.11    211    262    209    270 PF05605.15  zf-Di19           Domain     3    51    54     34.7   1.8e-08   1 CL0361   
-ENSMUST00000068415.11    282    304    282    304 PF00096.29  zf-C2H2           Domain     1    23    23     22.3   0.00013   1 CL0361   
-ENSMUST00000068415.11    310    330    310    331 PF00096.29  zf-C2H2           Domain     1    21    23     15.9     0.014   1 CL0361   
-ENSMUST00000068415.11    999   1017    999   1019 PF12874.10  zf-met            Domain     1    19    25     13.4     0.082   1 CL0361   
-ENSMUST00000068415.11   1055   1075   1055   1076 PF00096.29  zf-C2H2           Domain     1    21    23     16.3     0.011   1 CL0361   
-ENSMUST00000176438.9     211    262    209    270 PF05605.15  zf-Di19           Domain     3    51    54     34.7   1.8e-08   1 CL0361   
-ENSMUST00000176438.9     282    304    282    304 PF00096.29  zf-C2H2           Domain     1    23    23     22.3   0.00013   1 CL0361   
-ENSMUST00000176438.9     310    330    310    331 PF00096.29  zf-C2H2           Domain     1    21    23     15.9     0.014   1 CL0361   
-ENSMUST00000176438.9     999   1017    999   1019 PF12874.10  zf-met            Domain     1    19    25     13.4     0.082   1 CL0361   
-ENSMUST00000176438.9    1055   1075   1055   1076 PF00096.29  zf-C2H2           Domain     1    21    23     16.3     0.011   1 CL0361   
 ENSMUST00000029311.11    176    238    176    238 PF08344.14  TRP_2             Family     1    63    63     96.0   1.2e-27   1 No_clan  
 ENSMUST00000029311.11    374    631    362    632 PF00520.34  Ion_trans         Family    11   244   245    113.4   1.1e-32   1 CL0030   
 ENSMUST00000199399.5     176    238    176    238 PF08344.14  TRP_2             Family     1    63    63     97.5   4.1e-28   1 No_clan  
@@ -169,7 +184,6 @@ ENSMUST00000030407.8     286    337    286    338 PF00010.29  HLH               
 ENSMUST00000106252.9       1    125      1    157 PF01056.21  Myc_N             Family    13   141   340     93.8   1.9e-26   1 No_clan  
 ENSMUST00000106252.9     137    219    116    230 PF01056.21  Myc_N             Family   221   307   340     32.9   6.1e-08   1 No_clan  
 ENSMUST00000106252.9     286    337    286    338 PF00010.29  HLH               Domain     1    53    54     48.3   8.2e-13   1 No_clan  
-ENSMUST00000030773.12     41    219     38    251 PF08423.14  Rad51             Domain    37   208   255     61.8   6.2e-17   1 CL0023   
 ENSMUST00000034607.10      9    130      3    140 PF01217.23  Clat_adaptor_s    Domain     8   131   142     25.5   1.1e-05   1 CL0431   
 ENSMUST00000034607.10    270    496    261    510 PF00928.24  Adap_comp_sub     Family    11   252   264    122.6     2e-35   1 CL0448   
 ENSMUST00000072899.9    1015   1251   1010   1253 PF01576.22  Myosin_tail_1    Coiled-coil   847  1079  1081    121.3   3.5e-35   1 No_clan  
@@ -227,22 +241,10 @@ ENSMUST00000120512.8      74    247     74    247 PF15316.9   MDFI              
 ENSMUST00000125326.8      74    161     74    174 PF15316.9   MDFI              Family     1    88   171     54.3   1.7e-14   1 No_clan  
 ENSMUST00000189359.7      74    247     74    247 PF15316.9   MDFI              Family     1   171   171    223.8   1.5e-66   1 No_clan  
 ENSMUST00000190255.7     156    329    156    329 PF15316.9   MDFI              Family     1   171   171    222.6   3.4e-66   1 No_clan  
-ENSMUST00000047721.10    139    173    137    174 PF00400.35  WD40              Repeat     4    37    38     13.9     0.086   1 CL0186   
-ENSMUST00000047721.10    196    226    190    227 PF00400.35  WD40              Repeat     8    37    38     21.8   0.00027   1 CL0186   
-ENSMUST00000047721.10    232    269    231    269 PF00400.35  WD40              Repeat     2    38    38     23.8   6.5e-05   1 CL0186   
-ENSMUST00000047721.10    278    311    273    311 PF00400.35  WD40              Repeat     6    38    38     15.7     0.023   1 CL0186   
-ENSMUST00000047721.10    316    350    314    350 PF00400.35  WD40              Repeat     3    37    38     12.8      0.18   1 CL0186   
 ENSMUST00000041852.8      10    217      8    235 PF07992.17  Pyr_redox_2       Domain     3   215   295     59.5   3.3e-16   1 CL0063   
 ENSMUST00000041852.8     284    381    246    381 PF07992.17  Pyr_redox_2       Domain   207   295   295     49.0   5.3e-13   1 CL0063   
 ENSMUST00000041852.8     409    476    407    477 PF18267.4   Rubredoxin_C      Domain     4    69    70     26.8   3.9e-06   1 CL0608   
 ENSMUST00000137098.8      10    218      8    235 PF07992.17  Pyr_redox_2       Domain     3   222   295     61.5   8.1e-17   1 CL0063   
-ENSMUST00000050398.11     19    174     19    179 PF00994.27  MoCF_biosynth     Domain     1   138   144    100.2   8.7e-29   1 No_clan  
-ENSMUST00000050398.11    304    459    303    460 PF01507.22  PAPS_reduct       Family     2   173   174     82.4   4.1e-23   1 CL0039   
-ENSMUST00000107426.8      19    174     19    179 PF00994.27  MoCF_biosynth     Domain     1   138   144    100.3   7.8e-29   1 No_clan  
-ENSMUST00000107426.8     304    459    303    460 PF01507.22  PAPS_reduct       Family     2   173   174     82.6   3.7e-23   1 CL0039   
-ENSMUST00000129308.9      19    174     19    179 PF00994.27  MoCF_biosynth     Domain     1   138   144    100.3   7.8e-29   1 No_clan  
-ENSMUST00000129308.9     304    459    303    460 PF01507.22  PAPS_reduct       Family     2   173   174     82.6   3.7e-23   1 CL0039   
-ENSMUST00000162701.2      19     99     19     99 PF00994.27  MoCF_biosynth     Domain     1    81   144     86.5   1.4e-24   1 No_clan  
 ENSMUST00000061514.8     105    250      5    250 PF15279.9   SOBP              Family   180   323   323     36.5   9.1e-09   1 No_clan  
 ENSMUST00000112338.2     105    250      5    250 PF15279.9   SOBP              Family   180   323   323     36.5   9.1e-09   1 No_clan  
 ENSMUST00000120267.9      20    211     20    211 PF08614.14  ATG16            Coiled-coil     1   201   201    123.9   1.1e-35   1 No_clan  

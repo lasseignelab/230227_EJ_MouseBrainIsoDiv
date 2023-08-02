@@ -47,9 +47,9 @@ source("functions.R", local = knitr::knit_global())
 
 ### Get DTU by sex
 
-Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new switchAnalyzeRlist object with metadata for sex.
+Now that I have shown DTU differences across tissue, I am going to look at differences across sex. I'll need to create a new switchAnalyzeRlist object with metadata for sex. In this chunk we are making design matrices for all brain regions combined and separated.
 
-```{r make design matrix}
+```{r make design matrices}
 # make sex design for combined regions
 sex_design_combined <- data.frame(
   sampleID = sample_collection_metadata$sample_id,
@@ -78,23 +78,38 @@ for (tissue in tissues) {
 }
 ```
 
-```{r make switchlist for sex combined}
+First, we will make a switchlist for all tissues combined, comparing grossly across sex. Because there are many replicates, we can use satuRn.
+
+```{r make switchlist and run saturn for sex combined}
 # make switchlist
 sex_switchlist <- make_switchlist_saturn(
   isoformCountMatrix = merged_counts_iso,
   isoformRepExpression = cpm_iso,
   designMatrix = sex_design_combined,
-    isoformExonAnnoation = "data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
-    isoformNtFasta = "data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
-  reduceToSwitchingGenes = TRUE
+  isoformExonAnnoation = here(
+    "data", "nextflow", "bambu",
+    "extended_annotations.gtf"
+  ),
+  isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+  reduceToSwitchingGenes = FALSE
 )
 
 extractSwitchSummary(sex_switchlist)
 ```
 
-```{r make switchlists for sex by region}
+Expected results: F vs M	5	5	4	
+
+Only 4 genes were considered switching, so I will also try splitting by brain region.
+
+One of the genes Atp6v0e2, had downregulation in females with AD in this study https://www.frontiersin.org/articles/10.3389/fnagi.2021.735611/full
+
+### DTU in males and females split by brain region
+
+Now, we can also split out switchlists for each region. This creates smaller numbers of replicates so we want to run dexseq instead of satuRn.
+
+```{r make switchlists and run dexseq for sex by region}
 counts_list <- list()
-for(tissue in tissues) {
+for (tissue in tissues) {
   subset_counts <- subset(
     merged_counts_iso,
     select = c(
@@ -107,7 +122,7 @@ for(tissue in tissues) {
   counts_list[[tissue]] <- subset_counts
 }
 cpm_list <- list()
-for(tissue in tissues) {
+for (tissue in tissues) {
   # subset cpm
   subset_cpm <- subset(
     cpm_iso,
@@ -123,232 +138,284 @@ for(tissue in tissues) {
   cpm_list[[tissue]] <- subset_cpm
 }
 region_sex_switchlist_list <- list()
+for (tissue in tissues) {
+  tryCatch(
+    {
+      switchlist_obj <- make_switchlist_dexseq(
+        isoformCountMatrix = counts_list[[tissue]],
+        isoformRepExpression = cpm_list[[tissue]],
+        designMatrix = designs[[tissue]],
+        isoformExonAnnoation = here(
+          "data", "nextflow", "bambu",
+          "extended_annotations.gtf"
+        ),
+        isoformNtFasta = here("data", "gffread", "isoform_sequences.fa"),
+        reduceToSwitchingGenes = FALSE
+      )
+      region_sex_switchlist_list[[tissue]] <- switchlist_obj
+    },
+    error = function(e) {
+      cat("ERROR: ", tissue, conditionMessage(e), "\n")
+    }
+  )
+}
+
+extractSwitchSummary(region_sex_switchlist_list[["cerebellum"]])
+extractSwitchSummary(region_sex_switchlist_list[["cortex"]])
+extractSwitchSummary(region_sex_switchlist_list[["striatum"]])
+```
+
+expected cerebellum results: F vs M	4	3	2	
+
+expected cortex results: F vs M	22	19	14	
+
+expected striatum results: F vs M	11	7	7	
+
+```{r add gene symbols}
+#sex combined
+sex_switchlist <- get_gene_symbols(
+  switchlist_obj = sex_switchlist
+)
+
+# sex_region
 for(tissue in tissues) {
   tryCatch({
-    switchlist_obj <- make_switchlist_dexseq(
-      isoformCountMatrix = counts_list[[tissue]],
-      isoformRepExpression = cpm_list[[tissue]],
-      designMatrix = designs[[tissue]],
-    isoformExonAnnoation = "/data/project/lasseigne_lab/TCH_scratch/data_ej/nextflow/bambu/extended_annotations.gtf",
-    isoformNtFasta = "/data/project/lasseigne_lab/TCH_scratch/data_ej/gffread/isoform_sequences.fa",
-      reduceToSwitchingGenes = TRUE
+    temp_switchlist <- get_gene_symbols(
+      switchlist_obj = region_sex_switchlist_list[[tissue]]
     )
-    region_sex_switchlist_list[[tissue]] <- switchlist_obj
+    region_sex_switchlist_list[[tissue]] <- temp_switchlist
   }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
 }
 ```
 
+Now, we want to save our data.
 
 ```{r save sex combined switchlist}
 saveRDS(
-  sex_switchlist, 
+  sex_switchlist,
   here("data", "switchlist_objects", "raw", "sex_switchlist.Rds")
 )
 ```
 
+Also save the brain-region-specific data.
 
 ```{r save sex by region switchlists}
 saveRDS(
-  region_sex_switchlist_list, 
+  region_sex_switchlist_list,
   here("data", "switchlist_objects", "raw", "region_sex_switchlist_list.Rds")
 )
 ```
 
+Next, we filter these same genes for significance.
+
 ```{r filter for significance}
-#sex combined
+# sex combined
 sex_switchlist_sig_features <- dplyr::filter(
   sex_switchlist$isoformFeatures,
   abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
 )
 # sex_region
 region_sex_sig_features_list <- list()
-for(tissue in tissues) {
-  tryCatch({
-    temp_sig_features <- dplyr::filter(
-      region_sex_switchlist_list[[tissue]]$isoformFeatures,
-      abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
-    )
-    region_sex_sig_features_list[[tissue]] <- temp_sig_features
-  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+for (tissue in tissues) {
+  tryCatch(
+    {
+      temp_sig_features <- dplyr::filter(
+        region_sex_switchlist_list[[tissue]]$isoformFeatures,
+        abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+      )
+      region_sex_sig_features_list[[tissue]] <- temp_sig_features
+    },
+    error = function(e) {
+      cat("ERROR: ", tissue, conditionMessage(e), "\n")
+    }
+  )
 }
 ```
 
-```{r save sex combinde sig features}
+Save these features in results.
+
+```{r save sex combined sig features}
 write.csv(
-  sex_switchlist_sig_features, 
+  sex_switchlist_sig_features,
   here(
     "results",
-    "tcResults",
     "dtu_transcripts",
     "sex_switchlist_sig_features.csv"
-  ), 
-  row.names=FALSE
+  ),
+  row.names = FALSE
 )
 ```
 
+Do the same for tissue-specific sex switchlists.
+
 ```{r save sex region sig features}
-for(i in 1:length(region_sex_sig_features_list)) {
+for (i in seq_along(region_sex_sig_features_list)) {
   tissue_name <- names(region_sex_sig_features_list)[i]
   write.csv(
-    region_sex_sig_features_list[[tissue_name]], 
+    region_sex_sig_features_list[[tissue_name]],
     here(
       "results",
-      "tcResults",
       "dtu_transcripts",
       paste0(
         tissue_name,
         "_sex_sig_features.csv"
       )
-    ), 
-    row.names=FALSE
+    ),
+    row.names = FALSE
   )
 }
 ```
 
+Now, we can collapse these counts to the gene level.
+
 ```{r collapse to gene level}
-#sex combined
+# sex combined
 sex_switchlist_sig_genes <- unique(sex_switchlist_sig_features$gene_name)
 
 # sex_region
 region_sex_sig_genes_list <- list()
-for(i in 1:length(region_sex_sig_features_list)) {
-  tryCatch({
-    tissue_name <- names(region_sex_sig_features_list)[i]
-    tissue_sig_genes <- unique(region_sex_sig_features_list[[i]]$gene_name)
-    region_sex_sig_genes_list[[tissue_name]] <- tissue_sig_genes
-  }, error = function(e){cat("ERROR: ", tissue, conditionMessage(e), "\n")})
+for (i in seq_along(region_sex_sig_features_list)) {
+  tryCatch(
+    {
+      tissue_name <- names(region_sex_sig_features_list)[i]
+      tissue_sig_genes <- unique(region_sex_sig_features_list[[i]]$gene_name)
+      region_sex_sig_genes_list[[tissue_name]] <- tissue_sig_genes
+    },
+    error = function(e) {
+      cat("ERROR: ", tissue, conditionMessage(e), "\n")
+    }
+  )
 }
 ```
 
+Save the combined genes only into results.
+
 ```{r save sig genes sex combined}
-write.csv(
-  sex_switchlist_sig_genes, 
+write.table(
+  sex_switchlist_sig_genes,
   here(
     "results",
-    "tcResults",
     "dtu_genes",
     "sex_switchlist_sig_genes.csv"
-  ), 
-  row.names=FALSE
+  ),
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
 )
 ```
 
+Also save the genes for each region.
+
 ```{r save sig genes sex regions}
-for(i in 1:length(region_sex_sig_genes_list)) {
+for (i in seq_along(region_sex_sig_genes_list)) {
   tissue_name <- names(region_sex_sig_genes_list)[i]
-  write.csv(
-    region_sex_sig_genes_list[[tissue_name]], 
+  write.table(
+    region_sex_sig_genes_list[[tissue_name]],
     here(
       "results",
-      "tcResults",
       "dtu_genes",
       paste0(
         tissue_name,
         "_sex_sig_genes.csv"
       )
-    ), 
-    row.names=FALSE
+    ),
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE
   )
 }
 ```
 
-
-Only 4 genes were considered switching, so I will also try splitting by brain region.
-
-One of the genes Atp6v0e2, had downregulation in females with AD in this study https://www.frontiersin.org/articles/10.3389/fnagi.2021.735611/full
-
-Either way, these genes need to be extracted and saved. If I don't modify my existing function, this can be done quickly but it will say sex__other.txt instead of just text which I think is fine.
-
-```{r get significant switching genes}
-# get sex signifciant genes
-get_sig_genes(
-  tissue_switchlist = sex_switchlist_analyzed,
-  save_path = here("results", "dtu_genes")
-)
-```
-
-### Get sex DTU for each brain region
-
-Before analysis, I need to subset the data for each brain region.
-
-```{r split out brain regions}
-# make vector of brain regions
-all_regions <- c("cerebellum", "cortex", "hippocampus", "striatum")
-
-# split each region
-lapply(all_regions, split_region)
-```
-
-Now that the data is split out, I can make switchAnalyzeRlist objects for analysis.
-
-```{r make design and switchlists}
-# use function on all brain regions
-lapply(all_regions, make_switchlist)
-```
-
-Once these are made, I can run satuRn.
-
-#### Run satuRn
-
-```{r saturn by sex and brain region}
-# use function on all brain regions
-filter_run_saturn(
-  tissue = "cortex",
-  save_path = here("data", "switchlist_objects")
-)
-# no significant genes
-
-filter_run_saturn(
-  tissue = "cerebellum",
-  save_path = here("data", "switchlist_objects")
-)
-# no significant genes
-
-filter_run_saturn(
-  tissue = "hippocampus",
-  save_path = here("data", "switchlist_objects")
-)
-# no significant genes
-
-filter_run_saturn(
-  tissue = "striatum",
-  save_path = here("data", "switchlist_objects")
-)
-# this finds 3 switches in 2 genes
-extractSwitchSummary(stri_sex_switchlist_analyzed)
-```
-
-Expected results:
-F vs M	3	2	2
-
-Alright, now I have some differential used isoforms/genes. Let's visualize them with a volcano plot, although with how few genes there are it feels silly.
+Alright, now I have some differential used isoforms/genes saved. Let's visualize them with a volcano plot, although with how few genes there are it feels silly.
 
 #### Make volcano plots
 
 ```{r volcano plots for sex split by brain region}
-# use function
-create_sex_volcano_plot(
-  tissue_obj = stri_sex_switchlist_analyzed,
-  save_path = here("results", "plots", "satuRn_volcano")
+sex_combined_volcano <- create_volcano_plot(
+  switchlist = sex_switchlist,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+cerebellum_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$cerebellum,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+cortex_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$cortex,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+hippocampus_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$hippocampus,
+  condition1 = "F",
+  condition2 = "M"
+)
+
+striatum_sex_volcano <- create_volcano_plot(
+  switchlist = region_sex_switchlist_list$striatum,
+  condition1 = "F",
+  condition2 = "M"
 )
 ```
 
-I removed the UpSetPlot code because there were only 3 genes considered switching in a single brain region (striatum).
+Once the ggplot objects are created, we can save the volcano plots.
 
-#### GO Analysis using gprofiler2
+```{r save volcano plots}
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "sex_combined_volcano.png"
+  ),
+  plot = sex_combined_volcano
+)
 
-Before doing GO analysis, I need to pull out significant genes. GO analysis does not currently work at the isoform level (at least for gprofiler2).
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cerebellum_sex_volcano.png"
+  ),
+  plot = cerebellum_sex_volcano
+)
 
-```{r pull out signficant genes}
-get_cut_sig_genes(tissue = "striatum")
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "cortex_sex_volcano.png"
+  ),
+  plot = cortex_sex_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "hippocampus_sex_volcano.png"
+  ),
+  plot = hippocampus_sex_volcano
+)
+
+ggsave(
+  here(
+    "results",
+    "plots",
+    "satuRn_volcano",
+    "striatum_sex_volcano.png"
+  ),
+  plot = striatum_sex_volcano
+)
 ```
 
-Now, perform go analysis with gprofiler2, but this gives no results.
-
-```{r go analysis}
-# run gprofiler function on striatum
-run_gprofiler(tissue = "striatum") # no results to show
-```
 
 #### Clean up script
 
@@ -375,7 +442,6 @@ Estimated processing time is 22 minutes.
 ```{r versions}
 sessionInfo()
 ```
-
 R version 4.3.0 beta (2023-04-12 r84240)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Ubuntu 22.04.2 LTS
@@ -401,7 +467,7 @@ other attached packages:
  [1] here_1.0.1                    lintr_3.0.2                  
  [3] styler_1.9.1                  gprofiler2_0.2.1             
  [5] org.Mm.eg.db_3.17.0           viridis_0.6.2                
- [7] viridisLite_0.4.1             ComplexHeatmap_2.16.0        
+ [7] viridisLite_0.4.2             ComplexHeatmap_2.16.0        
  [9] IsoformSwitchAnalyzeR_1.99.17 pfamAnalyzeR_1.0.0           
 [11] sva_3.48.0                    genefilter_1.82.0            
 [13] mgcv_1.8-42                   nlme_3.1-162                 
@@ -428,67 +494,64 @@ loaded via a namespace (and not attached):
  [11] edgeR_3.42.0                  doParallel_1.0.17            
  [13] MASS_7.3-58.4                 processx_3.8.0               
  [15] lattice_0.21-8                ensembldb_2.24.0             
- [17] crosstalk_1.2.0               magrittr_2.0.3               
- [19] rmarkdown_2.21                plotly_4.10.1                
- [21] remotes_2.4.2                 yaml_2.3.7                   
- [23] httpuv_1.6.9                  pbapply_1.7-0                
- [25] DBI_1.1.3                     zlibbioc_1.46.0              
- [27] R.cache_0.16.0                R.utils_2.12.2               
- [29] AnnotationFilter_1.24.0       RCurl_1.98-1.12              
- [31] rappdirs_0.3.3                circlize_0.4.15              
- [33] GenomeInfoDbData_1.2.10       annotate_1.78.0              
- [35] codetools_0.2-19              DelayedArray_0.25.0          
- [37] xml2_1.3.4                    tidyselect_1.2.0             
- [39] shape_1.4.6                   futile.logger_1.4.3          
- [41] locfdr_1.1-8                  farver_2.1.1                 
- [43] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
- [45] jsonlite_1.8.4                GetoptLong_1.0.5             
- [47] ellipsis_0.3.2                survival_3.5-5               
- [49] iterators_1.0.14              systemfonts_1.0.4            
- [51] foreach_1.5.2                 tools_4.3.0                  
- [53] progress_1.2.2                ragg_1.2.5                   
- [55] Rcpp_1.0.10                   glue_1.6.2                   
- [57] gridExtra_2.3                 xfun_0.39                    
- [59] withr_2.5.0                   formatR_1.14                 
- [61] BiocManager_1.30.20           fastmap_1.1.1                
- [63] boot_1.3-28.1                 fansi_1.0.4                  
- [65] callr_3.7.3                   digest_0.6.31                
- [67] timechange_0.2.0              R6_2.5.1                     
- [69] mime_0.12                     textshaping_0.3.6            
- [71] colorspace_2.1-0              biomaRt_2.56.0               
- [73] RSQLite_2.3.1                 R.methodsS3_1.8.2            
- [75] utf8_1.2.3                    generics_0.1.3               
- [77] data.table_1.14.8             tximeta_1.18.0               
- [79] rtracklayer_1.60.0            htmlwidgets_1.6.2            
- [81] prettyunits_1.1.1             httr_1.4.5                   
- [83] pkgconfig_2.0.3               gtable_0.3.3                 
- [85] blob_1.2.4                    hwriter_1.3.2.1              
- [87] XVector_0.40.0                htmltools_0.5.5              
- [89] geneplotter_1.78.0            ProtGenerics_1.32.0          
- [91] clue_0.3-64                   scales_1.2.1                 
- [93] cyclocomp_1.1.0               png_0.1-8                    
- [95] knitr_1.42                    lambda.r_1.2.4               
- [97] rstudioapi_0.14               tzdb_0.3.0                   
- [99] reshape2_1.4.4                rjson_0.2.21                 
-[101] curl_5.0.0                    cachem_1.0.8                 
-[103] GlobalOptions_0.1.2           BiocVersion_3.17.1           
-[105] parallel_4.3.0                desc_1.4.2                   
-[107] restfulr_0.0.15               pillar_1.9.0                 
-[109] vctrs_0.6.2                   promises_1.2.0.1             
-[111] dbplyr_2.3.2                  xtable_1.8-4                 
-[113] cluster_2.1.4                 tximport_1.28.0              
-[115] evaluate_0.20                 VennDiagram_1.7.3            
-[117] GenomicFeatures_1.52.0        cli_3.6.1                    
-[119] locfit_1.5-9.7                compiler_4.3.0               
-[121] futile.options_1.0.1          Rsamtools_2.16.0             
-[123] rlang_1.1.1                   crayon_1.5.2                 
-[125] labeling_0.4.2                ps_1.7.4                     
-[127] plyr_1.8.8                    stringi_1.7.12               
-[129] munsell_0.5.0                 Biostrings_2.68.0            
-[131] lazyeval_0.2.2                Matrix_1.5-4                 
-[133] BSgenome_1.68.0               hms_1.1.3                    
-[135] bit64_4.0.5                   KEGGREST_1.40.0              
-[137] statmod_1.5.0                 shiny_1.7.4                  
-[139] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
-[141] memoise_2.0.1                 bit_4.0.5                    
-[143] xmlparsedata_1.0.5  
+ [17] magrittr_2.0.3                plotly_4.10.1                
+ [19] rmarkdown_2.21                remotes_2.4.2                
+ [21] yaml_2.3.7                    httpuv_1.6.9                 
+ [23] pbapply_1.7-0                 DBI_1.1.3                    
+ [25] zlibbioc_1.46.0               R.cache_0.16.0               
+ [27] R.utils_2.12.2                AnnotationFilter_1.24.0      
+ [29] RCurl_1.98-1.12               rappdirs_0.3.3               
+ [31] circlize_0.4.15               GenomeInfoDbData_1.2.10      
+ [33] annotate_1.78.0               codetools_0.2-19             
+ [35] DelayedArray_0.25.0           xml2_1.3.4                   
+ [37] tidyselect_1.2.0              shape_1.4.6                  
+ [39] futile.logger_1.4.3           locfdr_1.1-8                 
+ [41] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [43] jsonlite_1.8.4                GetoptLong_1.0.5             
+ [45] ellipsis_0.3.2                survival_3.5-5               
+ [47] iterators_1.0.14              foreach_1.5.2                
+ [49] tools_4.3.0                   progress_1.2.2               
+ [51] Rcpp_1.0.10                   glue_1.6.2                   
+ [53] gridExtra_2.3                 xfun_0.39                    
+ [55] withr_2.5.0                   formatR_1.14                 
+ [57] BiocManager_1.30.20           fastmap_1.1.1                
+ [59] boot_1.3-28.1                 fansi_1.0.4                  
+ [61] callr_3.7.3                   digest_0.6.31                
+ [63] timechange_0.2.0              R6_2.5.1                     
+ [65] mime_0.12                     colorspace_2.1-0             
+ [67] biomaRt_2.56.0                RSQLite_2.3.1                
+ [69] R.methodsS3_1.8.2             utf8_1.2.3                   
+ [71] generics_0.1.3                data.table_1.14.8            
+ [73] tximeta_1.18.0                rtracklayer_1.60.0           
+ [75] htmlwidgets_1.6.2             prettyunits_1.1.1            
+ [77] httr_1.4.5                    pkgconfig_2.0.3              
+ [79] gtable_0.3.3                  blob_1.2.4                   
+ [81] hwriter_1.3.2.1               XVector_0.40.0               
+ [83] htmltools_0.5.5               geneplotter_1.78.0           
+ [85] ProtGenerics_1.32.0           clue_0.3-64                  
+ [87] scales_1.2.1                  cyclocomp_1.1.0              
+ [89] png_0.1-8                     knitr_1.42                   
+ [91] lambda.r_1.2.4                rstudioapi_0.14              
+ [93] tzdb_0.3.0                    reshape2_1.4.4               
+ [95] rjson_0.2.21                  curl_5.0.0                   
+ [97] cachem_1.0.8                  GlobalOptions_0.1.2          
+ [99] BiocVersion_3.17.1            parallel_4.3.0               
+[101] desc_1.4.2                    restfulr_0.0.15              
+[103] pillar_1.9.0                  vctrs_0.6.3                  
+[105] promises_1.2.0.1              dbplyr_2.3.2                 
+[107] xtable_1.8-4                  cluster_2.1.4                
+[109] tximport_1.28.0               evaluate_0.20                
+[111] VennDiagram_1.7.3             GenomicFeatures_1.52.0       
+[113] cli_3.6.1                     locfit_1.5-9.7               
+[115] compiler_4.3.0                futile.options_1.0.1         
+[117] Rsamtools_2.16.0              rlang_1.1.1                  
+[119] crayon_1.5.2                  ps_1.7.4                     
+[121] plyr_1.8.8                    stringi_1.7.12               
+[123] munsell_0.5.0                 Biostrings_2.68.0            
+[125] lazyeval_0.2.2                Matrix_1.5-4                 
+[127] BSgenome_1.68.0               hms_1.1.3                    
+[129] bit64_4.0.5                   KEGGREST_1.40.0              
+[131] statmod_1.5.0                 shiny_1.7.4                  
+[133] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
+[135] memoise_2.0.1                 bit_4.0.5                    
+[137] xmlparsedata_1.0.5    

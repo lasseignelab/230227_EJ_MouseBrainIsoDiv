@@ -1,0 +1,148 @@
+# pfam_scan.pl,  run at Wed Jul 26 22:08:34 2023
+#
+# Copyright (c) 2009 Genome Research Ltd
+# Freely distributed under the GNU 
+# General Public License
+#
+# Authors: Jaina Mistry (jaina@ebi.ac.uk), 
+#          Rob Finn (rdf@ebi.ac.uk)
+#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>. 
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#      query sequence file: /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cortex_sex_AA.fasta
+#        searching against: /PfamScan/PfamFiles/Pfam-A.hmm, with cut off --cut_ga
+#    resolve clan overlaps: on
+#     predict active sites: off
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#
+# <seq id> <alignment start> <alignment end> <envelope start> <envelope end> <hmm acc> <hmm name> <type> <hmm start> <hmm end> <hmm length> <bit score> <E-value> <significance> <clan>
+
+ENSMUST00000020248.16     30    167     30    167 PF10152.12  CCDC53           Coiled-coil     1   153   153    169.6   7.1e-50   1 No_clan  
+ENSMUST00000182183.8      30    166     30    166 PF10152.12  CCDC53           Coiled-coil     1   153   153    167.0   4.4e-49   1 No_clan  
+ENSMUST00000021347.12    123    164    123    164 PF00040.22  fn2               Domain     1    42    42     64.4   7.8e-18   1 CL0602   
+ENSMUST00000021347.12    189    214    179    214 PF08238.15  Sel1              Repeat    11    38    38      8.3       4.3   1 CL0020   
+ENSMUST00000021347.12    217    250    215    250 PF08238.15  Sel1              Repeat     3    38    38      8.1       4.9   1 CL0020   
+ENSMUST00000021347.12    253    283    251    286 PF08238.15  Sel1              Repeat     3    35    38      4.8        54   1 CL0020   
+ENSMUST00000021347.12    289    316    287    320 PF08238.15  Sel1              Repeat     3    32    38      7.1        10   1 CL0020   
+ENSMUST00000021347.12    370    405    369    405 PF08238.15  Sel1              Repeat     2    38    38     25.7   1.5e-05   1 CL0020   
+ENSMUST00000021347.12    406    442    406    442 PF08238.15  Sel1              Repeat     1    38    38     33.2   6.2e-08   1 CL0020   
+ENSMUST00000021347.12    445    477    443    478 PF08238.15  Sel1              Repeat     3    37    38     34.5   2.4e-08   1 CL0020   
+ENSMUST00000021347.12    481    514    479    514 PF08238.15  Sel1              Repeat     3    38    38     30.3     5e-07   1 CL0020   
+ENSMUST00000021347.12    519    543    517    549 PF08238.15  Sel1              Repeat     5    31    38      5.3        37   1 CL0020   
+ENSMUST00000021347.12    607    622    585    622 PF08238.15  Sel1              Repeat    23    38    38      3.0     2e+02   1 CL0020   
+ENSMUST00000021347.12    625    658    623    658 PF08238.15  Sel1              Repeat     3    38    38     21.5    0.0003   1 CL0020   
+ENSMUST00000021347.12    660    693    660    694 PF08238.15  Sel1              Repeat     1    36    38     33.6   4.7e-08   1 CL0020   
+ENSMUST00000178462.8     139    164    129    164 PF08238.15  Sel1              Repeat    11    38    38      8.4         4   1 CL0020   
+ENSMUST00000178462.8     167    200    165    200 PF08238.15  Sel1              Repeat     3    38    38      8.2       4.5   1 CL0020   
+ENSMUST00000178462.8     203    233    201    236 PF08238.15  Sel1              Repeat     3    35    38      4.9        50   1 CL0020   
+ENSMUST00000178462.8     239    266    237    270 PF08238.15  Sel1              Repeat     3    32    38      7.2       9.7   1 CL0020   
+ENSMUST00000178462.8     320    355    319    355 PF08238.15  Sel1              Repeat     2    38    38     25.8   1.4e-05   1 CL0020   
+ENSMUST00000178462.8     356    392    356    392 PF08238.15  Sel1              Repeat     1    38    38     33.3   5.7e-08   1 CL0020   
+ENSMUST00000178462.8     395    427    393    428 PF08238.15  Sel1              Repeat     3    37    38     34.6   2.2e-08   1 CL0020   
+ENSMUST00000178462.8     431    464    429    464 PF08238.15  Sel1              Repeat     3    38    38     30.4   4.7e-07   1 CL0020   
+ENSMUST00000178462.8     469    493    467    499 PF08238.15  Sel1              Repeat     5    31    38      5.4        34   1 CL0020   
+ENSMUST00000178462.8     557    572    535    572 PF08238.15  Sel1              Repeat    23    38    38      3.1   1.8e+02   1 CL0020   
+ENSMUST00000178462.8     575    608    573    608 PF08238.15  Sel1              Repeat     3    38    38     21.6   0.00028   1 CL0020   
+ENSMUST00000178462.8     610    643    610    644 PF08238.15  Sel1              Repeat     1    36    38     33.7   4.3e-08   1 CL0020   
+ENSMUST00000065504.17    164    229    164    229 PF00191.23  Annexin           Domain     1    66    66     92.3   1.5e-26   1 No_clan  
+ENSMUST00000065504.17    236    300    236    301 PF00191.23  Annexin           Domain     1    65    66     88.1   3.2e-25   1 No_clan  
+ENSMUST00000065504.17    320    384    319    385 PF00191.23  Annexin           Domain     2    65    66     65.6   3.3e-18   1 No_clan  
+ENSMUST00000065504.17    395    460    395    460 PF00191.23  Annexin           Domain     1    66    66     82.1   2.4e-23   1 No_clan  
+ENSMUST00000100844.6     186    251    186    251 PF00191.23  Annexin           Domain     1    66    66     92.2   1.7e-26   1 No_clan  
+ENSMUST00000100844.6     258    322    258    323 PF00191.23  Annexin           Domain     1    65    66     88.0   3.4e-25   1 No_clan  
+ENSMUST00000100844.6     342    406    341    407 PF00191.23  Annexin           Domain     2    65    66     65.5   3.6e-18   1 No_clan  
+ENSMUST00000100844.6     417    482    417    482 PF00191.23  Annexin           Domain     1    66    66     82.0   2.5e-23   1 No_clan  
+ENSMUST00000224975.2     164    229    164    229 PF00191.23  Annexin           Domain     1    66    66     92.3   1.5e-26   1 No_clan  
+ENSMUST00000224975.2     236    300    236    301 PF00191.23  Annexin           Domain     1    65    66     88.1   3.2e-25   1 No_clan  
+ENSMUST00000224975.2     320    384    319    385 PF00191.23  Annexin           Domain     2    65    66     65.6   3.3e-18   1 No_clan  
+ENSMUST00000224975.2     395    460    395    460 PF00191.23  Annexin           Domain     1    66    66     82.1   2.4e-23   1 No_clan  
+ENSMUST00000027877.7      13    720     13    720 PF05804.15  KAP               Family     1   708   708   1378.1         0   1 CL0020   
+ENSMUST00000077642.12     13    720     13    720 PF05804.15  KAP               Family     1   708   708   1378.2         0   1 CL0020   
+ENSMUST00000034281.13    285    334    280    362 PF12335.11  SBF2              Family   123   172   227     22.5   7.9e-05   1 No_clan  
+ENSMUST00000108951.8     285    334    280    378 PF12335.11  SBF2              Family   123   172   227     22.5   7.9e-05   1 No_clan  
+ENSMUST00000166232.4       9     56      9     57 PF00018.31  SH3_1             Domain     1    47    48     50.2   1.6e-13   1 CL0010   
+ENSMUST00000166232.4     458    612    458    612 PF08824.13  Serine_rich       Domain     1   157   157    151.2   2.6e-44   1 No_clan  
+ENSMUST00000166232.4     659    868    658    868 PF12026.11  CAS_C             Domain     2   208   208    256.0   3.3e-76   1 CL0705   
+ENSMUST00000212349.2       9     56      9     57 PF00018.31  SH3_1             Domain     1    47    48     50.2   1.6e-13   1 CL0010   
+ENSMUST00000212349.2     458    612    458    612 PF08824.13  Serine_rich       Domain     1   157   157    151.2   2.6e-44   1 No_clan  
+ENSMUST00000212349.2     659    868    658    868 PF12026.11  CAS_C             Domain     2   208   208    256.0   3.3e-76   1 CL0705   
+ENSMUST00000030254.15      7    122      7    124 PF04133.17  Vps55             Family     1   118   120    132.4   7.5e-39   1 No_clan  
+ENSMUST00000106927.2      36     99     28    101 PF04133.17  Vps55             Family    56   118   120     70.8   9.4e-20   1 No_clan  
+ENSMUST00000028220.10     60    102     57    104 PF12937.10  F-box-like        Domain     4    46    48     31.3   1.6e-07   1 CL0271   
+ENSMUST00000028220.10    142    174    140    174 PF00400.35  WD40              Repeat     5    38    38     12.5      0.24   1 CL0186   
+ENSMUST00000028220.10    219    253    216    253 PF00400.35  WD40              Repeat     4    37    38     23.1    0.0001   1 CL0186   
+ENSMUST00000028220.10    258    304    258    304 PF00400.35  WD40              Repeat     1    37    38     13.5      0.11   1 CL0186   
+ENSMUST00000113078.8      60    102     57    104 PF12937.10  F-box-like        Domain     4    46    48     31.3   1.6e-07   1 CL0271   
+ENSMUST00000113078.8     142    174    140    174 PF00400.35  WD40              Repeat     5    38    38     12.5      0.24   1 CL0186   
+ENSMUST00000113078.8     219    253    216    253 PF00400.35  WD40              Repeat     4    37    38     23.1    0.0001   1 CL0186   
+ENSMUST00000113078.8     258    304    258    304 PF00400.35  WD40              Repeat     1    37    38     13.5      0.11   1 CL0186   
+ENSMUST00000113080.9      60    102     57    104 PF12937.10  F-box-like        Domain     4    46    48     31.3   1.6e-07   1 CL0271   
+ENSMUST00000113080.9     142    174    140    174 PF00400.35  WD40              Repeat     5    38    38     12.5      0.24   1 CL0186   
+ENSMUST00000113080.9     219    253    216    253 PF00400.35  WD40              Repeat     4    37    38     23.1    0.0001   1 CL0186   
+ENSMUST00000113080.9     258    304    258    304 PF00400.35  WD40              Repeat     1    37    38     13.5      0.11   1 CL0186   
+ENSMUST00000131534.8      60    102     57    104 PF12937.10  F-box-like        Domain     4    46    48     32.5   6.3e-08   1 CL0271   
+ENSMUST00000131534.8     142    174    140    174 PF00400.35  WD40              Repeat     5    38    38     13.6       0.1   1 CL0186   
+ENSMUST00000156130.2      13     45     11     45 PF00400.35  WD40              Repeat     5    38    38     14.3     0.062   1 CL0186   
+ENSMUST00000156130.2      90    124     87    124 PF00400.35  WD40              Repeat     4    37    38     25.0   2.6e-05   1 CL0186   
+ENSMUST00000046371.13    131    286    129    289 PF01569.24  PAP2              Family     3   133   136     56.1   3.6e-15   1 CL0525   
+ENSMUST00000190387.7     131    286    129    289 PF01569.24  PAP2              Family     3   133   136     56.9     2e-15   1 CL0525   
+ENSMUST00000012612.11    596    644    596    645 PF02891.23  zf-MIZ            Domain     1    49    50     77.1   6.7e-22   1 CL0229   
+ENSMUST00000102914.10    564    612    564    613 PF02891.23  zf-MIZ            Domain     1    49    50     77.2   6.4e-22   1 CL0229   
+ENSMUST00000109785.2     570    618    570    619 PF02891.23  zf-MIZ            Domain     1    49    50     77.2   6.4e-22   1 CL0229   
+ENSMUST00000109786.8     596    644    596    645 PF02891.23  zf-MIZ            Domain     1    49    50     77.1   6.7e-22   1 CL0229   
+ENSMUST00000109787.8     596    644    596    645 PF02891.23  zf-MIZ            Domain     1    49    50     77.1   6.7e-22   1 CL0229   
+ENSMUST00000077128.13     17     68     17     68 PF14604.9   SH3_9             Domain     1    49    49     38.6   8.1e-10   1 CL0010   
+ENSMUST00000077128.13     69    264     69    264 PF16618.8   SH3-WW_linker    Disordered     1   198   198    242.4     6e-72   1 No_clan  
+ENSMUST00000077128.13    267    294    265    294 PF00397.29  WW                Domain     3    31    31     30.0   4.4e-07   1 CL0680   
+ENSMUST00000077128.13    443    541    431    542 PF00169.32  PH                Domain    11   104   105     40.7     3e-10   1 CL0266   
+ENSMUST00000077128.13    637    783    637    784 PF00620.30  RhoGAP            Domain     1   148   149    169.2   5.6e-50   1 CL0409   
+ENSMUST00000182038.2      17     68     17     68 PF14604.9   SH3_9             Domain     1    49    49     40.0   3.1e-10   1 CL0010   
+ENSMUST00000182038.2      69    264     69    264 PF16618.8   SH3-WW_linker    Disordered     1   198   198    244.5   1.3e-72   1 No_clan  
+ENSMUST00000182038.2     267    294    265    294 PF00397.29  WW                Domain     3    31    31     31.2   1.8e-07   1 CL0680   
+ENSMUST00000182066.8      17     68     17     68 PF14604.9   SH3_9             Domain     1    49    49     38.7   7.9e-10   1 CL0010   
+ENSMUST00000182066.8      69    264     69    264 PF16618.8   SH3-WW_linker    Disordered     1   198   198    242.5   5.7e-72   1 No_clan  
+ENSMUST00000182066.8     267    294    265    294 PF00397.29  WW                Domain     3    31    31     30.0   4.2e-07   1 CL0680   
+ENSMUST00000182066.8     421    519    409    520 PF00169.32  PH                Domain    11   104   105     40.7   2.8e-10   1 CL0266   
+ENSMUST00000182066.8     615    761    615    762 PF00620.30  RhoGAP            Domain     1   148   149    169.3   5.3e-50   1 CL0409   
+ENSMUST00000182213.8      17     68     17     68 PF14604.9   SH3_9             Domain     1    49    49     38.6   8.5e-10   1 CL0010   
+ENSMUST00000182213.8      69    264     69    264 PF16618.8   SH3-WW_linker    Disordered     1   198   198    242.3   6.4e-72   1 No_clan  
+ENSMUST00000182213.8     267    294    265    294 PF00397.29  WW                Domain     3    31    31     29.9   4.5e-07   1 CL0680   
+ENSMUST00000182213.8     473    571    461    572 PF00169.32  PH                Domain    11   104   105     40.6   3.1e-10   1 CL0266   
+ENSMUST00000182213.8     667    813    667    814 PF00620.30  RhoGAP            Domain     1   148   149    169.1   5.9e-50   1 CL0409   
+ENSMUST00000182559.8      17     68     17     68 PF14604.9   SH3_9             Domain     1    49    49     38.6   8.4e-10   1 CL0010   
+ENSMUST00000182559.8      69    264     69    264 PF16618.8   SH3-WW_linker    Disordered     1   198   198    242.3   6.3e-72   1 No_clan  
+ENSMUST00000182559.8     267    294    265    294 PF00397.29  WW                Domain     3    31    31     30.0   4.5e-07   1 CL0680   
+ENSMUST00000182559.8     468    566    456    567 PF00169.32  PH                Domain    11   104   105     40.6   3.1e-10   1 CL0266   
+ENSMUST00000182559.8     662    808    662    809 PF00620.30  RhoGAP            Domain     1   148   149    169.1   5.8e-50   1 CL0409   
+ENSMUST00000086693.12    494    587    493    587 PF11365.11  SOGA             Coiled-coil     2    95    95    101.8   3.5e-29   1 No_clan  
+ENSMUST00000086693.12    622    714    622    714 PF11365.11  SOGA             Coiled-coil     1    95    95    126.6   6.6e-37   1 No_clan  
+ENSMUST00000086693.12   1220   1343   1220   1343 PF14818.9   DUF4482           Family     1   139   139    135.4   2.6e-39   1 No_clan  
+ENSMUST00000097291.10    494    587    493    587 PF11365.11  SOGA             Coiled-coil     2    95    95    101.9   3.4e-29   1 No_clan  
+ENSMUST00000097291.10    622    714    622    714 PF11365.11  SOGA             Coiled-coil     1    95    95    126.6   6.4e-37   1 No_clan  
+ENSMUST00000097291.10   1220   1343   1220   1343 PF14818.9   DUF4482           Family     1   139   139    135.4   2.6e-39   1 No_clan  
+ENSMUST00000134139.8     276    399    276    399 PF14818.9   DUF4482           Family     1   139   139    138.3   3.2e-40   1 No_clan  
+ENSMUST00000047321.9      74    125     73    126 PF00010.29  HLH               Domain     2    53    54     60.3   1.4e-16   1 No_clan  
+ENSMUST00000047321.9     149    252    146    253 PF00989.28  PAS               Domain     4   111   113     37.0     3e-09   1 CL0183   
+ENSMUST00000047321.9     339    441    337    444 PF14598.9   PAS_11            Domain     3   108   113     82.1   3.2e-23   1 CL0183   
+ENSMUST00000210074.2      61    112     60    113 PF00010.29  HLH               Domain     2    53    54     60.3   1.4e-16   1 No_clan  
+ENSMUST00000210074.2     136    239    133    240 PF00989.28  PAS               Domain     4   111   113     37.0   2.9e-09   1 CL0183   
+ENSMUST00000210074.2     326    428    324    431 PF14598.9   PAS_11            Domain     3   108   113     82.1   3.1e-23   1 CL0183   
+ENSMUST00000210238.2      74    125     73    126 PF00010.29  HLH               Domain     2    53    54     60.3   1.4e-16   1 No_clan  
+ENSMUST00000210238.2     149    252    146    253 PF00989.28  PAS               Domain     4   111   113     37.0     3e-09   1 CL0183   
+ENSMUST00000210238.2     339    441    337    444 PF14598.9   PAS_11            Domain     3   108   113     82.1   3.2e-23   1 CL0183   
+ENSMUST00000211770.2      81    132     80    133 PF00010.29  HLH               Domain     2    53    54     60.3   1.5e-16   1 No_clan  
+ENSMUST00000211770.2     156    259    153    260 PF00989.28  PAS               Domain     4   111   113     37.0   3.1e-09   1 CL0183   
+ENSMUST00000211770.2     346    448    344    451 PF14598.9   PAS_11            Domain     3   108   113     82.1   3.2e-23   1 CL0183   
+ENSMUST00000072580.12    134    407    133    408 PF07714.20  PK_Tyr_Ser-Thr    Domain     2   258   259    212.4   7.1e-63   1 CL0016   
+ENSMUST00000120005.10    134    407    133    408 PF07714.20  PK_Tyr_Ser-Thr    Domain     2   258   259    212.4   7.1e-63   1 CL0016   
+ENSMUST00000209617.2     160    433    159    434 PF07714.20  PK_Tyr_Ser-Thr    Domain     2   258   259    212.4   7.3e-63   1 CL0016   
+ENSMUST00000233503.2     134    407    133    408 PF07714.20  PK_Tyr_Ser-Thr    Domain     2   258   259    212.4   7.3e-63   1 CL0016   
