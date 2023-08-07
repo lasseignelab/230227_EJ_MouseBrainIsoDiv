@@ -1,11 +1,13 @@
 library(shiny)
 library(IsoformSwitchAnalyzeR)
 library(viridis)
+library(ComplexHeatmap)
 
 fluidPage(
   titlePanel("Visualizing Isoform Switches in Wild Type Mouse Brain"),
   
   tabsetPanel(
+    id = "inTabset",
     tabPanel(
       "Welcome and About",
       br(),
@@ -14,6 +16,9 @@ fluidPage(
         a("Lasseigne Lab", href = "https://www.lasseigne.org/"),
         "for visualizing long-read mouse brain RNA-sequencing data!"
       ),
+      img(src = "graphical_abstract.png",
+          width = "825px",
+          height = "225px"),
       p(
         "The plots displayed are created from the",
         a("IsoformSwitchAnalyzeR",
@@ -21,8 +26,20 @@ fluidPage(
         "package created and maintained by Kristoffer Vitting-Seerup."
       ),
       actionButton(inputId = "start",
-                   label = "Let's Get Started!")
+                   label = "Let's Get Started!"),
+      img(src = "logo_only.png", width = "50px")
     ),
+    
+    tabPanel(
+      "Custom Gene Expression Heatmap",
+      sidebarLayout(sidebarPanel(
+        fileInput(
+          inputId = "gene_ids",
+          label = "Input Gene IDs Here",
+          accept = c(".csv", ".tsv", ".txt")
+        )
+      ),
+      mainPanel(plotOutput("heatmap")))),
     
     tabPanel(
       "Compare Single Brain Region",
