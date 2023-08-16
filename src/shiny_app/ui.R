@@ -2,6 +2,7 @@ library(shiny)
 library(IsoformSwitchAnalyzeR)
 library(viridis)
 library(ComplexHeatmap)
+library(tidyverse)
 
 # read in counts data
 gene_exp_counts <- read.table("raw_counts/counts_gene.txt",

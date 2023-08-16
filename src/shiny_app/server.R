@@ -2,6 +2,7 @@ library(shiny)
 library(IsoformSwitchAnalyzeR)
 library(viridis)
 library(ComplexHeatmap)
+library(tidyverse)
 
 # global variables
 
