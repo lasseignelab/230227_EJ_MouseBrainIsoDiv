@@ -17,29 +17,22 @@ region_sex_switchlist_list_analyzed <-
   readRDS("complete_switchlists/region_sex_list_orf_de_pfam.Rds")
 
 # read in counts data
-gene_exp_counts <- read.table("raw_counts/counts_gene.txt",
-                              header = TRUE)
+combined_cpm <- readRDS("data/combined_cpm.Rds")
 
-ensembl_ids <- str_extract(rownames(gene_exp_counts), "ENSMUSG...........")
-
-# read in sample collection metadata
-sample_collection_metadata <- readRDS("raw_counts/sample_collection_metadata.RDS")
-
-# calculate cpm
-gene_exp_cpm <-
-  do.call(cbind, lapply(seq_len(ncol(gene_exp_counts)), function(i) {
-    gene_exp_counts[i] * 1e6 / sum(gene_exp_counts[i])
-  }))
+combined_ids <- rownames(combined_cpm)
 
 input <- list()
 
-input$gene_ids <- head(rownames(gene_exp_cpm))
+input$gene_ids <- head(rownames(combined_cpm))
+
+# read in sample collection metadata
+sample_collection_metadata <- readRDS("data/sample_collection_metadata.Rds")
 
 tissue_annotation <-
   HeatmapAnnotation(tissue = sample_collection_metadata$tissue)
 
-# code for server
-function(input, output, session) {
+# server module
+server <- function(input, output, session) {
   
   observeEvent(input$start, {
     updateTabsetPanel(session, "inTabset", selected = "Custom Gene Expression Heatmap")
@@ -53,9 +46,7 @@ function(input, output, session) {
                plotTopology = FALSE)})
   
   # fetch data
-  data_1 <- reactive({
-    get(region_all_switchlist_list_analyzed[[input$brain_region_1]]$isoformFeatures)
-  })
+  data_1 <- reactive(region_all_switchlist_list_analyzed[[input$brain_region_1]]$isoformFeatures)
   
   output$download_data_1 <- downloadHandler(
     filename = function() {
@@ -119,12 +110,13 @@ function(input, output, session) {
   )
   
   # selectize input for heatmap
-  updateSelectizeInput(session, "gene_ids", choices = ensembl_ids, server = TRUE)
+  updateSelectizeInput(session, "gene_ids", choices = combined_ids,
+                       server = TRUE)
   
   # make heatmap
   output$heatmap <- renderPlot({
     
-    Heatmap(as.matrix(gene_exp_cpm[input$gene_ids, ]), name = "cpm",
+    Heatmap(as.matrix(combined_cpm[input$gene_ids, ]), name = "cpm",
             top_annotation = tissue_annotation,
             show_column_names = FALSE)
     })

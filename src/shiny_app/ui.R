@@ -4,12 +4,6 @@ library(viridis)
 library(ComplexHeatmap)
 library(tidyverse)
 
-# read in counts data
-gene_exp_counts <- read.table("raw_counts/counts_gene.txt",
-                              header = TRUE)
-
-ensembl_ids <- str_extract(rownames(gene_exp_counts), "ENSMUSG...........")
-
 # set ui
 fluidPage(
   titlePanel("Visualizing Isoform Switches in Wild Type Mouse Brain"),
@@ -45,7 +39,7 @@ fluidPage(
       sidebarLayout(sidebarPanel(
         selectizeInput(
           inputId = "gene_ids",
-          label = "Input ENSEMBL IDs Here",
+          label = "Input Gene Symbols or ENSEMBL IDs Here",
           choices = NULL,
           multiple = TRUE
         )
@@ -74,7 +68,6 @@ fluidPage(
         ),
         downloadButton("download_data_1", "Download Raw Data")
       ),
-      
       mainPanel(plotOutput("switchplot_1")))
     ),
     
