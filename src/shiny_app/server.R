@@ -38,6 +38,23 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "inTabset", selected = "Custom Gene Expression Heatmap")
   })
   
+  
+  # selectize input for heatmap
+  updateSelectizeInput(session, "gene_ids", choices = combined_ids,
+                       server = TRUE)
+
+  # make heatmap
+  output$heatmap <- renderPlot({
+    
+    Heatmap(as.matrix(combined_cpm[input$gene_ids, ]), name = "cpm",
+            top_annotation = tissue_annotation,
+            show_column_names = FALSE)
+  })
+  
+  # selectize input for first switchplot tab
+  updateSelectizeInput(session, "gene_name1", choices = region_region_switchlist_analyzed$isoformFeatures$gene_name,
+                       server = TRUE)
+  
   # make switchplot for first tab
   output$switchplot_1 <- renderPlot({
     
@@ -58,8 +75,11 @@ server <- function(input, output, session) {
       write.csv(data_1(), file)
     }
   )
+  # selectize input for second switchplot tab
+  updateSelectizeInput(session, "gene_name2", choices = region_region_switchlist_analyzed$isoformFeatures$gene_name,
+                       server = TRUE)
   
-  # make switchplot for second tab
+  # make switchplot for second switchplot tab
   output$switchplot_2 <- renderPlot({
     
     switchPlot(region_region_switchlist_analyzed,
@@ -87,7 +107,11 @@ server <- function(input, output, session) {
       write.csv(data_2(), file)
     }
   )
-  # make switchplot for third tab
+  # selectize input for third switchplot tab
+  updateSelectizeInput(session, "gene_name3", choices = region_region_switchlist_analyzed$isoformFeatures$gene_name,
+                       server = TRUE)
+  
+  # make switchplot for third switchplot tab
   output$switchplot_3 <- renderPlot({
     
     switchPlot(region_sex_switchlist_list_analyzed[[input$brain_region_3]],
@@ -108,16 +132,4 @@ server <- function(input, output, session) {
       write.csv(data_3(), file)
     }
   )
-  
-  # selectize input for heatmap
-  updateSelectizeInput(session, "gene_ids", choices = combined_ids,
-                       server = TRUE)
-  
-  # make heatmap
-  output$heatmap <- renderPlot({
-    
-    Heatmap(as.matrix(combined_cpm[input$gene_ids, ]), name = "cpm",
-            top_annotation = tissue_annotation,
-            show_column_names = FALSE)
-    })
 }

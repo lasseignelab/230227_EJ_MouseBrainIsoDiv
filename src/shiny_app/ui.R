@@ -50,10 +50,10 @@ fluidPage(
     tabPanel(
       "Compare Single Brain Region",
       sidebarLayout(sidebarPanel(
-        textInput(
+        selectizeInput(
           inputId = "gene_name1",
-          label = "Gene Name",
-          placeholder = "Enter Gene Name Here..."
+          label = "Input Gene Symbol Here",
+          choices = NULL
         ),
         selectInput(
           inputId = "brain_region_1",
@@ -75,10 +75,10 @@ fluidPage(
     tabPanel(
       "Compare Double Brain Region",
       sidebarLayout(sidebarPanel(
-        textInput(
+        selectizeInput(
           inputId = "gene_name2",
-          label = "Gene Name",
-          placeholder = "Enter Gene Name Here..."
+          label = "Input Gene Symbol Here",
+          choices = NULL
         ),
         selectInput(
           inputId = "condition1",
@@ -112,10 +112,10 @@ fluidPage(
     tabPanel(
       "Compare Single Region Across Sexes",
       sidebarLayout(sidebarPanel(
-        textInput(
+        selectizeInput(
           inputId = "gene_name3",
-          label = "Gene Name",
-          placeholder = "Enter Gene Name Here..."
+          label = "Input Gene Symbol Here",
+          choices = NULL
         ),
         selectInput(
           inputId = "brain_region_3",
