@@ -57,13 +57,16 @@ server <- function(input, output, session) {
   
   # make heatmap
   output$heatmap <- renderPlot({
-    Heatmap(
+    plot <- Heatmap(
       as.matrix(combined_cpm[input$gene_ids,]),
       name = "cpm",
       top_annotation = tissue_annotation,
       show_column_names = FALSE,
-      col = ocean.deep(10)
+      col = ocean.deep(10),
+      heatmap_legend_param = list(legend_direction = "horizontal")
     )
+    
+    draw(plot, heatmap_legend_side = "bottom")
   })
   
   # selectize input for first switchplot tab
@@ -94,7 +97,8 @@ server <- function(input, output, session) {
     switchPlot(
       region_all_switchlist_list_analyzed[[input$brain_region_1]],
       gene = input$gene_name1,
-      plotTopology = FALSE
+      plotTopology = FALSE,
+      localTheme = theme_bw(base_size = 11)
     )
   })
   
@@ -136,7 +140,8 @@ server <- function(input, output, session) {
       gene = input$gene_name2,
       condition1 = input$condition1,
       condition2 = input$condition2,
-      plotTopology = FALSE
+      plotTopology = FALSE,
+      localTheme = theme_bw(base_size = 11)
     )
   })
   
@@ -167,7 +172,8 @@ server <- function(input, output, session) {
     switchPlot(
       region_sex_switchlist_list_analyzed[[input$brain_region_3]],
       gene = input$gene_name3,
-      plotTopology = FALSE
+      plotTopology = FALSE,
+      localTheme = theme_bw(base_size = 11)
     )
   })
   
