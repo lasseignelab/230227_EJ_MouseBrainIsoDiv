@@ -43,7 +43,11 @@ tissue_annotation <-
                         "hippocampus" = "#00BFC4",
                         "striatum" = "#C77CFF"
                       )
-                    ))
+                    ),
+                    annotation_legend_param = list(
+                      tissue = list(
+                        nrow = 1
+                      )))
 
 # server module
 server <- function(input, output, session) {
@@ -66,7 +70,7 @@ server <- function(input, output, session) {
       heatmap_legend_param = list(legend_direction = "horizontal")
     )
     
-    draw(plot, heatmap_legend_side = "bottom")
+    draw(plot, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
   })
   
   # selectize input for first switchplot tab
