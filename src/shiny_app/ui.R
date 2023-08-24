@@ -7,7 +7,6 @@ library(tidyverse)
 # set ui
 fluidPage(
   titlePanel("Visualizing Isoform Switches in Wild Type Mouse Brain"),
-  
   # shiny app and paper overview tab
   tabsetPanel(
     id = "inTabset",
