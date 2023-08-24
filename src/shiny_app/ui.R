@@ -5,7 +5,10 @@ library(ComplexHeatmap)
 library(tidyverse)
 
 # set ui
-fluidPage(
+ui <- fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+  ),
   titlePanel("Visualizing Isoform Switches in Wild Type Mouse Brain"),
   # shiny app and paper overview tab
   tabsetPanel(
