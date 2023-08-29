@@ -58,9 +58,20 @@ server <- function(input, output, session) {
   # selectize input for heatmap
   updateSelectizeInput(session, "gene_ids", choices = combined_ids,
                        server = TRUE)
-  
-  # make heatmap
-  output$heatmap <- renderPlot({
+
+  # A dynamically-sized heatmap
+  output$heatmap_image <- renderImage({
+    width  <- session$clientData$output_heatmap_image_width
+    height <- session$clientData$output_heatmap_image_height
+    
+    pixelratio <- session$clientData$pixelratio
+    
+    outfile <- tempfile(fileext='.png')
+    
+    # generate the image file
+    png(outfile, width=width*pixelratio, height=height*pixelratio,
+        res=72*pixelratio)
+    # plot code here
     plot <- Heatmap(
       as.matrix(combined_cpm[input$gene_ids,]),
       name = "cpm",
@@ -70,8 +81,18 @@ server <- function(input, output, session) {
       heatmap_legend_param = list(legend_direction = "horizontal")
     )
     
+    # draw plot
     draw(plot, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
-  })
+    
+    # turn off device
+    dev.off()
+    
+    # return a list containing the filename
+    list(src = outfile,
+         width = width,
+         height = height,
+         alt = "A custom heatmap of gene expression values")
+  }, deleteFile = TRUE)
   
   # selectize input for first switchplot tab
   updateSelectizeInput(
@@ -96,15 +117,36 @@ server <- function(input, output, session) {
     }
   )
   
-  # make switchplot for first tab
-  output$switchplot_1 <- renderPlot({
+  # a dynamically-sized switchplot for first tab
+  output$switchplot_1_image <- renderImage({
+    width  <- session$clientData$output_switchplot_1_image_width
+    height <- session$clientData$output_switchplot_1_image_height
+    
+    pixelratio <- session$clientData$pixelratio
+    
+    outfile <- tempfile(fileext='.png')
+    
+    # generate the image file
+    png(outfile, width=width*pixelratio, height=height*pixelratio,
+        res=72*pixelratio)
+    
+    # plot code here
     switchPlot(
       region_all_switchlist_list_analyzed[[input$brain_region_1]],
       gene = input$gene_name1,
       plotTopology = FALSE,
       localTheme = theme_bw(base_size = 11)
     )
-  })
+ 
+    # turn off device
+    dev.off()
+    
+    # return a list containing the filename
+    list(src = outfile,
+         width = width,
+         height = height,
+         alt = "A switch plot with gene of interest")
+  }, deleteFile = TRUE)
   
   # selectize input for second switchplot tab
   updateSelectizeInput(
@@ -137,8 +179,20 @@ server <- function(input, output, session) {
     }
   )
   
-  # make switchplot for second switchplot tab
-  output$switchplot_2 <- renderPlot({
+  # a dynamically-sized switchplot for second tab
+  output$switchplot_2_image <- renderImage({
+    width  <- session$clientData$output_switchplot_2_image_width
+    height <- session$clientData$output_switchplot_2_image_height
+    
+    pixelratio <- session$clientData$pixelratio
+    
+    outfile <- tempfile(fileext='.png')
+    
+    # generate the image file
+    png(outfile, width = width*pixelratio, height = height*pixelratio,
+        res = 72*pixelratio)
+    
+    # plot code here
     switchPlot(
       region_region_switchlist_analyzed,
       gene = input$gene_name2,
@@ -147,7 +201,16 @@ server <- function(input, output, session) {
       plotTopology = FALSE,
       localTheme = theme_bw(base_size = 11)
     )
-  })
+    
+    # turn off device
+    dev.off()
+    
+    # return a list containing the filename
+    list(src = outfile,
+         width = width,
+         height = height,
+         alt = "A switch plot with gene of interest")
+  }, deleteFile = TRUE)
   
   # selectize input for third switchplot tab
   updateSelectizeInput(
@@ -170,15 +233,36 @@ server <- function(input, output, session) {
       write.csv(data_3(), file)
     }
   )
-  
-  # make switchplot for third switchplot tab
-  output$switchplot_3 <- renderPlot({
+
+  # a dynamically-sized switchplot for third tab
+  output$switchplot_3_image <- renderImage({
+    width  <- session$clientData$output_switchplot_3_image_width
+    height <- session$clientData$output_switchplot_3_image_height
+    
+    pixelratio <- session$clientData$pixelratio
+    
+    outfile <- tempfile(fileext='.png')
+    
+    # generate the image file
+    png(outfile, width = width*pixelratio, height = height*pixelratio,
+        res = 72*pixelratio)
+    
+    # plot code here
     switchPlot(
       region_sex_switchlist_list_analyzed[[input$brain_region_3]],
       gene = input$gene_name3,
       plotTopology = FALSE,
       localTheme = theme_bw(base_size = 11)
     )
-  })
+    
+    # turn off device
+    dev.off()
+    
+    # return a list containing the filename
+    list(src = outfile,
+         width = width,
+         height = height,
+         alt = "A switch plot with gene of interest")
+  }, deleteFile = TRUE)
   
 }

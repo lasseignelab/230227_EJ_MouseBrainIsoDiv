@@ -76,7 +76,7 @@ ui <- fluidPage(
           "Note: be mindful of expression values, heatmap color may be skewed when a very lowly expressed gene is plotted with more highly expressed genes."
         )
       ),
-      mainPanel(plotOutput("heatmap")))
+      mainPanel(imageOutput("heatmap_image")))
     ),
     
     # single brain region vs all others switchplot tab
@@ -111,7 +111,8 @@ ui <- fluidPage(
             "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
           )
         ),
-        mainPanel(plotOutput("switchplot_1"))
+        mainPanel(
+          imageOutput("switchplot_1_image"))
       )
     ),
     
@@ -158,8 +159,8 @@ ui <- fluidPage(
             "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
           )
         ),
-        
-        mainPanel(plotOutput("switchplot_2"))
+        mainPanel(
+          imageOutput("switchplot_2_image"))
       )
     ),
     
@@ -196,7 +197,7 @@ ui <- fluidPage(
           )
         ),
         
-        mainPanel(plotOutput("switchplot_3"))
+        mainPanel(imageOutput("switchplot_3_image"))
       )
     )
   )
