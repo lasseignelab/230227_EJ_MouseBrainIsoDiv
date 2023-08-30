@@ -181,7 +181,7 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           p(
-            "Are you interested in comparing differential transcript usage withiin a single brain region across sexes?"
+            "Are you interested in comparing differential transcript usage within a single brain region across sexes?"
           ),
           p(
             "If you are, select a gene name and a brain region to focus on. Alternatively, you can download the processed data to plot yourself!"

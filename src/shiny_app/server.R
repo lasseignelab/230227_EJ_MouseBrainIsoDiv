@@ -55,6 +55,50 @@ server <- function(input, output, session) {
   # selectize input for heatmap
   updateSelectizeInput(session, "gene_ids", choices = combined_ids,
                        server = TRUE)
+  
+  output$download_heatmap <- downloadHandler(
+    filename = function() {
+      # set the suggested file name
+      paste0("cpm_expression.csv")
+    },
+    content = function(file) {
+      # write the data to the `file` that will be downloaded
+      write.csv(combined_cpm, file)
+    }
+  )
+  
+  # download image
+  output$download_heatmap_image <- downloadHandler(
+    filename = function() {
+      # set the suggested file name
+      paste0("custom_expression_heatmap.png")
+    },
+    content = function(file) {
+      width  <- session$clientData$output_heatmap_image_width
+      height <- session$clientData$output_heatmap_image_height
+      
+      pixelratio <- session$clientData$pixelratio
+      
+      # generate the image file
+      png(file, width = width*pixelratio, height = height*pixelratio,
+          res = 72*pixelratio)
+      # plot code here
+      plot <- Heatmap(
+        as.matrix(combined_cpm[input$gene_ids,]),
+        name = "cpm",
+        top_annotation = tissue_annotation,
+        show_column_names = FALSE,
+        col = ocean.deep(10),
+        heatmap_legend_param = list(legend_direction = "horizontal")
+      )
+      
+      # draw plot
+      draw(plot, heatmap_legend_side = "bottom", annotation_legend_side = "bottom")
+      
+      # turn off device
+      dev.off()
+    }
+  )
 
   # create a dynamically-sized heatmap
   output$heatmap_image <- renderImage({
@@ -66,8 +110,8 @@ server <- function(input, output, session) {
     outfile <- tempfile(fileext='.png')
     
     # generate the image file
-    png(outfile, width=width*pixelratio, height=height*pixelratio,
-        res=72*pixelratio)
+    png(outfile, width = width*pixelratio, height = height*pixelratio,
+        res = 72*pixelratio)
     # plot code here
     plot <- Heatmap(
       as.matrix(combined_cpm[input$gene_ids,]),
@@ -153,8 +197,8 @@ server <- function(input, output, session) {
     outfile <- tempfile(fileext='.png')
     
     # generate the image file
-    png(outfile, width=width*pixelratio, height=height*pixelratio,
-        res=72*pixelratio)
+    png(outfile, width = width*pixelratio, height = height*pixelratio,
+        res = 72*pixelratio)
     
     # plot code here
     switchPlot(
@@ -244,7 +288,7 @@ server <- function(input, output, session) {
     
     pixelratio <- session$clientData$pixelratio
     
-    outfile <- tempfile(fileext='.png')
+    outfile <- tempfile(fileext = '.png')
     
     # generate the image file
     png(outfile, width = width*pixelratio, height = height*pixelratio,
