@@ -51,15 +51,12 @@ tissue_annotation <-
 
 # server module
 server <- function(input, output, session) {
-  observeEvent(input$start, {
-    updateTabsetPanel(session, "inTabset", selected = "Custom Gene Expression Heatmap")
-  })
   
   # selectize input for heatmap
   updateSelectizeInput(session, "gene_ids", choices = combined_ids,
                        server = TRUE)
 
-  # A dynamically-sized heatmap
+  # create a dynamically-sized heatmap
   output$heatmap_image <- renderImage({
     width  <- session$clientData$output_heatmap_image_width
     height <- session$clientData$output_heatmap_image_height
@@ -117,6 +114,35 @@ server <- function(input, output, session) {
     }
   )
   
+  # download image
+  output$download_image_1 <- downloadHandler(
+    filename = function() {
+      # set the suggested file name
+      paste0(input$gene_name1, "_", input$brain_region_1, "_switchplot.png")
+    },
+    content = function(file) {
+      width  <- session$clientData$output_switchplot_1_image_width
+      height <- session$clientData$output_switchplot_1_image_height
+
+      pixelratio <- session$clientData$pixelratio
+
+      # generate the image file
+      png(file, width = width*pixelratio, height = height*pixelratio,
+          res = 72*pixelratio)
+
+      # plot code here
+      switchPlot(
+        region_all_switchlist_list_analyzed[[input$brain_region_1]],
+        gene = input$gene_name1,
+        plotTopology = FALSE,
+        localTheme = theme_bw(base_size = 11)
+      )
+
+      # turn off device
+      dev.off()
+    }
+  )
+  
   # a dynamically-sized switchplot for first tab
   output$switchplot_1_image <- renderImage({
     width  <- session$clientData$output_switchplot_1_image_width
@@ -148,6 +174,7 @@ server <- function(input, output, session) {
          alt = "A switch plot with gene of interest")
   }, deleteFile = TRUE)
   
+  
   # selectize input for second switchplot tab
   updateSelectizeInput(
     session,
@@ -176,6 +203,37 @@ server <- function(input, output, session) {
     content = function(file) {
       # write the data to the `file` that will be downloaded
       write.csv(data_2(), file)
+    }
+  )
+  
+  # download image
+  output$download_image_2 <- downloadHandler(
+    filename = function() {
+      # set the suggested file name
+      paste0(input$gene_name2, "_", input$condition1, "_", input$condition2, "_switchplot.png")
+    },
+    content = function(file) {
+      width  <- session$clientData$output_switchplot_2_image_width
+      height <- session$clientData$output_switchplot_2_image_height
+      
+      pixelratio <- session$clientData$pixelratio
+      
+      # generate the image file
+      png(file, width = width*pixelratio, height = height*pixelratio,
+          res = 72*pixelratio)
+      
+      # plot code here
+      switchPlot(
+        region_region_switchlist_analyzed,
+        gene = input$gene_name2,
+        condition1 = input$condition1,
+        condition2 = input$condition2,
+        plotTopology = FALSE,
+        localTheme = theme_bw(base_size = 11)
+      )
+      
+      # turn off device
+      dev.off()
     }
   )
   
@@ -223,6 +281,7 @@ server <- function(input, output, session) {
   data_3 <-
     reactive(region_sex_switchlist_list_analyzed[[input$brain_region_3]]$isoformFeatures)
   
+  # download data
   output$download_data_3 <- downloadHandler(
     filename = function() {
       # set the suggested file name
@@ -231,6 +290,35 @@ server <- function(input, output, session) {
     content = function(file) {
       # write the data to the `file` that will be downloaded
       write.csv(data_3(), file)
+    }
+  )
+  
+  # download image
+  output$download_image_3 <- downloadHandler(
+    filename = function() {
+      # set the suggested file name
+      paste0(input$gene_name3, "_", input$brain_region_3, "_switchplot.png")
+    },
+    content = function(file) {
+      width  <- session$clientData$output_switchplot_3_image_width
+      height <- session$clientData$output_switchplot_3_image_height
+      
+      pixelratio <- session$clientData$pixelratio
+      
+      # generate the image file
+      png(file, width = width*pixelratio, height = height*pixelratio,
+          res = 72*pixelratio)
+      
+      # plot code here
+      switchPlot(
+        region_sex_switchlist_list_analyzed[[input$brain_region_3]],
+        gene = input$gene_name3,
+        plotTopology = FALSE,
+        localTheme = theme_bw(base_size = 11)
+      )
+      
+      # turn off device
+      dev.off()
     }
   )
 

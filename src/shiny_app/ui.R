@@ -52,9 +52,10 @@ ui <- fluidPage(
           href = "https://bioconductor.org/packages/release/bioc/html/IsoformSwitchAnalyzeR.html"),
         "package created and maintained by Kristoffer Vitting-Seerup."
       ),
-      actionButton(inputId = "start",
-                   label = "Let's Get Started!"),
-      img(src = "logo_only.png", width = "50px")
+      img(src = "logo_only.png", width = "50px"),
+      
+      br(),
+      br()
     ),
     
     # gene expression heatmap tab
@@ -72,6 +73,10 @@ ui <- fluidPage(
           choices = NULL,
           multiple = TRUE
         ),
+        downloadButton("download_heatmap", "Download Raw Data"),
+        downloadButton("download_heatmap_image", "Download Image", icon = icon("camera")),
+        br(),
+        br(),
         p(
           "Note: be mindful of expression values, heatmap color may be skewed when a very lowly expressed gene is plotted with more highly expressed genes."
         )
@@ -107,6 +112,9 @@ ui <- fluidPage(
             selected = "cerebellum"
           ),
           downloadButton("download_data_1", "Download Raw Data"),
+          downloadButton("download_image_1", "Download Image", icon = icon("camera")),
+          br(),
+          br(),
           p(
             "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
           )
@@ -155,6 +163,9 @@ ui <- fluidPage(
             selected = "cortex"
           ),
           downloadButton("download_data_2", "Download Raw Data"),
+          downloadButton("download_image_2", "Download Image", icon = icon("camera")),
+          br(),
+          br(),
           p(
             "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
           )
@@ -192,6 +203,9 @@ ui <- fluidPage(
             selected = "cerebellum"
           ),
           downloadButton("download_data_3", "Download Raw Data"),
+          downloadButton("download_image_3", "Download Image", icon = icon("camera")),
+          br(),
+          br(),
           p(
             "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
           )
