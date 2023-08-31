@@ -39,6 +39,7 @@ suppressPackageStartupMessages({
   library(styler)
   library(lintr)
   library(here)
+  library(viridis)
 })
 ```
 
