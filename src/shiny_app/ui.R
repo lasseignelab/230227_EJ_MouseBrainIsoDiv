@@ -1,6 +1,6 @@
 # shiny app and paper overview tab
 welcome_about <- tabPanel(
-  "Welcome and About",
+  title = "Welcome and About",
   br(),
   br(),
   br(),
@@ -9,40 +9,53 @@ welcome_about <- tabPanel(
   div(
     h3("Welcome!"),
     p(
+      class = "welcome-about-p",
       "Welcome to the Shiny application created by Emma Jones in the",
       a("Lasseigne Lab", href = "https://www.lasseigne.org/"),
       "for visualizing long-read mouse brain RNA-sequencing data!"
     ),
     p(
+      class = "welcome-about-p",
       "To address differences in splicing across brain regions and sexes, we used long-read ONT RNA sequencing to sequence 40 mouse brain cDNA libraries from 10 mice and calculated differential transcript usage. We found that there is strong evidence of differential transcript usage across brain regions as well as differential expression at the gene and transcript level. We found that the brain region with the most differential expression and transcript usage is the cerebellum, potentially driven by differences in cell type composition. Overall, our findings suggest there is much differential splicing across brain regions and to a lesser extent, within brain regions across sexes. These differences in splicing could explain sex differences in prevalence and prognosis of various neurological and psychiatric disorders."
     ),
-    img(
+    tags$figure(
+      align = "center",
+      tags$img(
       src = "graphical_abstract.png",
       width = "825px",
       height = "225px"
     ),
-    p(
+    tags$figcaption(
+      "Graphical overview of our data generation and analysis",
       "If you are interested in checking out our work, feel free to check out our accompanying manuscript",
       a("here", href = "placeholder.com"),
-      "."
+      ".")
     ),
     p(
+      class = "welcome-about-p",
       "This web application allows users to query their own genes of interest in our generated dataset and produce plots to explore their own hypotheses. Happy learning!"
     ),
     hr(),
     h3("What is differential transcript usage?"),
     p(
+      class = "welcome-about-p",
       "Differential transcript usage (DTU) measures changes in the proportions of transcripts expressed that a gene may have across groups."
     ),
-    img(
+    tags$figure(
+      align = "center",
+      tags$img(
       src = "DTU_example.png",
       width = "600px",
       height = "300px"
     ),
+    tags$figcaption("An example of classical differential gene expression on the left, and differential transcript usage on the right.")
+    ),
     p(
+      class = "welcome-about-p",
       "In the figure above, there is an example on the left of differential gene expression across conditions, but no differential transcript usage since the transcript isoforms are still expressed in the same proportions. On the right, you can see that the transcript isoforms are expressed in different proportions, showing differential transcript usage without differential gene expression."
     ),
     p(
+      class = "welcome-about-p",
       "The isoform switch plots displayed are generated using the",
       a("IsoformSwitchAnalyzeR",
         href = "https://bioconductor.org/packages/release/bioc/html/IsoformSwitchAnalyzeR.html"),
@@ -51,10 +64,12 @@ welcome_about <- tabPanel(
     hr(),
     h3("Contact Information"),
     p(
-      "For any issues or inquiries about this website or its related publication, please contact Emma Jones (efjones (at) uab.edu) or Brittany Lasseigne (bnp0001 (at) uab.edu)."
+      class = "welcome-about-p",
+      "For any issues or inquiries about this website or its related publication, please contact Emma Jones (efjones@uab.edu) or Brittany Lasseigne (bnp0001@uab.edu)."
     ),
     hr(),
     div(
+      class = "branding",
       p("All figures created with BioRender.com"),
       p(
         "Copyright 2023 by the",
@@ -66,7 +81,7 @@ welcome_about <- tabPanel(
 
 # gene expression heatmap tab
 gene_exp_heatmap <- tabPanel(
-  "Custom Gene Expression Heatmap",
+  title = "Custom Gene Expression Heatmap",
   br(),
   br(),
   br(),
@@ -100,7 +115,7 @@ gene_exp_heatmap <- tabPanel(
 
 # single brain region vs all others switchplot tab
 single_region_plot <- tabPanel(
-  "Compare Single Brain Region to Others",
+  title = "Compare Single Brain Region to Others",
   br(),
   br(),
   br(),
@@ -144,7 +159,7 @@ single_region_plot <- tabPanel(
 
 # pairwise brain region switchplot tab
 pairwise_region_plot <- tabPanel(
-  "Compare Two Brain Regions",
+  title = "Compare Two Brain Regions",
   br(),
   br(),
   br(),
@@ -199,7 +214,7 @@ pairwise_region_plot <- tabPanel(
 
 # within brain region across sexes switchplot tab
 sex_region_plot <- tabPanel(
-  "Compare Sex Within a Brain Region",
+  title = "Compare Sex Within a Brain Region",
   br(),
   br(),
   br(),
