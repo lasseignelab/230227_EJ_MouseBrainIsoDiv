@@ -14,69 +14,101 @@ welcome_about <- tabPanel(
       "Welcome to the Shiny application created by Emma Jones in the",
       a("Lasseigne Lab", href = "https://www.lasseigne.org/"),
       "for visualizing long-read mouse brain RNA-sequencing data!",
-      "Here, you can visualize normalized counts at the gene level and isoform switches by brain region and sex."
+      "Here, you can visualize normalized counts at the gene level and isoform",
+      "switches by brain region and sex."
     ),
     hr(),
     h3("Dataset Overview"),
     p(
       class = "welcome-about-p",
-      "To address differences in splicing across brain regions and sexes, we used long-read",
-      a("Oxford Nanopore Technologies", href = "https://nanoporetech.com/"), 
-      "(ONT) RNA sequencing (RNA-Seq) to sequence 40 mouse brain cDNA libraries from 10 mice and calculated differential transcript usage.",
-      "We found that there is strong evidence of differential transcript usage across brain regions as well as differential expression at the gene and transcript level.",
-      "We found that the brain region with the most differential expression and transcript usage is the cerebellum, potentially driven by differences in cell type composition.",
-      "Overall, our findings suggest there is much differential splicing across brain regions and to a lesser extent, within brain regions across sexes.",
-      "These differences in splicing could explain sex differences in prevalence and prognosis of various neurological and psychiatric disorders."
+      "To address differences in splicing across brain regions and sexes, we",
+      "used long-read",
+      a("Oxford Nanopore Technologies", href = "https://nanoporetech.com/"),
+      "RNA sequencing (RNA-Seq) to sequence 40 mouse brain cDNA libraries",
+      "from 10 mice and calculated differential transcript usage.",
+      "We found that there is strong evidence of differential transcript usage",
+      "across brain regions as well as differential expression at the gene and",
+      "transcript level.",
+      "We found that the brain region with the most differential expression",
+      "and transcript usage is the cerebellum, potentially driven by",
+      "differences in cell type composition.",
+      "Overall, our findings suggest there is much differential splicing",
+      "across brain regions and to a lesser extent, within brain regions",
+      "across sexes.",
+      "These differences in splicing could explain sex differences in",
+      "prevalence and prognosis of various neurological and psychiatric",
+      "disorders."
     ),
     tags$figure(
       align = "center",
       tags$img(
-      src = "graphical_abstract.png",
-      width = "1001px",
-      height = "273px"
-    ),
-    tags$figcaption(
-      "Graphical overview of our data generation and analysis",
-      "If you are interested in checking out our work, feel free to check out our accompanying manuscript",
-      a("here", href = "placeholder.com"),
-      ".")
+        src = "graphical_abstract.png",
+        width = "1001px",
+        height = "273px"
+      ),
+      tags$figcaption(
+        "Graphical overview of our data generation and analysis",
+        "If you are interested in checking out our work, feel free to check",
+        "out our accompanying manuscript",
+        a("here", href = "placeholder.com"),
+        "."
+      )
     ),
     p(
       class = "welcome-about-p",
-      "This web application allows users to query their own genes of interest in our generated dataset and produce plots to explore their own hypotheses. Happy learning!"
+      "This web application allows users to query their own genes of interest",
+      "in our generated dataset and produce plots to explore their own",
+      "hypotheses. Happy learning!"
     ),
     hr(),
     h3("What is differential transcript usage?"),
     p(
       class = "welcome-about-p",
-      "Differential transcript usage (DTU) measures changes in the proportions of transcripts expressed that a gene may have across groups."
+      "Differential transcript usage (DTU) measures changes in the proportions",
+      "of transcripts expressed that a gene may have across groups."
     ),
     tags$figure(
       align = "center",
       tags$img(
-      src = "DTU_example.png",
-      width = "700px",
-      height = "350px"
-    ),
-    tags$figcaption("An example of classical differential gene expression on the left, and differential transcript usage on the right.")
+        src = "DTU_example.png",
+        width = "700px",
+        height = "350px"
+      ),
+      tags$figcaption(
+        "An example of classical differential gene expression on",
+        "the left, and differential transcript usage on",
+        "the right."
+      )
     ),
     p(
       class = "welcome-about-p",
-      "In the figure above, there is an example on the left of differential gene expression across conditions, but no differential transcript usage since the transcript isoforms are still expressed in the same proportions. On the right, you can see that the transcript isoforms are expressed in different proportions, showing differential transcript usage without differential gene expression.",
-      "For more information, please refer to our recent", a("review article", href = "https://academic.oup.com/bfg/advance-article/doi/10.1093/bfgp/elad019/7178017"), "published in Briefings in Functional Genomics."
+      "In the figure above, there is an example on the left of differential",
+      "gene expression across conditions, but no differential transcript usage",
+      "since the transcript isoforms are still expressed in the same",
+      "proportions. On the right, you can see that the transcript isoforms are",
+      "expressed in different proportions, showing differential transcript",
+      "usage without differential gene expression.",
+      "For more information, please refer to our recent",
+      a("review article",
+        href = "https://academic.oup.com/bfg/advance-article/doi/10.1093/bfgp/elad019/7178017"
+      ),
+      "published in Briefings in Functional Genomics."
     ),
     p(
       class = "welcome-about-p",
       "The isoform switch plots displayed are generated using the",
       a("IsoformSwitchAnalyzeR",
-        href = "https://bioconductor.org/packages/release/bioc/html/IsoformSwitchAnalyzeR.html"),
+        href = "https://bioconductor.org/packages/release/bioc/html/IsoformSwitchAnalyzeR.html"
+      ),
       "package created and maintained by Kristoffer Vitting-Seerup."
     ),
     hr(),
     h3("Contact Information"),
     p(
       class = "welcome-about-p",
-      "For any issues or inquiries about this website or its related publication, please contact Emma Jones (efjones@uab.edu) or Brittany Lasseigne (bnp0001@uab.edu)."
+      "For any issues or inquiries about this website or its related",
+      "publication, please contact Emma Jones (efjones@uab.edu) or",
+      "Brittany Lasseigne (bnp0001@uab.edu)."
     ),
     hr(),
     div(
@@ -101,10 +133,13 @@ gene_exp_heatmap <- tabPanel(
   sidebarLayout(
     sidebarPanel(
       p(
-        "Interested in gene-level expression (counts per million) of your genes of interest?"
+        "Interested in gene-level expression (counts per million) of your",
+        "genes of interest?"
       ),
       p(
-        "Use this tool to make a heatmap of you favorite genes (max recommended genes is around 30), and see how they cluster colored by tissue sample."
+        "Use this tool to make a heatmap of you favorite genes",
+        "(max recommended genes is around 30), and see how they cluster",
+        "colored by tissue sample."
       ),
       selectizeInput(
         inputId = "gene_ids",
@@ -113,11 +148,15 @@ gene_exp_heatmap <- tabPanel(
         multiple = TRUE
       ),
       downloadButton("download_heatmap", "Download Raw Data"),
-      downloadButton("download_heatmap_image", "Download Image", icon = icon("camera")),
+      downloadButton("download_heatmap_image", "Download Image",
+        icon = icon("camera")
+      ),
       br(),
       br(),
       p(
-        "Note: be mindful of expression values and color scale, heatmap color gradient may appear skewed when a lowly expressed gene is plotted with more highly expressed genes."
+        "Note: be mindful of expression values and color scale, heatmap color",
+        "gradient may appear skewed when a lowly expressed gene is plotted",
+        "with more highly expressed genes."
       )
     ),
     mainPanel(imageOutput("heatmap_image"))
@@ -135,7 +174,8 @@ single_region_plot <- tabPanel(
   sidebarLayout(
     sidebarPanel(
       p(
-        "Are you interested in comparing differential transcript usage across a single brain region compared to other regions?"
+        "Are you interested in comparing differential transcript usage across",
+        "a single brain region compared to other regions?"
       ),
       p(
         "If you are, select a gene name and a brain region to focus on.",
@@ -159,11 +199,15 @@ single_region_plot <- tabPanel(
         selected = "cerebellum"
       ),
       downloadButton("download_data_1", "Download Raw Data"),
-      downloadButton("download_image_1", "Download Image", icon = icon("camera")),
+      downloadButton("download_image_1", "Download Image",
+        icon = icon("camera")
+      ),
       br(),
       br(),
       p(
-        "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
+        "Note: if you do not see your gene of interest, it is likely it did",
+        "not have at least 2 transcripts measured in our data or was not",
+        "expressed in both samples and/or brain regions."
       )
     ),
     mainPanel(imageOutput("switchplot_1_image"))
@@ -181,7 +225,8 @@ pairwise_region_plot <- tabPanel(
   sidebarLayout(
     sidebarPanel(
       p(
-        "Are you interested in comparing differential transcript usage pairwise across two specific brain regions?"
+        "Are you interested in comparing differential transcript usage",
+        "pairwise across two specific brain regions?"
       ),
       p(
         "If you are, select a gene name and brain regions to focus on.",
@@ -216,11 +261,15 @@ pairwise_region_plot <- tabPanel(
         selected = "cortex"
       ),
       downloadButton("download_data_2", "Download Raw Data"),
-      downloadButton("download_image_2", "Download Image", icon = icon("camera")),
+      downloadButton("download_image_2", "Download Image",
+        icon = icon("camera")
+      ),
       br(),
       br(),
       p(
-        "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
+        "Note: if you do not see your gene of interest, it is likely it did",
+        "not have at least 2 transcripts measured in our data or was not",
+        "expressed in both samples and/or brain regions."
       )
     ),
     mainPanel(imageOutput("switchplot_2_image"))
@@ -238,7 +287,8 @@ sex_region_plot <- tabPanel(
   sidebarLayout(
     sidebarPanel(
       p(
-        "Are you interested in comparing differential transcript usage within a single brain region across sexes?"
+        "Are you interested in comparing differential transcript usage within",
+        "a single brain region across sexes?"
       ),
       p(
         "If you are, select a gene name and a brain region to focus on.",
@@ -262,14 +312,17 @@ sex_region_plot <- tabPanel(
         selected = "cerebellum"
       ),
       downloadButton("download_data_3", "Download Raw Data"),
-      downloadButton("download_image_3", "Download Image", icon = icon("camera")),
+      downloadButton("download_image_3", "Download Image",
+        icon = icon("camera")
+      ),
       br(),
       br(),
       p(
-        "Note: if you do not see your gene of interest, it is likely it did not have at least 2 transcripts measured in our data or was not expressed in both samples and/or brain regions."
+        "Note: if you do not see your gene of interest, it is likely it did",
+        "not have at least 2 transcripts measured in our data or was not",
+        "expressed in both samples and/or brain regions."
       )
     ),
-    
     mainPanel(imageOutput("switchplot_3_image"))
   )
 )
