@@ -180,6 +180,8 @@ sig_overlap_list <- filter_genes(
 # make UpSet plot (ComplexHeatmap)
 # create matrix
 sig_overlap_list_mat <- ComplexHeatmap::list_to_matrix(sig_overlap_list)
+# rename columns
+colnames(sig_overlap_list_mat) <- c("Cerebellum vs. Cortex", "Cerebellum vs. Hippocampus", "Cerebellum vs. Striatum", "Cortex vs. Hippocampus", "Cortex vs. Striatum", "Hippocampus vs. Striatum")
 
 # generate combination matrix
 sig_overlap_list_comb_mat <- make_comb_mat(sig_overlap_list_mat)
