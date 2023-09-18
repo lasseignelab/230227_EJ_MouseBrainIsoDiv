@@ -277,7 +277,9 @@ format_deseq_results <- function(condition1, condition2) {
 # function for reformatting results so they match the switchlist data frame, but
 # at the transcript level instead of the gene level
 format_deseq_results_dte <- function(condition1, condition2) {
-  condition1_condition2_res <- get(paste0(condition1, "_", condition2, "_dte_res"))
+  condition1_condition2_res <- get(
+    paste0(condition1, "_", condition2, "_dte_res")
+  )
 
   condition1_condition2_padj <- data.frame(
     "isoform_id" = rownames(condition1_condition2_res),
@@ -406,44 +408,47 @@ incorporate_deseq_results <-
 
 # function to make dge, dte, and dtu comparision plots
 make_comparison_plots <- function(comparison_list, save_path) {
-  
   # create matrix
   for_plot_mat <- list_to_matrix(comparison_list)
-  
+
   # create plot
   euler_plot <- plot(euler(for_plot_mat),
-                     fills = alpha(c("#5D69B1", "#52BCA3", "#99C945"), 0.6),
-                     shape = "ellipse",
-                     quantities = TRUE,
-                     labels = list(fontsize = 10))
+    fills = alpha(c("#5D69B1", "#52BCA3", "#99C945"), 0.6),
+    quantities = TRUE,
+    labels = list(fontsize = 10)
+  )
   # edit plot dims
   euler_plot$vp$height <- unit(0.8, "npc")
-  
+
   # create pdf
-  pdf(here(
-    save_path, "euler_diagrams",
-    paste0(str_sub(deparse(substitute(comparison_list)),
-                   end = -6
-    ), "_dge_dte_dtu.pdf")),
+  pdf(
+    here(
+      save_path, "euler_diagrams",
+      paste0(str_sub(deparse(substitute(comparison_list)),
+        end = -6
+      ), "_dge_dte_dtu.pdf")
+    ),
     width = 5,
-    height = 4)
-  
+    height = 4
+  )
+
   # display plot
   print(euler_plot)
-  
+
   # turn off device
   dev.off()
-  
+
   # generate combination matrix
   for_plot_comb_mat <- make_comb_mat(for_plot_mat)
-  
+
   # make and save UpSet plot (ComplexHeatmap)
   pdf(
     here(
       save_path, "upset_plots",
-      paste0(str_sub(deparse(substitute(comparison_list)),
-                     end = -6
-      ), "_dge_dte_dtu.pdf")
+      paste0(
+        str_sub(deparse(substitute(comparison_list)), end = -6),
+        "_dge_dte_dtu.pdf"
+      )
     ),
     width = 8, height = 6
   )
@@ -455,10 +460,10 @@ make_comparison_plots <- function(comparison_list, save_path) {
       for_plot_comb_mat
     )],
     top_annotation = upset_top_annotation(for_plot_comb_mat,
-                                          add_numbers = TRUE
+      add_numbers = TRUE
     ),
     right_annotation = upset_right_annotation(for_plot_comb_mat,
-                                              add_numbers = TRUE
+      add_numbers = TRUE
     )
   )
   # draw upset plot
