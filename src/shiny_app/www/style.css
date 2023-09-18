@@ -1,7 +1,43 @@
 /*
  * Base Tag Formatting
  */
+ 
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-text {
-  font-family: Arial, Helvetica, sans-serif;
+* {
+  font-family: 'Roboto', sans-serif;
+}
+
+h1{
+  font-family: 'Roboto', sans-serif;
+  font-size: 4em;
+}
+
+h2{
+  font-family: 'Roboto', sans-serif;
+  font-size: 3em;
+  text-align: center;
+}
+
+h3{
+  font-family: 'Roboto', sans-serif;
+  font-size: 2.8em;
+  text-align: center;
+}
+
+h4{
+  font-family: 'Roboto', sans-serif;
+  font-size: 2em;
+}
+
+.welcome-about-p {
+  font-family: 'Roboto', sans-serif;
+  padding: 2vw 2vw 2vw 2vw;
+  font-size: 1.3em;
+}
+
+.branding {
+  font-family: 'Roboto', sans-serif;
+  font-size: .8em;
+  text-align: center;
 }
