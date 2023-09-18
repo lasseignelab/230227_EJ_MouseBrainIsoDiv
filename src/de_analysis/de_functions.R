@@ -406,23 +406,33 @@ incorporate_deseq_results <-
 
 # function to make dge, dte, and dtu comparision plots
 make_comparison_plots <- function(comparison_list, save_path) {
-  # plot venn diagram
-  venn <- ggvenn(
-    comparison_list,
-    fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
-    stroke_size = 0.5,
-    set_name_size = 4
-  )
-  # save venn diagram
-  ggsave(here(
-    save_path, "venn_diagrams",
-    paste0(str_sub(deparse(substitute(comparison_list)),
-                   end = -6
-    ), "_dge_dte_dtu.pdf")
-  ), plot = venn)
   
   # create matrix
   for_plot_mat <- list_to_matrix(comparison_list)
+  
+  # create plot
+  euler_plot <- plot(euler(for_plot_mat),
+                     fills = alpha(c("#5D69B1", "#52BCA3", "#99C945"), 0.6),
+                     shape = "ellipse",
+                     quantities = TRUE,
+                     labels = list(fontsize = 10))
+  # edit plot dims
+  euler_plot$vp$height <- unit(0.8, "npc")
+  
+  # create pdf
+  pdf(here(
+    save_path, "euler_diagrams",
+    paste0(str_sub(deparse(substitute(comparison_list)),
+                   end = -6
+    ), "_dge_dte_dtu.pdf")),
+    width = 5,
+    height = 4)
+  
+  # display plot
+  print(euler_plot)
+  
+  # turn off device
+  dev.off()
   
   # generate combination matrix
   for_plot_comb_mat <- make_comb_mat(for_plot_mat)
@@ -455,5 +465,5 @@ make_comparison_plots <- function(comparison_list, save_path) {
   draw(upset)
   dev.off()
   # return both plots
-  list(venn, upset)
+  list(euler_plot, upset)
 }

@@ -28,10 +28,10 @@ suppressPackageStartupMessages({
   library(IsoformSwitchAnalyzeR)
   library(ComplexHeatmap)
   library(viridis)
-  library(ggvenn)
   library(styler)
   library(lintr)
   library(here)
+  library(eulerr)
 })
 
 # source functions
