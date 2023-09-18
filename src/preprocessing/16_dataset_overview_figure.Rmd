@@ -15,7 +15,6 @@ The purpose of this script is to provide a dataset overview to serve as manuscri
 
 ---
 Remaining to do:
-- create new docker with hexbin package
 - What about nanopore stats/ long-read information
 - Transcripts lengths etc
 - Consider turning into a table
@@ -39,6 +38,8 @@ suppressPackageStartupMessages({
   library(styler)
   library(lintr)
   library(here)
+  library(hexbin)
+  library(viridis)
 })
 ```
 
@@ -160,6 +161,7 @@ ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
 
 sum(sample_collection_metadata$total_reads)
 ```
+total reads: 85909493
 
 what are the most highly expressed novel transcripts??
 
@@ -281,9 +283,9 @@ My software versions will be commented below.
 sessionInfo()
 ```
 
-R version 4.3.0 beta (2023-04-12 r84240)
+R version 4.3.1 (2023-06-16)
 Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Ubuntu 22.04.2 LTS
+Running under: Ubuntu 22.04.3 LTS
 
 Matrix products: default
 BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -302,36 +304,25 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] here_1.0.1        lintr_3.0.2       styler_1.9.1      data.table_1.14.8
- [5] lubridate_1.9.2   forcats_1.0.0     stringr_1.5.0     dplyr_1.1.2      
- [9] purrr_1.0.1       readr_2.1.4       tidyr_1.3.0       tibble_3.2.1     
-[13] ggplot2_3.4.2     tidyverse_2.0.0  
+ [1] viridis_0.6.4     viridisLite_0.4.2 hexbin_1.28.3     here_1.0.1       
+ [5] lintr_3.1.0       styler_1.10.1     data.table_1.14.8 lubridate_1.9.2  
+ [9] forcats_1.0.0     stringr_1.5.0     dplyr_1.1.2       purrr_1.0.2      
+[13] readr_2.1.4       tidyr_1.3.0       tibble_3.2.1      ggplot2_3.4.3    
+[17] tidyverse_2.0.0  
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.2.0        viridisLite_0.4.2       farver_2.1.1           
- [4] blob_1.2.4              R.utils_2.12.2          Biostrings_2.68.0      
- [7] bitops_1.0-7            fastmap_1.1.1           RCurl_1.98-1.12        
-[10] lazyeval_0.2.2          rex_1.2.1               digest_0.6.31          
-[13] timechange_0.2.0        lifecycle_1.0.3         processx_3.8.0         
-[16] KEGGREST_1.40.0         RSQLite_2.3.1           magrittr_2.0.3         
-[19] compiler_4.3.0          rlang_1.1.1             tools_4.3.0            
-[22] utf8_1.2.3              yaml_2.3.7              knitr_1.42             
-[25] labeling_0.4.2          bit_4.0.5               xmlparsedata_1.0.5     
-[28] xml2_1.3.4              R.cache_0.16.0          withr_2.5.0            
-[31] BiocGenerics_0.46.0     desc_1.4.2              R.oo_1.25.0            
-[34] grid_4.3.0              stats4_4.3.0            fansi_1.0.4            
-[37] colorspace_2.1-0        scales_1.2.1            cli_3.6.1              
-[40] rmarkdown_2.21          crayon_1.5.2            ragg_1.2.5             
-[43] generics_0.1.3          remotes_2.4.2           rstudioapi_0.14        
-[46] httr_1.4.5              tzdb_0.3.0              DBI_1.1.3              
-[49] cachem_1.0.8            zlibbioc_1.46.0         AnnotationDbi_1.62.0   
-[52] XVector_0.40.0          vctrs_0.6.3             callr_3.7.3            
-[55] IRanges_2.34.0          hms_1.1.3               S4Vectors_0.38.0       
-[58] bit64_4.0.5             systemfonts_1.0.4       cyclocomp_1.1.0        
-[61] hexbin_1.28.3           glue_1.6.2              ps_1.7.4               
-[64] stringi_1.7.12          gtable_0.3.3            GenomeInfoDb_1.36.0    
-[67] munsell_0.5.0           pillar_1.9.0            htmltools_0.5.5        
-[70] GenomeInfoDbData_1.2.10 R6_2.5.1                textshaping_0.3.6      
-[73] rprojroot_2.0.3         lattice_0.21-8          evaluate_0.20          
-[76] Biobase_2.60.0          png_0.1-8               R.methodsS3_1.8.2      
-[79] memoise_2.0.1           xfun_0.39               pkgconfig_2.0.3 
+ [1] gtable_0.3.4      xfun_0.40         remotes_2.4.2.1   processx_3.8.2   
+ [5] lattice_0.21-8    callr_3.7.3       tzdb_0.4.0        vctrs_0.6.3      
+ [9] tools_4.3.1       ps_1.7.5          generics_0.1.3    fansi_1.0.4      
+[13] pkgconfig_2.0.3   R.oo_1.25.0       desc_1.4.2        lifecycle_1.0.3  
+[17] R.cache_0.16.0    compiler_4.3.1    farver_2.1.1      textshaping_0.3.6
+[21] munsell_0.5.0     htmltools_0.5.6   yaml_2.3.7        lazyeval_0.2.2   
+[25] pillar_1.9.0      crayon_1.5.2      R.utils_2.12.2    tidyselect_1.2.0 
+[29] digest_0.6.33     stringi_1.7.12    labeling_0.4.2    rprojroot_2.0.3  
+[33] fastmap_1.1.1     grid_4.3.1        colorspace_2.1-0  cli_3.6.1        
+[37] magrittr_2.0.3    utf8_1.2.3        withr_2.5.0       scales_1.2.1     
+[41] backports_1.4.1   cyclocomp_1.1.0   timechange_0.2.0  rmarkdown_2.24   
+[45] gridExtra_2.3     ragg_1.2.5        R.methodsS3_1.8.2 hms_1.1.3        
+[49] evaluate_0.21     knitr_1.43        rex_1.2.1         rlang_1.1.1      
+[53] glue_1.6.2        xml2_1.3.5        rstudioapi_0.15.0 R6_2.5.1         
+[57] systemfonts_1.0.4

@@ -126,29 +126,36 @@ cpam_mouse <- mapped_genes$Gene.stable.ID.1
 Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this. I made a function to pull out the gene lists, compare, and save objects.
 
 ```{r run analysis}
-# prep significant gene lists and compare
-lapply(seq_along(region_all_switchlist_analyzed), compare_switching_genes) 
-# warning: function only prints last result (cpam)
+# compare gene lists 
+all_ad_genes <- lapply(
+  region_all_switchlist_analyzed, 
+  compare_switching_genes, 
+  ad_mouse
+)
+all_cpam_genes <- lapply(
+  region_all_switchlist_analyzed,
+  compare_switching_genes,
+  cpam_mouse
+)
+all_psych_genes <- lapply(
+  region_all_switchlist_analyzed,
+  compare_switching_genes,
+  psychiatric_mouse
+)
 ```
 
+
+```{r save compare lists}
+saveRDS(
+  all_psych_genes,
+  here("results", "psych_dtu_genes", "all_psych_genes.Rds")
+)
+```
 So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
 
 Either way, I can still make an upset plot for psychiatric genes at minimum.
 
 ```{r make upset plots}
-# make all into list
-all_psych_genes <- list(
-  cerebellum = cerebellum_psych_genes,
-  cortex = cortex_psych_genes,
-  hippocampus = hippocampus_psych_genes,
-  striatum = striatum_psych_genes
-)
-# save list
-saveRDS(
-  all_psych_genes,
-  here("results", "psych_dtu_genes", "all_psych_genes.Rds")
-)
-
 # make matrix
 all_psych_genes_mat <- list_to_matrix(all_psych_genes)
 

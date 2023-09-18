@@ -148,6 +148,9 @@ format_deseq_results_dte("cerebellum", "hippocampus")
 format_deseq_results_dte("cerebellum", "striatum")
 format_deseq_results_dte("cortex", "hippocampus")
 format_deseq_results_dte("cortex", "striatum")
+
+hippocampus_striatum_dte_res <- striatum_hippocampus_dte_res # needed to rename
+
 format_deseq_results_dte("hippocampus", "striatum")
 
 region_region_switchlist_orf$isoformFeatures$iso_q_value <-
@@ -168,7 +171,7 @@ switchPlot(region_region_switchlist_orf,
 
 switchPlotTopSwitches(region_region_switchlist_orf,
   pathToOutput = here(
-    "results", "plots", "switch_plots", "de_added",
+    "results","plots", "switch_plots", "de_added",
     "region_region"
   ),
   splitFunctionalConsequences = FALSE
