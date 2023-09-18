@@ -227,7 +227,7 @@ cortex_striatum_list <- list(
 
 hippocampus_striatum_list <- list(
   `hippocampus striatum DGE` = striatum_hippocampus_dge_genes,
-  `hippocampus striatum DTE` = hippocampus_striatum_dte_genes,
+  `hippocampus striatum DTE` = striatum_hippocampus_dte_genes,
   `hippocampus striatum DTU` = hippocampus_striatum_dtu_genes
 )
 ```
