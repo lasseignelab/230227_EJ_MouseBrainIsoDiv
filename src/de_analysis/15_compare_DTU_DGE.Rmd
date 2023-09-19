@@ -453,6 +453,7 @@ dev.off()
 
 upset_plot
 ```
+
 Then, for DTE.
 
 ```{r create upsetplots for DTE overlap}
@@ -485,6 +486,90 @@ dev.off()
 upset_plot
 
 ```
+
+One way to show numbers of genes is stacked bar plots, though this will not show the overlap. Maybe if I make a category for each in the stack it will be ok? So for each brain region or pairwise comparision, there would be 7 possible combinations.
+
+For simplicity, I'll do this for only 4 brain regions first.
+
+```{r stacked bar plots}
+
+stacked_barplot <- data.frame(
+  "brain_region" = c(rep("cerebellum", 3), rep("cortex", 3), rep("hippocampus", 3), rep("striatum", 3)),
+  "analysis" = rep(c("DGE", "DTE", "DTU"), 4),
+  "n_genes" = c(
+    length(cerebellum_dge_genes),
+    length(cerebellum_dte_genes),
+    length(cerebellum_dtu_genes),
+    
+    length(cortex_dge_genes),
+    length(cortex_dte_genes),
+    length(cortex_dtu_genes),
+    
+    length(hippocampus_dge_genes),
+    length(hippocampus_dte_genes),
+    length(hippocampus_dtu_genes),
+    
+    length(striatum_dge_genes),
+    length(striatum_dte_genes),
+    length(striatum_dtu_genes)
+  )
+)
+
+ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
+    geom_bar(position = "stack", stat = "identity")
+
+ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
+    geom_bar(position = "fill", stat = "identity")
+```
+
+```{r stacked bar plots}
+
+stacked_barplot <- data.frame(
+  "brain_region" = c(rep("cerebellum", 7), rep("cortex", 7), rep("hippocampus", 7), rep("striatum", 7)),
+  "analysis" = rep(c("DGE", "DTE", "DTU", "DGE and DTE", "DGE and DTU", "DTE and DTU", "all"), 4),
+  "n_genes" = c(
+    length(cerebellum_dge_genes),
+    length(cerebellum_dte_genes),
+    length(cerebellum_dtu_genes),
+    length(intersect(cerebellum_dge_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+    length(intersect(cerebellum_dge_genes, cerebellum_dtu_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+    length(intersect(cerebellum_dtu_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+    length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+    
+    length(cortex_dge_genes),
+    length(cortex_dte_genes),
+    length(cortex_dtu_genes),
+    length(intersect(cortex_dge_genes, cortex_dte_genes)),
+    length(intersect(cortex_dge_genes, cortex_dtu_genes)),
+    length(intersect(cortex_dtu_genes, cortex_dte_genes)),
+    length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
+    
+    length(hippocampus_dge_genes),
+    length(hippocampus_dte_genes),
+    length(hippocampus_dtu_genes),
+    length(intersect(hippocampus_dge_genes, hippocampus_dte_genes)),
+    length(intersect(hippocampus_dge_genes, hippocampus_dtu_genes)),
+    length(intersect(hippocampus_dtu_genes, hippocampus_dte_genes)),
+    length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
+    
+    length(striatum_dge_genes),
+    length(striatum_dte_genes),
+    length(striatum_dtu_genes),
+    length(intersect(striatum_dge_genes, striatum_dte_genes)),
+    length(intersect(striatum_dge_genes, striatum_dtu_genes)),
+    length(intersect(striatum_dtu_genes, striatum_dte_genes)),
+    length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes))
+  )
+)
+
+ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
+    geom_bar(position = "stack", stat = "identity")
+
+ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
+    geom_bar(position = "fill", stat = "identity")
+```
+
+This is a neat idea in theory but in practice not so sure about it because of all the arguments and lengths needed to manually calculate. there should be a way to simplify this the same way an upset plot works. and at that point, it just is an upset plot.
 
 #### Clean up script
 
