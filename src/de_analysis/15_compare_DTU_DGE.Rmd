@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Comparing DTU, DTE, and DGE
 
-The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. 
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. It requires the eulerr package, which is in docker 1.6.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -352,9 +352,139 @@ make_comparison_plots(striatum_sex_list,
 )
 ```
 
-```{r create upset plots for examining DGE and DTE overlap}
+I also want to look at the overlap of DGE and DTE with themselves, as compared to the DTU in script 5. This code allows us to make lists, the corresponding matrices and combination matrices required for the upset plots. I'll start with the pairwise genes identified, the largest gene lists.
+
+First create the lists.
+
+```{r create lists of DGE and DTE overlap}
+
+dge_main_list <- list(`Cerebellum vs. Cortex` = cerebellum_cortex_dge_genes,
+                      `Cerebellum vs. Hippocampus` = cerebellum_hippocampus_dge_genes,
+                      `Cerebellum vs. Striatum` = cerebellum_striatum_dge_genes,
+                      `Cortex vs. Hippocampus` = cortex_hippocampus_dge_genes,
+                      `Cortex vs. Striatum` = cortex_striatum_dge_genes,
+                      `Hippocampus vs. Striatum` = striatum_hippocampus_dge_genes)
+
+
+
+dte_main_list <- list(`Cerebellum vs. Cortex` = cerebellum_cortex_dte_genes,
+                      `Cerebellum vs. Hippocampus` = cerebellum_hippocampus_dte_genes,
+                      `Cerebellum vs. Striatum` = cerebellum_striatum_dte_genes,
+                      `Cortex vs. Hippocampus` = cortex_hippocampus_dte_genes,
+                      `Cortex vs. Striatum` = cortex_striatum_dte_genes,
+                      `Hippocampus vs. Striatum` = striatum_hippocampus_dte_genes)
 ```
 
+Once we have made these lists, we can use them to get some basic stats on how many genes overlap and how many are unique. This is mainly for the manuscript.
+
+```{r get pairwise comparisions stats}
+# aggregate all dge genes
+all_pairwise_dge_genes <- unique(c(cerebellum_cortex_dge_genes, cerebellum_hippocampus_dge_genes, cerebellum_striatum_dge_genes, cortex_hippocampus_dge_genes, cortex_striatum_dge_genes, striatum_hippocampus_dge_genes))
+
+# aggregate all dte genes
+all_pairwise_dte_genes <- unique(c(cerebellum_cortex_dte_genes, cerebellum_hippocampus_dte_genes, cerebellum_striatum_dte_genes, cortex_hippocampus_dte_genes, cortex_striatum_dte_genes, striatum_hippocampus_dte_genes))
+
+# how many intersect?
+length(intersect(all_pairwise_dge_genes, all_pairwise_dte_genes))
+
+# all dge or dte genes
+all_dge_dte <- union(all_pairwise_dge_genes, all_pairwise_dte_genes)
+
+# aggregate all pairwise dtu genes
+all_pairwise_dtu_genes <- unique(c(cerebellum_cortex_dtu_genes, cerebellum_hippocampus_dtu_genes, cerebellum_striatum_dtu_genes, cortex_hippocampus_dtu_genes, cortex_striatum_dtu_genes, hippocampus_striatum_dtu_genes))
+
+# how many pairwise dtu genes overlap with dge
+length(intersect(all_pairwise_dge_genes, all_pairwise_dtu_genes))
+
+#and what percent?
+length(intersect(all_pairwise_dge_genes, all_pairwise_dtu_genes)) / length(all_pairwise_dtu_genes)
+
+# how many pairwise dtu genes overlap with dte
+length(intersect(all_pairwise_dte_genes, all_pairwise_dtu_genes))
+
+#and what percent?
+length(intersect(all_pairwise_dte_genes, all_pairwise_dtu_genes)) / length(all_pairwise_dtu_genes)
+
+# how many pairwise dtu genes overlap with dge or dte
+length(intersect(all_dge_dte, all_pairwise_dtu_genes))
+
+# and what percent?
+length(intersect(all_dge_dte, all_pairwise_dtu_genes)) / 
+  length(all_pairwise_dtu_genes)
+
+# leaving how many unidentified?
+length(all_pairwise_dtu_genes) - length(intersect(all_dge_dte, all_pairwise_dtu_genes))
+
+# and what percent?
+(length(all_pairwise_dtu_genes) - length(intersect(all_dge_dte, all_pairwise_dtu_genes))) / 
+  length(all_pairwise_dtu_genes)
+
+```
+
+Then create the upset plots from combination matrices. 
+
+First for DGE.
+
+```{r create upset plots for examining DGE overlap}
+
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_main_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_region_dge_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dge_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+```
+Then, for DTE.
+
+```{r create upsetplots for DTE overlap}
+
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_main_list)
+
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_region_dte_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dte_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+
+```
 
 #### Clean up script
 
