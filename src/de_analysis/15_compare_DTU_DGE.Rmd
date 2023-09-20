@@ -520,46 +520,75 @@ ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
 
 ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
     geom_bar(position = "fill", stat = "identity")
+
+ggsave(here("results/plots/bar_plots/stacked_region_others.png"), width = 6, height = 4)
 ```
 
 ```{r stacked bar plots}
 
 stacked_barplot <- data.frame(
   "brain_region" = c(rep("cerebellum", 7), rep("cortex", 7), rep("hippocampus", 7), rep("striatum", 7)),
-  "analysis" = rep(c("DGE", "DTE", "DTU", "DGE and DTE", "DGE and DTU", "DTE and DTU", "all"), 4),
+  "analysis" = rep(c("DGE only", "DTE only", "DTU only", "DGE and DTE", "DGE and DTU", "DTE and DTU", "all"), 4),
   "n_genes" = c(
-    length(cerebellum_dge_genes),
-    length(cerebellum_dte_genes),
-    length(cerebellum_dtu_genes),
-    length(intersect(cerebellum_dge_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
-    length(intersect(cerebellum_dge_genes, cerebellum_dtu_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
-    length(intersect(cerebellum_dtu_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
-    length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
-    
-    length(cortex_dge_genes),
-    length(cortex_dte_genes),
-    length(cortex_dtu_genes),
-    length(intersect(cortex_dge_genes, cortex_dte_genes)),
-    length(intersect(cortex_dge_genes, cortex_dtu_genes)),
-    length(intersect(cortex_dtu_genes, cortex_dte_genes)),
-    length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
-    
-    length(hippocampus_dge_genes),
-    length(hippocampus_dte_genes),
-    length(hippocampus_dtu_genes),
-    length(intersect(hippocampus_dge_genes, hippocampus_dte_genes)),
-    length(intersect(hippocampus_dge_genes, hippocampus_dtu_genes)),
-    length(intersect(hippocampus_dtu_genes, hippocampus_dte_genes)),
-    length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
-    
-    length(striatum_dge_genes),
-    length(striatum_dte_genes),
-    length(striatum_dtu_genes),
-    length(intersect(striatum_dge_genes, striatum_dte_genes)),
-    length(intersect(striatum_dge_genes, striatum_dtu_genes)),
-    length(intersect(striatum_dtu_genes, striatum_dte_genes)),
-    length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes))
-  )
+# dge only
+length(setdiff(cerebellum_dge_genes, union(intersect(cerebellum_dge_genes, cerebellum_dte_genes), intersect(cerebellum_dge_genes, cerebellum_dtu_genes)))),
+# dte only
+length(setdiff(cerebellum_dte_genes, union(intersect(cerebellum_dge_genes, cerebellum_dte_genes), intersect(cerebellum_dte_genes, cerebellum_dtu_genes)))),
+# dtu only
+length(setdiff(cerebellum_dtu_genes, union(intersect(cerebellum_dge_genes, cerebellum_dtu_genes), intersect(cerebellum_dte_genes, cerebellum_dtu_genes)))),
+# dge and dte
+length(intersect(cerebellum_dge_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+# dge and dtu
+length(intersect(cerebellum_dge_genes, cerebellum_dtu_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+# dte and dtu
+length(intersect(cerebellum_dtu_genes, cerebellum_dte_genes)) - length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+# all
+length(intersect(intersect(cerebellum_dge_genes, cerebellum_dte_genes), cerebellum_dtu_genes)),
+
+# dge only
+length(setdiff(cortex_dge_genes, union(intersect(cortex_dge_genes, cortex_dte_genes), intersect(cortex_dge_genes, cortex_dtu_genes)))),
+# dte only
+length(setdiff(cortex_dte_genes, union(intersect(cortex_dge_genes, cortex_dte_genes), intersect(cortex_dte_genes, cortex_dtu_genes)))),
+# dtu only
+length(setdiff(cortex_dtu_genes, union(intersect(cortex_dge_genes, cortex_dtu_genes), intersect(cortex_dte_genes, cortex_dtu_genes)))),
+# dge and dte
+length(intersect(cortex_dge_genes, cortex_dte_genes)) - length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
+# dge and dtu
+length(intersect(cortex_dge_genes, cortex_dtu_genes)) - length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
+# dte and dtu
+length(intersect(cortex_dtu_genes, cortex_dte_genes)) - length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
+# all
+length(intersect(intersect(cortex_dge_genes, cortex_dte_genes), cortex_dtu_genes)),
+
+# dge only
+length(setdiff(hippocampus_dge_genes, union(intersect(hippocampus_dge_genes, hippocampus_dte_genes), intersect(hippocampus_dge_genes, hippocampus_dtu_genes)))),
+# dte only
+length(setdiff(hippocampus_dte_genes, union(intersect(hippocampus_dge_genes, hippocampus_dte_genes), intersect(hippocampus_dte_genes, hippocampus_dtu_genes)))),
+# dtu only
+length(setdiff(hippocampus_dtu_genes, union(intersect(hippocampus_dge_genes, hippocampus_dtu_genes), intersect(hippocampus_dte_genes, hippocampus_dtu_genes)))),
+# dge and dte
+length(intersect(hippocampus_dge_genes, hippocampus_dte_genes)) - length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
+# dge and dtu
+length(intersect(hippocampus_dge_genes, hippocampus_dtu_genes)) - length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
+# dte and dtu
+length(intersect(hippocampus_dtu_genes, hippocampus_dte_genes)) - length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
+# all
+length(intersect(intersect(hippocampus_dge_genes, hippocampus_dte_genes), hippocampus_dtu_genes)),
+
+# dge only
+length(setdiff(striatum_dge_genes, union(intersect(striatum_dge_genes, striatum_dte_genes), intersect(striatum_dge_genes, striatum_dtu_genes)))),
+# dte only
+length(setdiff(striatum_dte_genes, union(intersect(striatum_dge_genes, striatum_dte_genes), intersect(striatum_dte_genes, striatum_dtu_genes)))),
+# dtu only
+length(setdiff(striatum_dtu_genes, union(intersect(striatum_dge_genes, striatum_dtu_genes), intersect(striatum_dte_genes, striatum_dtu_genes)))),
+# dge and dte
+length(intersect(striatum_dge_genes, striatum_dte_genes)) - length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes)),
+# dge and dtu
+length(intersect(striatum_dge_genes, striatum_dtu_genes)) - length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes)),
+# dte and dtu
+length(intersect(striatum_dtu_genes, striatum_dte_genes)) - length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes)),
+# all
+length(intersect(intersect(striatum_dge_genes, striatum_dte_genes), striatum_dtu_genes)))
 )
 
 ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
@@ -567,6 +596,8 @@ ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
 
 ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) + 
     geom_bar(position = "fill", stat = "identity")
+
+ggsave(here("results/plots/bar_plots/stacked_region_others_overlap.png"), width = 6, height = 4)
 ```
 
 This is a neat idea in theory but in practice not so sure about it because of all the arguments and lengths needed to manually calculate. there should be a way to simplify this the same way an upset plot works. and at that point, it just is an upset plot.
