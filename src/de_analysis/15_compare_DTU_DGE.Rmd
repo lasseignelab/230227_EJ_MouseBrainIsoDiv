@@ -375,6 +375,34 @@ dte_main_list <- list(`Cerebellum vs. Cortex` = cerebellum_cortex_dte_genes,
                       `Hippocampus vs. Striatum` = striatum_hippocampus_dte_genes)
 ```
 
+Also, I want to make lists of all dge and dtu single region comparisons.
+
+```{r make lists of all dge and dtu single region comparisons}
+dge_single_list <- list(`Cerebellum` = cortex_dge_genes,
+                      `Hippocampus` = hippocampus_dge_genes,
+                      `Cortex` = cortex_dge_genes,
+                      `Striatum` = striatum_dge_genes)
+
+dte_single_list <- list(`Cerebellum` = cortex_dte_genes,
+                      `Hippocampus` = hippocampus_dte_genes,
+                      `Cortex` = cortex_dte_genes,
+                      `Striatum` = striatum_dte_genes)
+```
+
+And, I want to make make lists of all dge and dtu sex comparisons.
+
+```{r make lists of all dge and dtu sex comparisons}
+dge_sex_list <- list(`Cerebellum` = cortex_sex_dge_genes,
+                      `Hippocampus` = hippocampus_sex_dge_genes,
+                      `Cortex` = cortex_sex_dge_genes,
+                      `Striatum` = striatum_sex_dge_genes)
+
+dte_sex_list <- list(`Cerebellum` = cortex_sex_dte_genes,
+                      `Hippocampus` = hippocampus_sex_dte_genes,
+                      `Cortex` = cortex_sex_dte_genes,
+                      `Striatum` = striatum_sex_dte_genes)
+```
+
 Once we have made these lists, we can use them to get some basic stats on how many genes overlap and how many are unique. This is mainly for the manuscript.
 
 ```{r get pairwise comparisions stats}
@@ -421,6 +449,8 @@ length(all_pairwise_dtu_genes) - length(intersect(all_dge_dte, all_pairwise_dtu_
 
 ```
 
+### Creating More UpSet Plots!
+
 Then create the upset plots from combination matrices. 
 
 First for DGE.
@@ -454,6 +484,64 @@ dev.off()
 upset_plot
 ```
 
+Region others
+
+```{r do this for region others}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_single_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_others_dge_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dge_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+```
+And region sex
+
+```{r do this for region others}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_sex_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_sex_dge_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dge_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+```
 Then, for DTE.
 
 ```{r create upsetplots for DTE overlap}
@@ -486,6 +574,70 @@ dev.off()
 upset_plot
 
 ```
+
+I can also do this for region other and region sex, just as above.
+
+Region others
+
+```{r do this for region others}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_single_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_others_dte_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dte_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+```
+And region sex
+
+```{r do this for region others}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_sex_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_sex_dte_upset.pdf"),
+    width = 12, height = 6
+)
+upset_plot <- UpSet(dte_overlap_list_comb_mat,
+                    comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+                    comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
+                    top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+                                                          add_numbers = TRUE
+                    ),
+                    right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+                                                              add_numbers = TRUE
+                    )
+)
+draw(upset_plot)
+dev.off()
+
+upset_plot
+```
+
+
+### Stacked bar plots
 
 One way to show numbers of genes is stacked bar plots, though this will not show the overlap. Maybe if I make a category for each in the stack it will be ok? So for each brain region or pairwise comparision, there would be 7 possible combinations.
 
