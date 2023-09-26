@@ -1,0 +1,415 @@
+---
+title: "compare single region to pairwise"
+author: "Emma Jones"
+date: "2023-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Compare region to pairwise specific gene lists
+
+The purpose of this analysis is to determine how many DTU genes or DEGs are specific to a study design. Keep things things at the single vs others level is easier to interpret, while the pairwise finds more genes. However, the genes in common across pairwise comparisons are not the same.
+
+### Load in Packages
+
+```{r load in packages}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+  library(eulerr)
+})
+
+```
+
+
+### Load in Data
+
+First, we want to load in the DGE data
+
+```{r load in DGE data}
+# DGE
+dge_files <- list.files(here("results", "de_genes"))
+# loop in files
+for (i in dge_files) {
+  temp <- read.csv(
+    here("results", "de_genes", i),
+    header = FALSE
+  )
+  genes <- temp$V1
+  assign(paste0(str_sub(i, end = -5), "_dge_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+```
+
+Next, we need to pull in the transcript counts files to get gene name information for all transcripts and load in the DTE lists.
+
+```{r pull in DTE data}
+transcript_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_transcript.txt"),
+  header = TRUE
+)
+
+tx_gene_names <- transcript_counts[, 1:2]
+
+# DTE
+dte_files <- list.files(here("results", "de_transcripts"))
+# loop in files
+for (i in dte_files) {
+  temp <- read.csv(
+    here("results", "de_transcripts", i),
+    header = FALSE
+  )
+  transcripts <- temp$V1
+  genes <- tx_gene_names$GENEID[tx_gene_names$TXNAME %in% transcripts]
+  assign(paste0(str_sub(i, end = -5), "_dte_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+```
+
+Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
+
+```{r load in DTU data}
+# start with region region
+region_region_switchlist <- readRDS(
+  here("data", "switchlist_objects", "de_added", "region_region_orf_de.Rds")
+)
+sig_region_region <- dplyr::filter(
+  region_region_switchlist$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+)
+region_region_dtu_genes <- unique(sig_region_region$gene_id)
+
+# region others
+region_all_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_all_switchlist_list_orf_de.Rds"
+  )
+)
+for (i in names(region_all_switchlist_list)) {
+  sig_temp <- dplyr::filter(
+    region_all_switchlist_list[[i]]$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  genes <- sig_temp$gene_id
+  genes <- unique(genes)
+  assign(paste0(i, "_dtu_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+
+# region sex
+region_sex_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_sex_switchlist_list_orf_de.Rds"
+  )
+)
+for (i in names(region_sex_switchlist_list)) {
+  sig_temp <- dplyr::filter(
+    region_sex_switchlist_list[[i]]$isoformFeatures,
+    abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
+  )
+  genes <- sig_temp$gene_id
+  genes <- unique(genes)
+  assign(paste0(i, "_sex_dtu_genes"),
+    genes,
+    envir = .GlobalEnv
+  )
+}
+```
+
+Next, we can pull what we need from each file to make single comparison lists.
+
+```{r pull out comparisons}
+# cerebellum cortex
+cerebellum_cortex_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "cortex"
+)
+
+cerebellum_cortex_dtu_genes <- cerebellum_cortex_subset$gene_id
+
+# cerebellum hippocampus
+cerebellum_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "hippocampus"
+)
+
+cerebellum_hippocampus_dtu_genes <- cerebellum_hippocampus_subset$gene_id
+
+# cerebellum striatum
+cerebellum_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "striatum"
+)
+
+cerebellum_striatum_dtu_genes <- cerebellum_striatum_subset$gene_id
+
+# cortex hippocampus
+cortex_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "hippocampus"
+)
+
+cortex_hippocampus_dtu_genes <- cortex_hippocampus_subset$gene_id
+
+# cortex striatum
+cortex_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "striatum"
+)
+
+cortex_striatum_dtu_genes <- cortex_striatum_subset$gene_id
+
+# hippocampus striatum
+hippocampus_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "hippocampus" & condition_2 == "striatum"
+)
+
+hippocampus_striatum_dtu_genes <- hippocampus_striatum_subset$gene_id
+```
+
+### Examine if genes identified in 1 v all are in the pairwise gene lists
+
+I'll start with the smallest gene list, hippocampus
+
+```{r hippocampus dge}
+# get length of single vs all
+length(hippocampus_dge_genes) # 395
+
+# first pairwise comparison
+length(striatum_hippocampus_dge_genes) # 707
+# how many genes are shared?
+sum(hippocampus_dge_genes %in% striatum_hippocampus_dge_genes) # 237
+# what percent is that total?
+sum(hippocampus_dge_genes %in% striatum_hippocampus_dge_genes) / length(hippocampus_dge_genes) # 0.6
+
+# second pairwise comparison
+length(cerebellum_hippocampus_dge_genes) # 1935
+# how many genes are shared?
+sum(hippocampus_dge_genes %in% cerebellum_hippocampus_dge_genes) # 320
+# what percent is that total?
+sum(hippocampus_dge_genes %in% cerebellum_hippocampus_dge_genes) / length(hippocampus_dge_genes) # 0.81
+
+# third pairwise comparison
+length(cortex_hippocampus_dge_genes) # 329
+# how many genes are shared?
+sum(hippocampus_dge_genes %in% cortex_hippocampus_dge_genes)# 160
+# what percent is that total?
+sum(hippocampus_dge_genes %in% cortex_hippocampus_dge_genes) / length(hippocampus_dge_genes) # 0.41
+
+```
+
+do for dtu 
+
+```{r hippocampus dtu}
+# get length of single vs all
+length(hippocampus_dtu_genes) # 44
+
+# first pairwise comparison
+length(hippocampus_striatum_dtu_genes) # 72
+# how many genes are shared?
+sum(hippocampus_dtu_genes %in% hippocampus_striatum_dtu_genes) # 1
+# what percent is that total?
+sum(hippocampus_dtu_genes %in% hippocampus_striatum_dtu_genes) / length(hippocampus_dtu_genes) # 0.02
+
+# second pairwise comparison
+length(cerebellum_hippocampus_dtu_genes) # 177
+# how many genes are shared?
+sum(hippocampus_dtu_genes %in% cerebellum_hippocampus_dtu_genes) # 3
+# what percent is that total?
+sum(hippocampus_dtu_genes %in% cerebellum_hippocampus_dtu_genes) / length(hippocampus_dtu_genes) # 0.068
+
+# third pairwise comparison
+length(cortex_hippocampus_dtu_genes) # 41
+# how many genes are shared?
+sum(hippocampus_dtu_genes %in% cortex_hippocampus_dtu_genes) # 2
+# what percent is that total?
+sum(hippocampus_dtu_genes %in% cortex_hippocampus_dtu_genes) / length(hippocampus_dtu_genes) # 0.045
+
+```
+
+Then striatum
+```{r striatum dge}
+# get length of single vs all
+length(striatum_dge_genes) # 744
+
+# first pairwise comparison
+length(striatum_hippocampus_dge_genes) # 707
+# how many genes are shared?
+sum(striatum_dge_genes %in% striatum_hippocampus_dge_genes) # 389
+# what percent is that total?
+sum(striatum_dge_genes %in% striatum_hippocampus_dge_genes) / length(striatum_dge_genes) # 0.52
+
+# second pairwise comparison
+length(cerebellum_striatum_dge_genes) # 2229
+# how many genes are shared?
+sum(striatum_dge_genes %in% cerebellum_striatum_dge_genes) # 657
+# what percent is that total?
+sum(striatum_dge_genes %in% cerebellum_striatum_dge_genes) / length(striatum_dge_genes) # 0.88
+
+# third pairwise comparison
+length(cortex_striatum_dge_genes) # 634
+# how many genes are shared?
+sum(striatum_dge_genes %in% cortex_striatum_dge_genes) # 351
+# what percent is that total?
+sum(striatum_dge_genes %in% cortex_striatum_dge_genes) / length(striatum_dge_genes) # 0.47
+
+```
+
+do for dtu 
+
+```{r striatum dtu}
+# get length of single vs all
+length(striatum_dtu_genes) # 2
+
+# first pairwise comparison
+length(hippocampus_striatum_dtu_genes) # 72
+# how many genes are shared?
+sum(striatum_dtu_genes %in% hippocampus_striatum_dtu_genes) # 0
+# what percent is that total?
+sum(striatum_dtu_genes %in% hippocampus_striatum_dtu_genes) / length(striatum_dtu_genes) # 0
+
+# second pairwise comparison
+length(cerebellum_striatum_dtu_genes) # 558
+# how many genes are shared?
+sum(striatum_dtu_genes %in% cerebellum_striatum_dtu_genes) # 0
+# what percent is that total?
+sum(striatum_dtu_genes %in% cerebellum_striatum_dtu_genes) / length(striatum_dtu_genes) # 0
+
+# third pairwise comparison
+length(cortex_striatum_dtu_genes) # 276
+# how many genes are shared?
+sum(striatum_dtu_genes %in% cortex_striatum_dtu_genes) # 0
+# what percent is that total?
+sum(striatum_dtu_genes %in% cortex_striatum_dtu_genes) / length(striatum_dtu_genes) # 0
+
+```
+Cortex
+```{r cortex dge}
+# get length of single vs all
+length(cortex_dge_genes) # 541
+
+# first pairwise comparison
+length(cortex_hippocampus_dge_genes) # 349
+# how many genes are shared?
+sum(cortex_dge_genes %in% cortex_hippocampus_dge_genes) # 157
+# what percent is that total?
+sum(cortex_dge_genes %in% cortex_hippocampus_dge_genes) / length(cortex_dge_genes) # 0.29
+
+# second pairwise comparison
+length(cerebellum_cortex_dge_genes) # 2201
+# how many genes are shared?
+sum(cortex_dge_genes %in% cerebellum_cortex_dge_genes) # 474
+# what percent is that total?
+sum(cortex_dge_genes %in% cerebellum_cortex_dge_genes) / length(cortex_dge_genes) # 0.87
+
+# third pairwise comparison
+length(cortex_striatum_dge_genes) # 634
+# how many genes are shared?
+sum(cortex_dge_genes %in% cortex_striatum_dge_genes) # 230
+# what percent is that total?
+sum(cortex_dge_genes %in% cortex_striatum_dge_genes) / length(cortex_dge_genes) # 0.42
+
+```
+
+do for dtu 
+
+```{r cortex dtu}
+# get length of single vs all
+length(cortex_dtu_genes) # 21
+
+# first pairwise comparison
+length(cortex_hippocampus_dtu_genes) # 41
+# how many genes are shared?
+sum(cortex_dtu_genes %in% cortex_hippocampus_dtu_genes) # 6
+# what percent is that total?
+sum(cortex_dtu_genes %in% cortex_hippocampus_dtu_genes) / length(cortex_dtu_genes) # 0.28
+
+# second pairwise comparison
+length(cerebellum_cortex_dtu_genes) # 483
+# how many genes are shared?
+sum(cortex_dtu_genes %in% cerebellum_cortex_dtu_genes) # 10
+# what percent is that total?
+sum(cortex_dtu_genes %in% cerebellum_cortex_dtu_genes) / length(cortex_dtu_genes) # 0.47
+
+# third pairwise comparison
+length(cortex_striatum_dtu_genes) # 276
+# how many genes are shared?
+sum(cortex_dtu_genes %in% cortex_striatum_dtu_genes) # 15
+# what percent is that total?
+sum(cortex_dtu_genes %in% cortex_striatum_dtu_genes) / length(cortex_dtu_genes) # 0.71
+
+```
+And finally, cerebellum.
+
+```{r cerebellum dge}
+# get length of single vs all
+length(cerebellum_dge_genes) # 2147
+
+# first pairwise comparison
+length(cerebellum_hippocampus_dge_genes) # 1935
+# how many genes are shared?
+sum(cerebellum_dge_genes %in% cerebellum_hippocampus_dge_genes) # 1518
+# what percent is that total?
+sum(cerebellum_dge_genes %in% cerebellum_hippocampus_dge_genes) / length(cerebellum_dge_genes) # 0.7
+
+# second pairwise comparison
+length(cerebellum_cortex_dge_genes) # 2201
+# how many genes are shared?
+sum(cerebellum_dge_genes %in% cerebellum_cortex_dge_genes) # 1730
+# what percent is that total?
+sum(cerebellum_dge_genes %in% cerebellum_cortex_dge_genes) / length(cerebellum_dge_genes) # 0.80
+
+# third pairwise comparison
+length(cerebellum_striatum_dge_genes) # 2229
+# how many genes are shared?
+sum(cerebellum_dge_genes %in% cerebellum_striatum_dge_genes) # 1666
+# what percent is that total?
+sum(cerebellum_dge_genes %in% cerebellum_striatum_dge_genes) / length(cerebellum_dge_genes) # 0.77
+
+```
+
+do for dtu 
+
+```{r cerebellum dtu}
+# get length of single vs all
+length(cerebellum_dtu_genes) # 129
+
+# first pairwise comparison
+length(cerebellum_hippocampus_dtu_genes) # 177
+# how many genes are shared?
+sum(cerebellum_dtu_genes %in% cerebellum_hippocampus_dtu_genes) # 42
+# what percent is that total?
+sum(cerebellum_dtu_genes %in% cerebellum_hippocampus_dtu_genes) / length(cerebellum_dtu_genes) # 0.32
+
+# second pairwise comparison
+length(cerebellum_cortex_dtu_genes) # 483
+# how many genes are shared?
+sum(cerebellum_dtu_genes %in% cerebellum_cortex_dtu_genes) # 104
+# what percent is that total?
+sum(cerebellum_dtu_genes %in% cerebellum_cortex_dtu_genes) / length(cerebellum_dtu_genes) # 0.80
+
+# third pairwise comparison
+length(cerebellum_striatum_dtu_genes) # 558
+# how many genes are shared?
+sum(cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes) # 106
+# what percent is that total?
+sum(cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes) / length(cerebellum_dtu_genes) # 0.82
+
+```
