@@ -413,3 +413,73 @@ sum(cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes) # 106
 sum(cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes) / length(cerebellum_dtu_genes) # 0.82
 
 ```
+
+```{r calculate jaccard similarity}
+
+jaccard_similarity <- function(A, B) {
+  intersection = length(intersect(get(A), get(B)))
+  union = length(get(A)) + length(get(B)) - intersection
+  return (intersection/union)
+}
+
+aggregate_dtu_comparisons <- list(cerebellum_dtu_genes = cerebellum_dtu_genes, cortex_dtu_genes = cortex_dtu_genes, hippocampus_dtu_genes = hippocampus_dtu_genes, striatum_dtu_genes = striatum_dtu_genes)
+
+pairwise_dtu_comparisons <- list(cerebellum_cortex_dtu_genes = cerebellum_cortex_dtu_genes, cerebellum_hippocampus_dtu_genes = cerebellum_hippocampus_dtu_genes, cerebellum_striatum_dtu_genes = cerebellum_striatum_dtu_genes, cortex_striatum_dtu_genes = cortex_striatum_dtu_genes, cortex_hippocampus_dtu_genes = cortex_hippocampus_dtu_genes, hippocampus_striatum_dtu_genes = hippocampus_striatum_dtu_genes)
+
+all_combinations <- expand_grid(names(aggregate_dtu_comparisons), names(pairwise_dtu_comparisons))
+
+all_combinations$jaccard_similarity <- map2(all_combinations$`names(aggregate_dtu_comparisons)`, all_combinations$`names(pairwise_dtu_comparisons)`, jaccard_similarity)
+
+all_combinations$jaccard_similarity <- as.numeric(all_combinations$jaccard_similarity)
+```
+
+```{r make dtu heatmap}
+col_fun <- colorRamp2(c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7), magma(8))
+
+for_heatmap_1 <- as.data.frame(pivot_wider(all_combinations, names_from = `names(aggregate_dtu_comparisons)`, values_from = jaccard_similarity))
+
+rownames(for_heatmap) <- for_heatmap_1$`names(pairwise_dtu_comparisons)`
+
+for_heatmap_1 <- for_heatmap_1[, 2:5]
+
+heatmap_1 <- Heatmap(as.matrix(for_heatmap_1), name = "jaccard similarity", col = col_fun)
+
+heatmap_1
+```
+
+```{r make dge lists}
+aggregate_dge_comparisons <- list(cerebellum_dge_genes = cerebellum_dge_genes, cortex_dge_genes = cortex_dge_genes, hippocampus_dge_genes = hippocampus_dge_genes, striatum_dge_genes = striatum_dge_genes)
+
+pairwise_dge_comparisons <- list(cerebellum_cortex_dge_genes = cerebellum_cortex_dge_genes, cerebellum_hippocampus_dge_genes = cerebellum_hippocampus_dge_genes, cerebellum_striatum_dge_genes = cerebellum_striatum_dge_genes, cortex_striatum_dge_genes = cortex_striatum_dge_genes, cortex_hippocampus_dge_genes = cortex_hippocampus_dge_genes, striatum_hippocampus_dge_genes = striatum_hippocampus_dge_genes)
+
+all_dge_combinations <- expand_grid(names(aggregate_dge_comparisons), names(pairwise_dge_comparisons))
+
+all_dge_combinations$jaccard_similarity <- map2(all_dge_combinations$`names(aggregate_dge_comparisons)`, all_dge_combinations$`names(pairwise_dge_comparisons)`, jaccard_similarity)
+
+all_dge_combinations$jaccard_similarity <- as.numeric(all_dge_combinations$jaccard_similarity)
+```
+
+```{r make dge heatmap}
+col_fun <- colorRamp2(c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7), magma(8))
+
+for_heatma2 <- as.data.frame(pivot_wider(all_dge_combinations, names_from = `names(aggregate_dge_comparisons)`, values_from = jaccard_similarity))
+
+rownames(for_heatma2) <- for_heatmap_2$`names(pairwise_dge_comparisons)`
+
+for_heatma2 <- for_heatmap_2[, 2:5]
+
+heatmap_2 <- Heatmap(as.matrix(for_heatmap), name = "jaccard similarity", col = col_fun)
+
+heatmap_2
+```
+
+
+
+
+```{r show both heatmaps with same colors}
+
+draw(heatmap_1 + heatmap_2)
+
+```
+
+
