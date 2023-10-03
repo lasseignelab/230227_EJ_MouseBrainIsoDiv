@@ -62,6 +62,10 @@ both_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, ]
 
 EJ_custom_palette <- c('#EEDD88', '#77AADD', '#FFAABB', "#5D69B1", '#EE8866', "#52BCA3", "#99C945", '#99DDFF', '#DDDDDD')
 
+region_colors <- c('#EE8866', "#99C945", "#52BCA3", "#5D69B1")
+
+other_colors <- c('#77AADD', '#EEDD88')
+
 # get number of novel transcripts
 txs <- sum(!is.na(str_extract(counts_drop0$isoform_id, "tx*...")))
 
@@ -77,11 +81,16 @@ ggplot(transcript_data, aes(
   fill = transcript_novelty
 )) +
   geom_bar(position = "dodge", stat = "identity") +
-  scale_fill_viridis(discrete = TRUE, begin = 0.3, end = 0.9) +
+  scale_fill_manual(values = other_colors) +
   geom_text(aes(label = count),
-    position = position_dodge(width = 0.9),
-    vjust = -0.25
-  )
+    position = position_dodge(width = 0.9), vjust = -0.25
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        legend.position = "none") +
+  scale_x_discrete(labels = c("Annotated", "Novel")) +
+  xlab("Transcript Novelty") +
+  ylab("Number of Transcripts")
 
 # save
 ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
@@ -105,10 +114,16 @@ gene_data <- data.frame(
 # barplot
 ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
   geom_bar(position = "dodge", stat = "identity") +
-  scale_fill_viridis(discrete = TRUE, begin = 0.2, end = 0.6) +
+  scale_fill_manual(values = other_colors) +
   geom_text(aes(label = count),
     position = position_dodge(width = 0.9), vjust = -0.25
-  )
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        legend.position = "none") +
+  scale_x_discrete(labels = c("Annotated", "Novel")) +
+  xlab("Gene Novelty") +
+  ylab("Number of Genes")
 
 # save
 ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
@@ -127,7 +142,10 @@ tx_per_gene <- gene_matches %>%
 
 ggplot(tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
-  xlim(0, 25)
+  xlim(0, 25) +
+  xlab("Transcripts per Gene") +
+  ylab("Number of Genes") +
+  theme_minimal(base_size = 16)
 
 ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
 
@@ -159,14 +177,20 @@ ggplot(sample_collection_metadata, aes(x = N50)) +
   geom_histogram()
 
 # geom bar for reads per tissue
-ggplot(
-  sample_collection_metadata,
-  aes(y = total_reads, x = tissue, fill = tissue)
-) +
-  geom_bar(stat = "identity")
+ggplot(sample_collection_metadata,
+       aes(y = total_reads, x = tissue, fill = tissue)) +
+  geom_bar(stat = "identity") + 
+  scale_fill_manual(values = region_colors) +
+  scale_x_discrete(labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")) +
+  theme_minimal(base_size = 16) +
+  labs(fill = "Tissue") +
+  xlab("Tissue") +
+  ylab("Total Number of Reads") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        legend.position = "none")
 
 ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
-  width = 6, height = 4
+  width = 6, height = 5
 )
 
 sum(sample_collection_metadata$total_reads)
