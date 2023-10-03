@@ -78,7 +78,7 @@ for (i in dte_files) {
 }
 ```
 
-Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
+Finally, load in the DTU data for comparisons. It is important to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
 ```{r load in DTU data}
 # start with region region
@@ -480,6 +480,64 @@ heatmap_2
 
 draw(heatmap_1 + heatmap_2)
 
+```
+
+### overlap examples
+
+```{r get overlap examples}
+
+cerebellum_present_list <- cerebellum_dtu_genes[cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes]
+
+cerebellum_not_present_list <- cerebellum_dtu_genes[!cerebellum_dtu_genes %in% cerebellum_striatum_dtu_genes]
+
+switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_present_list[1])
+
+switchPlot(region_region_switchlist, gene = present_list[1], condition1 = "cerebellum", condition2 = "striatum")
+
+switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_not_present_list[1])
+
+switchPlot(region_region_switchlist, gene = not_present_list[1], condition1 = "cerebellum", condition2 = "striatum")
+```
+
+```{r look at more examples}
+
+switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_present_list[2])
+
+switchPlot(region_region_switchlist, gene = cerebellum_present_list[2], condition1 = "cerebellum", condition2 = "striatum")
+
+switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_not_present_list[2])
+
+switchPlot(region_region_switchlist, gene = cerebellum_not_present_list[2], condition1 = "cerebellum", condition2 = "striatum")
+```
+
+```{r pull out specific information to make wider plots}
+cerebellum_present_list_values <- region_region_switchlist[["isoformFeatures"]][region_region_switchlist[["isoformFeatures"]]$gene_id %in% cerebellum_present_list, c("isoform_id", "gene_name", "condition_1", "condition_2", "iso_value_1", "iso_value_2")]
+
+cerebellum_present_list_values <- pivot_longer(cerebellum_present_list_values, cols = c("iso_value_1", "iso_value_2"), names_to = "value_name", values_to = "isoform_value")
+
+cerebellum_present_list_values <- pivot_longer(cerebellum_present_list_values, cols = c("condition_1", "condition_2"), names_to = "condition_name", values_to = "condition")
+
+cerebellum_present_list_values <- cerebellum_present_list_values[, -c(3, 5)]
+
+cerebellum_present_list_values <- cerebellum_present_list_values %>%
+ group_by_all() %>%
+ filter(n() == 1)
+
+ggplot(data = cerebellum_present_list_values[cerebellum_present_list_values$gene_name == "Araf",], aes(x = isoform_id, y = isoform_value, fill = condition)) +
+geom_bar(stat = "identity", position = position_dodge()) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+cerebellum_not_present_list
+
+ggplot(data = df2, aes(x = dose, y = len, fill = supp)) +
+geom_bar(stat = "identity", position = position_dodge()) + theme(axis.text.x = element_text(angle = 45))
+
+
+```
+
+```{r }
+```
+
+```{r }
 ```
 
 

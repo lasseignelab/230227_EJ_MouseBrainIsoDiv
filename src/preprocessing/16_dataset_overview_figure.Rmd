@@ -51,11 +51,17 @@ load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
 
 gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, -1]
+
+both_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, ]
+
 ```
 
 ## Plot things!!
 
 ```{r barplot txs}
+
+EJ_custom_palette <- c('#EEDD88', '#77AADD', '#FFAABB', "#5D69B1", '#EE8866', "#52BCA3", "#99C945", '#99DDFF', '#DDDDDD')
+
 # get number of novel transcripts
 txs <- sum(!is.na(str_extract(counts_drop0$isoform_id, "tx*...")))
 
@@ -113,7 +119,7 @@ ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
 transcripts per gene
 
 ```{r get transcripts per gene}
-gene_matches <- merged_counts[, 1:2]
+gene_matches <- both_counts_drop0[, 1:2]
 
 tx_per_gene <- gene_matches %>%
   group_by(GENEID) %>%
@@ -124,6 +130,10 @@ ggplot(tx_per_gene, aes(x = `transcript count`)) +
   xlim(0, 25)
 
 ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+
+mean(tx_per_gene$`transcript count`)
+
+
 ```
 
 

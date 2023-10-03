@@ -472,3 +472,32 @@ make_comparison_plots <- function(comparison_list, save_path) {
   # return both plots
   list(euler_plot, upset)
 }
+
+# function for data wrangling isoform expression info from pairwise switchlist
+wrangle_iso_exp <- function(gene_list) {
+  
+  # pull only columns and genes you care about
+  gene_list_values <- region_region_switchlist[["isoformFeatures"]][region_region_switchlist[["isoformFeatures"]]$gene_id %in% gene_list, c("isoform_id", "gene_name", "condition_1", "condition_2", "iso_value_1", "iso_value_2")]
+  
+  # pivot isoform values into one column
+  gene_list_values <- 
+    pivot_longer(gene_list_values, cols = c("iso_value_1", "iso_value_2"),
+                 names_to = "value_name", values_to = "isoform_value")
+ 
+   # pivot conditions into separate columns
+  gene_list_values <- 
+    pivot_longer(gene_list_values, cols = c("condition_1", "condition_2"),
+                 names_to = "condition_name", values_to = "condition")
+  
+  # remove uneeded columns
+  gene_list_values <- gene_list_values[, -c(3, 5)]
+ 
+   # remove duplicate rows
+  gene_list_values <- gene_list_values %>%
+    group_by_all() %>%
+    filter(n() == 1)
+ 
+   # return object
+  return(gene_list_values)
+  
+}
