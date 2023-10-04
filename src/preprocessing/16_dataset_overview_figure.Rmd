@@ -13,13 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get cpm and sample metadata. 
 
-Many of the plots from this script contribute to figure 1 of the manuscript. To completely make figure 1, which also includes content from script 10 (the VST PCA, panel B), you may want to run this script later in your analysis.
+Many of the plots from this script contribute to figure 1 of the manuscript. To completely make figure 1, you must also include content from script 10 (the VST PCA, panel B), so you may want to run this script later in your analysis.
 
 ---
 Remaining to do:
 - What about nanopore stats/ long-read information
 - Transcripts lengths etc
-- delete useless code
 ---
 
 For code review, I am tracking the amount of time that this analysis will take.
@@ -253,6 +252,11 @@ tx_per_gene <- gene_matches %>%
   group_by(GENEID) %>%
   summarise(`transcript count` = n(), .groups = "drop")
 
+# save table
+write_csv(tx_per_gene,
+          here("results", "all_txs", "txs_per_gene.csv"),
+          quote = "none")
+
 # plot
 ggplot(tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
@@ -276,6 +280,11 @@ So, I will first pull out the novel genes, then do the reverse.
 # pull out novel transcripts by gene
 tx_per_novel_gene <- tx_per_gene[tx_per_gene$GENEID %in% novel_genes, ]
 
+# save table
+write_csv(tx_per_novel_gene,
+          here("results", "novel_genes", "txs_per_novel_gene.csv"),
+          quote = "none")
+
 # plot
 ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
@@ -293,6 +302,11 @@ I also want to make a supplemental table of these transcripts so that it can be 
 # isolate novel transcripts
 novel_txs <- gene_matches[!is.na(str_extract(gene_matches$TXNAME, "tx*...")), ]
 
+# save novel transcripts with gene id
+write_csv(novel_txs,
+          here("results", "novel_txs", "novel_txs_geneids.csv"),
+          quote = "none")
+
 # count number of novel transcripts that belong to a novel gene
 nrow(novel_txs[!is.na(str_extract(novel_txs$GENEID, "gene*...")), ]) # 309
 
@@ -304,6 +318,11 @@ novel_tx_per_gene <- novel_txs %>%
   group_by(GENEID) %>%
   summarise(`transcript count` = n(), .groups = "drop")
 
+# save table
+write_csv(novel_tx_per_gene,
+          here("results", "novel_txs", "novel_txs_per_gene.csv"),
+          quote = "none")
+
 # plot
 ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
@@ -311,14 +330,15 @@ ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
   ylab("Number of Genes") +
   theme_minimal(base_size = 16)
 
-# save
+# save plot
 ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
+
 ```
 
 
 ### Biological replicate agreement
 
-Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill, meaning they are both from female cerebellum.
+Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill, meaning they are both from female cerebellum. Just choosing two samples may not be the best way to show this, potentially could make a heatmap of all correlations and annotate the heatmap with correct sample information.
 
 ```{r biological replicate agreement}
 # plot
