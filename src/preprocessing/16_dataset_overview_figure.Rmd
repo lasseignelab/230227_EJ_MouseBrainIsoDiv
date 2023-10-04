@@ -81,8 +81,18 @@ We also need the gtf file for useful information about our transcripts.
 ```{r read in the gtf file}
 annotation <- read_table(
   here("data", "nextflow", "bambu", "extended_annotations.gtf"),
-  col_names = FALSE
+  col_names = c("location", "method", "type", "start", "stop", "blank1", "strand", "blank2", "geneid", "gene_id", "transcriptid", "transcript_id")
 )
+
+# need to message df a little bit
+annotation <- annotation[,-c(2, 6, 8, 9, 11)]
+
+annotation$gene_id <- str_sub(annotation$gene_id, 2, -3)
+
+annotation$transcript_id <- str_sub(annotation$transcript_id, 2, -3)
+
+# pull out info for only transcripts
+transcripts_annotation <- annotation[annotation$type == "transcript",]
 ```
 
 ### Metadata plots
@@ -335,6 +345,13 @@ ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
 
 ```
 
+I also want to have more location about these novel genes, such as their chromosomal locations. I can get this from the annotation gtf.
+
+```{r pull novel genes from annotation}
+
+novel_genes_annotation <- annotation[annotation]
+  
+```
 
 ### Biological replicate agreement
 
@@ -389,7 +406,7 @@ novel_tx_cpm_means <- novel_cpm[, c(1, 42)]
 
 Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
 
-Here I am manually looking up the chr locataions of the novel genes. I should try to automate this somehow but have not gotten to it yet.
+Here I am manually looking up the chr locations of the novel genes. I should try to automate this somehow but have not gotten to it yet.
 
 I can also extract the top 50 expressed transcripts for interproscan, though we dont get much information out of this.
 
