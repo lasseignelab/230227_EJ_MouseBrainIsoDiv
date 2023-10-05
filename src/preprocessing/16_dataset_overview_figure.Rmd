@@ -92,7 +92,7 @@ annotation$gene_id <- str_sub(annotation$gene_id, 2, -3)
 annotation$transcript_id <- str_sub(annotation$transcript_id, 2, -3)
 
 # pull out info for only transcripts
-transcripts_annotation <- annotation[annotation$type == "transcript",]
+transcripts_annotation <- annotation[annotation$type == "transcript",-2]
 ```
 
 ### Metadata plots
@@ -345,11 +345,27 @@ ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
 
 ```
 
-I also want to have more location about these novel genes, such as their chromosomal locations. I can get this from the annotation gtf.
+I also want to have more location about these novel transcripts, such as their chromosomal locations. I can get this from the annotation gtf.
+
+```{r pull novel transcripts from annotation}
+
+novel_transcripts_annotation <- transcripts_annotation[transcripts_annotation$transcript_id %in% novel_txs$TXNAME,]
+
+write_csv(novel_transcripts_annotation,
+          here("results", "novel_txs", "novel_txs_annotation.csv"),
+          quote = "none")
+  
+```
+
+I also want to do this for novel genes and include and all transcripts for these genes.
 
 ```{r pull novel genes from annotation}
 
-novel_genes_annotation <- annotation[annotation]
+novel_genes_annotation <- transcripts_annotation[transcripts_annotation$gene_id %in% novel_genes,]
+
+write_csv(novel_genes_annotation,
+          here("results", "novel_genes", "novel_genes_annotation.csv"),
+          quote = "none")
   
 ```
 
