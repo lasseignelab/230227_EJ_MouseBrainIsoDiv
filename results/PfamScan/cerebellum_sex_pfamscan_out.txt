@@ -1,4 +1,4 @@
-# pfam_scan.pl,  run at Wed Jul 26 22:08:29 2023
+# pfam_scan.pl,  run at Thu Oct  5 21:16:44 2023
 #
 # Copyright (c) 2009 Genome Research Ltd
 # Freely distributed under the GNU 
@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>. 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-#      query sequence file: /data/user/efjones/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cerebellum_sex_AA.fasta
+#      query sequence file: /data/user/flanary/code_review/230227_EJ_MouseBrainIsoDiv/data/switchlist_fasta/cerebellum_sex_AA.fasta
 #        searching against: /PfamScan/PfamFiles/Pfam-A.hmm, with cut off --cut_ga
 #    resolve clan overlaps: on
 #     predict active sites: off
