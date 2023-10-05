@@ -15,12 +15,6 @@ The purpose of this script is to provide a dataset overview to serve as manuscri
 
 Many of the plots from this script contribute to figure 1 of the manuscript. To completely make figure 1, you must also include content from script 10 (the VST PCA, panel B), so you may want to run this script later in your analysis.
 
----
-Remaining to do:
-- What about nanopore stats/ long-read information
-- Transcripts lengths etc
----
-
 For code review, I am tracking the amount of time that this analysis will take.
 
 ```{r proc time}
@@ -115,10 +109,11 @@ ggplot(
   labs(fill = "Tissue") +
   xlab("Tissue") +
   ylab("Total Number of Reads") +
-  theme(
+  theme(axis.title.x.bottom = element_blank(),
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
     legend.position = "none"
-  )
+  ) +
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
@@ -136,7 +131,8 @@ I can also plot other metadata, such as RIN and read length, as histograms. Thes
 ```{r plot other metadata histograms}
 # reads per sample
 ggplot(sample_collection_metadata, aes(x = total_reads)) +
-  geom_histogram(bins = 10)
+  geom_histogram(bins = 10) +
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
@@ -145,7 +141,8 @@ ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
 
 # RIN per sample
 ggplot(sample_collection_metadata, aes(x = RIN)) +
-  geom_histogram()
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "RIN_per_sample.png"),
@@ -154,7 +151,8 @@ ggsave(here("results", "plots", "histograms", "RIN_per_sample.png"),
 
 # median length per sample
 ggplot(sample_collection_metadata, aes(x = med_len)) +
-  geom_histogram()
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "length_per_sample.png"),
@@ -163,7 +161,8 @@ ggsave(here("results", "plots", "histograms", "length_per_sample.png"),
 
 # N50 per sample
 ggplot(sample_collection_metadata, aes(x = N50)) +
-  geom_histogram()
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "n50_per_sample.png"),
@@ -206,7 +205,8 @@ ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
   ) +
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Gene Novelty") +
-  ylab("Number of Genes")
+  ylab("Number of Genes")+
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
@@ -243,7 +243,8 @@ ggplot(transcript_data, aes(
   ) +
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Transcript Novelty") +
-  ylab("Number of Transcripts")
+  ylab("Number of Transcripts")+
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
@@ -273,7 +274,8 @@ ggplot(tx_per_gene, aes(x = `transcript count`)) +
   xlim(0, 25) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)
+  theme_minimal(base_size = 16)+
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
@@ -300,7 +302,8 @@ ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)
+  theme_minimal(base_size = 16)+
+  theme(text = element_text(face = "bold"))
 
 # save
 ggsave(here("results", "plots", "histograms", "transcripts_per_novel_gene.png"))
@@ -338,7 +341,8 @@ ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)
+  theme_minimal(base_size = 16)+
+  theme(text = element_text(face = "bold"))
 
 # save plot
 ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
