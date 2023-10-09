@@ -32,6 +32,9 @@ suppressPackageStartupMessages({
   library(here)
   library(hexbin)
   library(viridis)
+  library(cowplot)
+  library(DESeq2)
+  library(patchwork)
 })
 ```
 
@@ -89,13 +92,54 @@ annotation$transcript_id <- str_sub(annotation$transcript_id, 2, -3)
 transcripts_annotation <- annotation[annotation$type == "transcript",-2]
 ```
 
+### Load in VST data for PCA
+
+```{r load in vst data}
+
+source(here("src", "de_analysis", "de_functions.R"))
+
+# read in gene counts data
+gene_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_gene.txt"),
+  header = TRUE
+)
+
+# rename columns
+colnames(gene_counts) <- str_extract(colnames(gene_counts), "sample..")
+
+dds <- DESeqDataSetFromMatrix(
+  countData = round(gene_counts),
+  colData = sample_collection_metadata,
+  design = ~ sex + tissue
+)
+nrow(dds)
+
+keep <- rowSums(counts(dds)) > 1
+dds <- dds[keep, ]
+nrow(dds)
+
+# vst normalization
+vsd <- vst(dds, blind = FALSE)
+head(assay(vsd), 3)
+
+colData(vsd)
+
+vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) + 
+  scale_color_manual(values = region_colors,
+       labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")) +
+  theme_minimal(base_size = 12) +
+  labs(color = "Tissue") +
+  theme(text = element_text(face = "bold"))
+
+vst_tissue_pca
+```
 ### Metadata plots
 
 Here, I want to plot the number of reads per sample. Also, the calculate total number of reads. This will become panel C of figure 1.
 
 ```{r make barplot for reads per tissue}
 # geom bar for reads per tissue
-ggplot(
+reads_per_tissue_plot <- ggplot(
   sample_collection_metadata,
   aes(y = total_reads, x = tissue, fill = tissue)
 ) +
@@ -105,7 +149,7 @@ ggplot(
     labels =
       c("Cerebellum", "Cortex", "Hippocampus", "Striatum")
   ) +
-  theme_minimal(base_size = 16) +
+  theme_minimal(base_size = 12) +
   labs(fill = "Tissue") +
   xlab("Tissue") +
   ylab("Total Number of Reads") +
@@ -116,7 +160,7 @@ ggplot(
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
+ggsave(reads_per_tissue_plot, here("results", "plots", "bar_plots", "reads_per_sample.png"),
   width = 6, height = 5
 )
 
@@ -192,7 +236,7 @@ gene_data <- data.frame(
 )
 
 # barplot
-ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
+novel_genes_plot <- ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
   geom_bar(position = "dodge", stat = "identity") +
   scale_fill_manual(values = other_colors) +
   geom_text(aes(label = count),
@@ -206,10 +250,11 @@ ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Gene Novelty") +
   ylab("Number of Genes")+
-  theme(text = element_text(face = "bold"))
+  theme(text = element_text(face = "bold")) +
+  coord_cartesian(clip = "off")
 
 # save
-ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+ggsave(novel_genes_plot, here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
   width = 3, height = 4
 )
 ```
@@ -227,7 +272,7 @@ transcript_data <- data.frame(
 )
 
 # barplot
-ggplot(transcript_data, aes(
+novel_txs_plot <- ggplot(transcript_data, aes(
   x = transcript_novelty, y = count,
   fill = transcript_novelty
 )) +
@@ -244,10 +289,11 @@ ggplot(transcript_data, aes(
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Transcript Novelty") +
   ylab("Number of Transcripts")+
-  theme(text = element_text(face = "bold"))
+  theme(text = element_text(face = "bold")) +
+  coord_cartesian(clip = "off")
 
 # save
-ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
+ggsave(novel_txs_plot <- here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
   width = 3, height = 4
 )
 ```
@@ -269,16 +315,16 @@ write_csv(tx_per_gene,
           quote = "none")
 
 # plot
-ggplot(tx_per_gene, aes(x = `transcript count`)) +
+tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlim(0, 25) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)+
+  theme_minimal(base_size = 12)+
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+ggsave(tx_per_gene_plot, here("results", "plots", "histograms", "transcripts_per_gene.png"))
 
 # what is the mean number of tx per gene
 mean(tx_per_gene$`transcript count`)
@@ -302,7 +348,7 @@ ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)+
+  theme_minimal(base_size = 12)+
   theme(text = element_text(face = "bold"))
 
 # save
@@ -341,7 +387,7 @@ ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 16)+
+  theme_minimal(base_size = 12) +
   theme(text = element_text(face = "bold"))
 
 # save plot
@@ -372,6 +418,31 @@ write_csv(novel_genes_annotation,
           quote = "none")
   
 ```
+
+## Create final figure
+
+Now that individual plots have been saved, I can create the final figure, aside from the cartoon. I will use plot_grid from cowplot for this
+
+```{r put all plots together}
+
+top_row <- plot_grid(vst_tissue_pca, reads_per_tissue_plot, labels = c("B", "C"), rel_widths = c(2, 1))
+
+top_row
+
+bottom_row <- plot_grid(novel_genes_plot, novel_txs_plot, tx_per_gene_plot, labels = c("D", "E", "F"), rel_widths = c(0.5, 0.5, 1), nrow = 1)
+
+bottom_row
+
+final_figure1 <- plot_grid(top_row, bottom_row, ncol = 1)
+
+final_figure1
+
+png(here("results", "finished_figures", "figure1.png"), width = 8, height = 7, units = "in", res = 300)
+final_figure1
+dev.off()
+
+```
+
 
 ### Biological replicate agreement
 
