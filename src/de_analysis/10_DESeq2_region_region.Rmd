@@ -70,6 +70,9 @@ vsd <- vst(dds, blind = FALSE)
 head(assay(vsd), 3)
 
 colData(vsd)
+```
+
+```{r plot PCA}
 
 plotPCA(vsd, intgroup = c("sex", "tissue"))
 
@@ -79,7 +82,15 @@ plotPCA(vsd, intgroup = c("med_len"))
 
 plotPCA(vsd, intgroup = c("RIN"))
 
-vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue"))
+region_colors <- c('#EE8866', "#99C945", "#52BCA3", "#5D69B1")
+
+vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) + 
+  scale_color_manual(values = region_colors,
+       labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")) +
+  theme_minimal(base_size = 18) +
+  labs(color = "Tissue")
+
+vst_tissue_pca
 
 # save pca plot
 ggsave(here("results", "plots", "pca", "vst_tissue_pca.png"),

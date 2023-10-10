@@ -1,8 +1,20 @@
+# The purpose of this script is to create all data needed to support the shiny
+# application for accessing the data form our 2023 manuscript.
+
+# This script is dependent upon obtaining the raw nextflow nanoseq pipeline
+# results directory, which should be stored in data if you are using this dir
+# structure. If you do not want to run the pipeline yourself, please download
+# the correct nextflow results directory from zenodo.
+
+# Other data required for the shiny app, specifically the "complete_switchlists"
+# directory, can be created from running scripts 00 - 14 or downloading from
+# zenodo.
+
 # load in packages
 library(tidyverse)
 library(biomaRt)
 
-# read in counts data
+# read in counts data generated from the nanoseq pipeline (script 00)
 gene_exp_counts <- read.table("data/nextflow/bambu/counts_gene.txt",
   header = TRUE
 )
