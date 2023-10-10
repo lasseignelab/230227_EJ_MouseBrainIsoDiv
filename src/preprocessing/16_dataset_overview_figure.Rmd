@@ -525,11 +525,16 @@ merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
 
 # use ggplot to make density plots showing the two distributions
 ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
-  geom_density(alpha = .5) + scale_fill_manual(values = other_colors) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = other_colors,
+                    name = "Transcript\nClassification",
+                    labels = c("Annotated", "Novel")) +
   xlab("log10(Mean CPM + 1)") +
   ylab("Relative Density") +
   theme_minimal(base_size = 12)+
   theme(text = element_text(face = "bold"))
+
+ggsave(here("results", "finished_figures", "supp1.png"))
 
 ```
 
