@@ -66,6 +66,9 @@ load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 # drop 0 for accurate counts of transcripts
 counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
 
+# drop 0 for accurate cpm of transcripts
+cpm_drop0 <- cpm_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
+
 # drop 0 for accurate counts of genes
 gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, -1]
 
@@ -462,15 +465,17 @@ Expected results: cor 0.9304667, p-value < 2.2e-16
 
 ### Transcript exploration
 
-Pleas note: This code is very experimental and did not make it into the paper draft.
+The goal of this part of the analysis is to look at expression levels of novel  genes and transcripts.
 
 So, what are the some of the most highly expressed novel transcripts?
 
-```{r pull highest expressed transcripts}
+```{r look at expression (counts) of annotated vs novel txs}
 novel_counts <- merged_counts_iso[merged_counts_iso$isoform_id %like% "tx", ]
 novel_counts$means <- apply(novel_counts[, -1], 1, mean)
 
 novel_tx_count_means <- novel_counts[, c(1, 42)]
+
+hist(novel_tx_count_means$means)
 
 # compare to annotated
 annotated_counts <-
@@ -486,31 +491,46 @@ merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
 merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
 ```
 
-actually, lets see if that agrees when I do to cpm normalized counts
+Actually, I think it is better to use the cpm normalized counts for this, so let's do the same thing again.
 
-```{r cpm iso}
+```{r look at expression (cpm) of annotated vs novel txs}
+# pull out novel tx cpm expression
 novel_cpm <- cpm_iso[cpm_iso$isoform_id %like% "tx", ]
 novel_cpm$means <- apply(novel_cpm[, -1], 1, mean)
 
 novel_tx_cpm_means <- novel_cpm[, c(1, 42)]
+
+hist(novel_tx_cpm_means$means)
+
+# compare to annotated
+annotated_cpm <-
+  cpm_iso[!cpm_iso$isoform_id %like% "tx", ]
+annotated_cpm$means <- apply(annotated_cpm[, -1], 1, mean)
+
+annotated_tx_cpm_means <- annotated_cpm[, c(1, 42)]
+
+hist(annotated_tx_cpm_means$means)
 ```
 
-Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
+The histograms aren't quite right, and I think we want a more direct comparison between annotated and novel transcripts, so I'll make a density plot.
 
-Here I am manually looking up the chr locations of the novel genes. I should try to automate this somehow but have not gotten to it yet.
+```{r plot denisty plot of expression distributions}
+# plot - need to data wrangle
+merged_cpm_iso_means <- cpm_drop0
+merged_cpm_iso_means$means <- apply(merged_cpm_iso_means[, -1], 1, mean)
 
-I can also extract the top 50 expressed transcripts for interproscan, though we dont get much information out of this.
+merged_cpm_iso_means$novel <- merged_cpm_iso_means$isoform_id %like% "tx"
 
-```{r extract top 50 expressed novel transcripts}
-novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means), ]
+merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
 
-top50_txs <- head(novel_tx_cpm_means$isoform_id, 50)
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) + scale_fill_manual(values = other_colors) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
 
-write.table(top50_txs,
-  here("data", "interproscan", "top50_txs.txt"),
-  quote = FALSE,
-  row.names = FALSE, col.names = FALSE
-)
 ```
 
 #### Clean up script
