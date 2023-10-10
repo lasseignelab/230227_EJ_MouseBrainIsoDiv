@@ -277,7 +277,9 @@ format_deseq_results <- function(condition1, condition2) {
 # function for reformatting results so they match the switchlist data frame, but
 # at the transcript level instead of the gene level
 format_deseq_results_dte <- function(condition1, condition2) {
-  condition1_condition2_res <- get(paste0(condition1, "_", condition2, "_dte_res"))
+  condition1_condition2_res <- get(
+    paste0(condition1, "_", condition2, "_dte_res")
+  )
 
   condition1_condition2_padj <- data.frame(
     "isoform_id" = rownames(condition1_condition2_res),
@@ -406,34 +408,47 @@ incorporate_deseq_results <-
 
 # function to make dge, dte, and dtu comparision plots
 make_comparison_plots <- function(comparison_list, save_path) {
-  # plot venn diagram
-  venn <- ggvenn(
-    comparison_list,
-    fill_color = c("#5D69B1", "#52BCA3", "#99C945"),
-    stroke_size = 0.5,
-    set_name_size = 4
-  )
-  # save venn diagram
-  ggsave(here(
-    save_path, "venn_diagrams",
-    paste0(str_sub(deparse(substitute(comparison_list)),
-                   end = -6
-    ), "_dge_dte_dtu.pdf")
-  ), plot = venn)
-  
   # create matrix
   for_plot_mat <- list_to_matrix(comparison_list)
-  
+
+  # create plot
+  euler_plot <- plot(euler(for_plot_mat),
+    fills = alpha(c("#5D69B1", "#52BCA3", "#99C945"), 0.6),
+    quantities = TRUE,
+    labels = list(fontsize = 10)
+  )
+  # edit plot dims
+  euler_plot$vp$height <- unit(0.8, "npc")
+
+  # create pdf
+  pdf(
+    here(
+      save_path, "euler_diagrams",
+      paste0(str_sub(deparse(substitute(comparison_list)),
+        end = -6
+      ), "_dge_dte_dtu.pdf")
+    ),
+    width = 5,
+    height = 4
+  )
+
+  # display plot
+  print(euler_plot)
+
+  # turn off device
+  dev.off()
+
   # generate combination matrix
   for_plot_comb_mat <- make_comb_mat(for_plot_mat)
-  
+
   # make and save UpSet plot (ComplexHeatmap)
   pdf(
     here(
       save_path, "upset_plots",
-      paste0(str_sub(deparse(substitute(comparison_list)),
-                     end = -6
-      ), "_dge_dte_dtu.pdf")
+      paste0(
+        str_sub(deparse(substitute(comparison_list)), end = -6),
+        "_dge_dte_dtu.pdf"
+      )
     ),
     width = 8, height = 6
   )
@@ -445,15 +460,44 @@ make_comparison_plots <- function(comparison_list, save_path) {
       for_plot_comb_mat
     )],
     top_annotation = upset_top_annotation(for_plot_comb_mat,
-                                          add_numbers = TRUE
+      add_numbers = TRUE
     ),
     right_annotation = upset_right_annotation(for_plot_comb_mat,
-                                              add_numbers = TRUE
+      add_numbers = TRUE
     )
   )
   # draw upset plot
   draw(upset)
   dev.off()
   # return both plots
-  list(venn, upset)
+  list(euler_plot, upset)
+}
+
+# function for data wrangling isoform expression info from pairwise switchlist
+wrangle_iso_exp <- function(gene_list) {
+  
+  # pull only columns and genes you care about
+  gene_list_values <- region_region_switchlist[["isoformFeatures"]][region_region_switchlist[["isoformFeatures"]]$gene_id %in% gene_list, c("isoform_id", "gene_name", "condition_1", "condition_2", "iso_value_1", "iso_value_2")]
+  
+  # pivot isoform values into one column
+  gene_list_values <- 
+    pivot_longer(gene_list_values, cols = c("iso_value_1", "iso_value_2"),
+                 names_to = "value_name", values_to = "isoform_value")
+ 
+   # pivot conditions into separate columns
+  gene_list_values <- 
+    pivot_longer(gene_list_values, cols = c("condition_1", "condition_2"),
+                 names_to = "condition_name", values_to = "condition")
+  
+  # remove uneeded columns
+  gene_list_values <- gene_list_values[, -c(3, 5)]
+ 
+   # remove duplicate rows
+  gene_list_values <- gene_list_values %>%
+    group_by_all() %>%
+    filter(n() == 1)
+ 
+   # return object
+  return(gene_list_values)
+  
 }
