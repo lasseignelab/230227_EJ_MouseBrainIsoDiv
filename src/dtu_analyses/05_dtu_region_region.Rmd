@@ -327,37 +327,43 @@ Now I can run gprofiler.
 run_plot_gprofiler(
   gene_list = sig_overlap_list$cerebellum_cortex,
   name = "cerebellum_cortex",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 
 run_plot_gprofiler(
   gene_list = sig_overlap_list$cerebellum_hippocampus,
   name = "cerebellum_hippocampus",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 
 run_plot_gprofiler(
   gene_list = sig_overlap_list$cerebellum_striatum,
   name = "cerebellum_striatum",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 
 run_plot_gprofiler(
   gene_list = sig_overlap_list$cortex_hippocampus,
   name = "cortex_hippocampus",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 
 run_plot_gprofiler(
   gene_list = sig_overlap_list$cortex_striatum,
   name = "cortex_striatum",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 
 run_plot_gprofiler(
   gene_list = sig_overlap_list$hippocampus_striatum,
   name = "hippocampus_striatum",
-  save_path = here("results", "plots", "gprofiler2")
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu"),
+  csv_save_path = here("results", "gprofiler2", "dtu")
 )
 ```
 

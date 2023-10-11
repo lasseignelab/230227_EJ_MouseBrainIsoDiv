@@ -213,10 +213,11 @@ create_volcano_plot <-
     volcano
   }
 
-# this function is for runnning gprofiler
+# this function is for running gprofiler
 run_plot_gprofiler <- function(gene_list,
                                name,
-                               save_path) {
+                               plot_save_path,
+                               csv_save_path) {
   # run gprofiler2
   gostres <- gost(
     query = gene_list,
@@ -231,9 +232,22 @@ run_plot_gprofiler <- function(gene_list,
   gostplot(gostres, capped = TRUE, interactive = FALSE)
   # save
   ggsave(paste0(
-    save_path,
+    plot_save_path,
     "/", name, "_gostres.png"
   ), width = 6, height = 4)
+  # pull out results df
+  results <- gostres[["result"]]
+  # data wrangle
+  results <- apply(results, 2, as.character)
+  # write to results
+  write.csv(
+    results,
+    paste0(
+      csv_save_path,
+      "/", name, "_results.csv"
+    ),
+    quote = FALSE
+  )
 }
 
 ######################### 08_dtu_neuro_diseases script #########################
