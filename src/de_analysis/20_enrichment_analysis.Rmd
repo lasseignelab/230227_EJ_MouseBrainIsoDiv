@@ -1,0 +1,141 @@
+---
+title: "Functional enrichment analysis"
+author: "Emma Jones"
+date: "2023-10-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load in packages
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+
+```{r read in data and get cpm values}
+
+source("../dtu_analyses/functions.R", local = knitr::knit_global())
+
+```
+
+
+```{r load in DE results}
+
+de_results <- list.files(here("data", "deseq2_data"))
+
+# loop in files
+for (i in de_results) {
+  temp <- readRDS(
+    here("data", "deseq2_data", i)
+  )
+  results <- as.data.frame(temp)
+  
+  sig_results <- subset(results, padj < 0.05)
+  sig_results <- subset(sig_results, abs(log2FoldChange) > 1.5)
+  
+  sig_results <- na.omit(str_extract(rownames(sig_results), "ENSMUSG..........."))
+  
+  assign(paste0(str_sub(i, end = -5)),
+    results,
+    envir = .GlobalEnv
+  )
+  
+  assign(paste0("sig_", str_sub(i, end = -5)),
+  sig_results,
+    envir = .GlobalEnv
+  )
+}
+```
+
+The current issue with these results is that the transcript results are not mapped to genes. I will have to map these to genes first.
+
+```{r get genes from txs}
+transcript_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_transcript.txt"),
+  header = TRUE
+)
+
+tx_gene_names <- transcript_counts[, 1:2]
+
+pairwise_dte_genes <- unique(tx_gene_names$GENEID[tx_gene_names$TXNAME %in% rownames(cerebellum_cortex_transcripts_results)])
+```
+
+The pairwise results DO share the same background genes, but the single regions and single region sex DO NOT share the same background genes. For bg genes, you can just get the rownames for gene level. For transcript level, I'll need to pull the gene names of all the transcripts that were measured the way we got above. I'm just going to start with pairwise comparisons, since thatis what we use in the manuscript anyway.
+
+```{r create background genes list}
+pairwise_dge_genes <- rownames(cerebellum_cortex_results)
+
+# data wrangle the ensembl IDs for gprofiler and drop novel genes
+pairwise_dge_genes <- na.omit(str_extract(pairwise_dge_genes, "ENSMUSG..........."))
+pairwise_dte_genes <- na.omit(str_extract(pairwise_dte_genes, "ENSMUSG..........."))
+
+```
+
+```{r run gprofiler on dge genes}
+# run gprofiler2
+run_plot_gprofiler(
+  gene_list = sig_cerebellum_cortex_results,
+  name = "cerebellum_cortex",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+run_plot_gprofiler(
+  gene_list = sig_cerebellum_hippocampus_results,
+  name = "cerebellum_hippocampus",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+run_plot_gprofiler(
+  gene_list = sig_cortex_hippocampus_results,
+  name = "cortex_hippocampus",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+run_plot_gprofiler(
+  gene_list = sig_cerebellum_striatum_results,
+  name = "cerebellum_striatum",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+run_plot_gprofiler(
+  gene_list = sig_cortex_striatum_results,
+  name = "cerebellum_cortex_striatum",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+run_plot_gprofiler(
+  gene_list = sig_striatum_hippocampus_results,
+  name = "striatum_hippocampus",
+  custom_bg_genes = as.vector(pairwise_dge_genes),
+  plot_save_path = here("results", "plots", "gprofiler2", "dge"),
+  csv_save_path = here("results", "gprofiler2", "dge")
+)
+
+
+```

@@ -216,6 +216,7 @@ create_volcano_plot <-
 # this function is for running gprofiler
 run_plot_gprofiler <- function(gene_list,
                                name,
+                               custom_bg_genes,
                                plot_save_path,
                                csv_save_path) {
   # run gprofiler2
@@ -225,7 +226,7 @@ run_plot_gprofiler <- function(gene_list,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
     measure_underrepresentation = FALSE, evcodes = FALSE,
     user_threshold = 0.05, correction_method = "g_SCS",
-    domain_scope = "custom", custom_bg = bg_genes,
+    domain_scope = "custom", custom_bg = custom_bg_genes,
     numeric_ns = "", sources = NULL, as_short_link = FALSE
   )
   # plot
