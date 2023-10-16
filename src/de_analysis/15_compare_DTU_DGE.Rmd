@@ -393,8 +393,6 @@ dge_main_list <- list(
   `Hippocampus vs. Striatum` = striatum_hippocampus_dge_genes
 )
 
-
-
 dte_main_list <- list(
   `Cerebellum vs. Cortex` = cerebellum_cortex_dte_genes,
   `Cerebellum vs. Hippocampus` = cerebellum_hippocampus_dte_genes,
@@ -418,14 +416,14 @@ Also, I want to make lists of all dge and dtu single region comparisons.
 
 ```{r make lists of all dge and dtu single region comparisons}
 dge_single_list <- list(
-  `Cerebellum` = cortex_dge_genes,
+  `Cerebellum` = cerebellum_dge_genes,
   `Hippocampus` = hippocampus_dge_genes,
   `Cortex` = cortex_dge_genes,
   `Striatum` = striatum_dge_genes
 )
 
 dte_single_list <- list(
-  `Cerebellum` = cortex_dte_genes,
+  `Cerebellum` = cerebellum_dte_genes,
   `Hippocampus` = hippocampus_dte_genes,
   `Cortex` = cortex_dte_genes,
   `Striatum` = striatum_dte_genes
@@ -436,14 +434,14 @@ And, I want to make make lists of all dge and dtu sex comparisons.
 
 ```{r make lists of all dge and dtu sex comparisons}
 dge_sex_list <- list(
-  `Cerebellum` = cortex_sex_dge_genes,
+  `Cerebellum` = cerebellum_sex_dge_genes,
   `Hippocampus` = hippocampus_sex_dge_genes,
   `Cortex` = cortex_sex_dge_genes,
   `Striatum` = striatum_sex_dge_genes
 )
 
 dte_sex_list <- list(
-  `Cerebellum` = cortex_sex_dte_genes,
+  `Cerebellum` = cerebellum_sex_dte_genes,
   `Hippocampus` = hippocampus_sex_dte_genes,
   `Cortex` = cortex_sex_dte_genes,
   `Striatum` = striatum_sex_dte_genes
