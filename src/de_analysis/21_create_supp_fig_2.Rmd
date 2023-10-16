@@ -91,7 +91,7 @@ for (i in dte_files) {
 }
 ```
 
-Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
+Finally, load in the DTU data for comparisons. It is important to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
 ```{r load in DTU data}
 # region others
@@ -117,7 +117,7 @@ for (i in names(region_all_switchlist_list)) {
 
 ### Create stacked barplot
 
-```{r create stacked barplot}
+```{r create stacked barplot dataframe}
 stacked_barplot <- data.frame(
   "brain_region" = c(
     rep("Cerebellum", 7), rep("Cortex", 7),
@@ -309,7 +309,7 @@ stacked_barplot <- data.frame(
 
 Now that the dataframe has been created, we can plot.
 
-```{r plot stacked barplot for unpaired}
+```{r plot stacked barplot}
 stacked_barplot_single_plot <-
   ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
   geom_bar(position = "fill", stat = "identity") +
@@ -471,7 +471,7 @@ final_supp_2 <-
 
 final_supp_2
 
-png(here("results", "finished_figures", "supp_figure2.png"),
+png(here("results", "finished_figures", "supp2.png"),
   width = 12, height = 9, units = "in", res = 300
 )
 
