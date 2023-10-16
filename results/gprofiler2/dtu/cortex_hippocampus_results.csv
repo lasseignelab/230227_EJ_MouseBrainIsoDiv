@@ -1,0 +1,15 @@
+,x
+query,query_1
+significant,TRUE
+p_value,0.0498269458625092
+term_size,1
+query_size,29
+intersection_size,1
+precision,0.0344827586206897
+recall,1
+term_id,CORUM:5524
+source,CORUM
+term_name,Polycomb repressive complex 1
+effective_domain_size,13288
+source_order,436
+parents,CORUM:0000000
