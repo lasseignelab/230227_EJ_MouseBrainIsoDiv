@@ -414,22 +414,24 @@ make_comparison_plots <- function(comparison_list, save_path) {
   # create plot
   euler_plot <- plot(euler(for_plot_mat),
     fills = alpha(c("#5D69B1", "#52BCA3", "#99C945"), 0.6),
-    quantities = TRUE,
-    labels = list(fontsize = 10)
+    quantities = list(cex = 2),
+    labels = list(fontsize = 14)
   )
   # edit plot dims
   euler_plot$vp$height <- unit(0.8, "npc")
 
-  # create pdf
-  pdf(
+  # create png
+  png(
     here(
       save_path, "euler_diagrams",
       paste0(str_sub(deparse(substitute(comparison_list)),
         end = -6
-      ), "_dge_dte_dtu.pdf")
+      ), "_dge_dte_dtu.png")
     ),
     width = 5,
-    height = 4
+    height = 4,
+    units = "in",
+    res = 300
   )
 
   # display plot

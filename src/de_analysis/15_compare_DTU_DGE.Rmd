@@ -113,7 +113,7 @@ for (i in dte_files) {
 }
 ```
 
-Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
+Finally, load in the DTU data for comparisons. It is important to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
 ```{r load in DTU data}
 # start with region region
@@ -293,27 +293,27 @@ Finally, we want to compare to within brain regions across sex.
 ```{r make list for comparing within brain region across sex}
 # make results into a list
 cerebellum_sex_list <- list(
-  `cerebellum sex DGE` = cerebellum_sex_dge_genes,
-  `cerebellum sex DTE` = cerebellum_sex_dte_genes,
-  `cerebellum sex DTU` = cerebellum_sex_dtu_genes
+  `DGE` = cerebellum_sex_dge_genes,
+  `DTE` = cerebellum_sex_dte_genes,
+  `DTU` = cerebellum_sex_dtu_genes
 )
 
 cortex_sex_list <- list(
-  `cortex sex DGE` = cortex_sex_dge_genes,
-  `cortex sex DTE` = cortex_sex_dte_genes,
-  `cortex sex DTU` = cortex_sex_dtu_genes
+  `DGE` = cortex_sex_dge_genes,
+  `DTE` = cortex_sex_dte_genes,
+  `DTU` = cortex_sex_dtu_genes
 )
 
 hippocampus_sex_list <- list(
-  `hippocampus sex DGE` = hippocampus_sex_dge_genes,
-  `hippocampus sex DTE` = hippocampus_sex_dte_genes,
-  `hippocampus sex DTU` = hippocampus_sex_dtu_genes
+  `DGE` = hippocampus_sex_dge_genes,
+  `DTE` = hippocampus_sex_dte_genes,
+  `DTU` = hippocampus_sex_dtu_genes
 )
 
 striatum_sex_list <- list(
-  `striatum sex DGE` = striatum_sex_dge_genes,
-  `striatum sex DTE` = striatum_sex_dte_genes,
-  `striatum sex DTU` = striatum_sex_dtu_genes
+  `DGE` = striatum_sex_dge_genes,
+  `DTE` = striatum_sex_dte_genes,
+  `DTU` = striatum_sex_dtu_genes
 )
 ```
 
