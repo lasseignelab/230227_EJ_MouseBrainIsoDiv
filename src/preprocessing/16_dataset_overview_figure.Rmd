@@ -525,13 +525,62 @@ merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
 
 # use ggplot to make density plots showing the two distributions
 ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
-  geom_density(alpha = .5) + scale_fill_manual(values = other_colors) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = other_colors,
+                    name = "Transcript\nClassification",
+                    labels = c("Annotated", "Novel")) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
+
+ggsave(here("results", "finished_figures", "supp1.png"))
+
+```
+
+What % are expressed with a mean CPM of 1 or higher? 
+
+There are multiple ways we can do this, most simply is looking at the mean across all samples, but if we pivot longer we could be able to look at all of the values.
+
+```{r how many are transcripts are expressed at what level}
+
+novel_cpm_means_df <- merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$novel == TRUE,]
+
+sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
+```
+
+Now, I'm going to try and pivot the data and run the same stat.
+
+```{r transcript expression pivoted version}
+
+novel_cpm <- merged_cpm_iso_means[merged_cpm_iso_means$novel == TRUE, ]
+
+novel_cpm_pivot <- pivot_longer(novel_cpm, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
+
+sum(novel_cpm_pivot$CPM >= 1) / nrow(novel_cpm_pivot) # only 64% now
+
+
+```
+
+Not sure how helpful this is. But the pivot may be useful if we pivot the entire df and then make supp figure again?
+
+```{r pivot entire df}
+
+merged_cpm_iso_means_long <- pivot_longer(merged_cpm_iso_means, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
+
+ggplot(merged_cpm_iso_means_long, aes(x = log10(CPM + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = other_colors,
+                    name = "Transcript\nClassification",
+                    labels = c("Annotated", "Novel")) +
   xlab("log10(Mean CPM + 1)") +
   ylab("Relative Density") +
   theme_minimal(base_size = 12)+
   theme(text = element_text(face = "bold"))
 
 ```
+
+Yeah, I think mean was better anyway. Was worth a try though!
 
 #### Clean up script
 

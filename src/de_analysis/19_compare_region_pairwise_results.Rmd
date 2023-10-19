@@ -25,6 +25,7 @@ suppressPackageStartupMessages({
   library(lintr)
   library(here)
   library(eulerr)
+  library(circlize)
 })
 
 ```
@@ -434,15 +435,27 @@ all_combinations$jaccard_similarity <- as.numeric(all_combinations$jaccard_simil
 ```
 
 ```{r make dtu heatmap}
+better_rownames <- c("Cerebellum vs. Striatum", "Cerebellum vs. Cortex",
+                         "Cerebellum vs. Hippocampus",
+                         "Striatum vs. Hippocampus", "Cortex vs. Striatum",
+                         "Cortex vs. Hippocampus")
+
 col_fun <- colorRamp2(c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7), magma(8))
 
 for_heatmap_1 <- as.data.frame(pivot_wider(all_combinations, names_from = `names(aggregate_dtu_comparisons)`, values_from = jaccard_similarity))
 
-rownames(for_heatmap) <- for_heatmap_1$`names(pairwise_dtu_comparisons)`
+rownames(for_heatmap_1) <- for_heatmap_1$`names(pairwise_dtu_comparisons)`
 
 for_heatmap_1 <- for_heatmap_1[, 2:5]
 
-heatmap_1 <- Heatmap(as.matrix(for_heatmap_1), name = "jaccard similarity", col = col_fun)
+heatmap_1 <- Heatmap(as.matrix(for_heatmap_1), name = "Jaccard Similarity", 
+                     col = col_fun,
+                     row_labels = better_rownames,
+                     row_order = c(3,1,2,6,4,5),
+                     row_names_gp = gpar(fontface = "bold"),
+                     column_labels = c("Cerebellum DTU", "Cortex DTU",
+                                       "Hippocampus DTU", "Striatum DTU"),
+                     column_names_gp = gpar(fontface = "bold"))
 
 heatmap_1
 ```
@@ -460,23 +473,36 @@ all_dge_combinations$jaccard_similarity <- as.numeric(all_dge_combinations$jacca
 ```
 
 ```{r make dge heatmap}
+
 col_fun <- colorRamp2(c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7), magma(8))
 
-for_heatma2 <- as.data.frame(pivot_wider(all_dge_combinations, names_from = `names(aggregate_dge_comparisons)`, values_from = jaccard_similarity))
+for_heatmap_2 <- as.data.frame(pivot_wider(all_dge_combinations, names_from = `names(aggregate_dge_comparisons)`, values_from = jaccard_similarity))
 
-rownames(for_heatma2) <- for_heatmap_2$`names(pairwise_dge_comparisons)`
+rownames(for_heatmap_2) <- for_heatmap_2$`names(pairwise_dge_comparisons)`
 
-for_heatma2 <- for_heatmap_2[, 2:5]
+for_heatmap_2 <- for_heatmap_2[, 2:5]
 
-heatmap_2 <- Heatmap(as.matrix(for_heatmap), name = "jaccard similarity", col = col_fun)
+heatmap_2 <- Heatmap(as.matrix(for_heatmap_2), 
+                     name = "Jaccard Similarity", 
+                     col = col_fun,
+                     row_labels = better_rownames,
+                     row_names_gp = gpar(fontface = "bold"),
+                     column_labels = c("Cerebellum DGE", "Striatum DGE",
+                                       "Cortex DGE", "Hippocampus DGE"),
+                     column_names_gp = gpar(fontface = "bold"))
+heatmap_2 
 
-heatmap_2
 ```
 
 
-
-
 ```{r show both heatmaps with same colors}
+png(here("results", "finished_figures", "supp3.png"),
+  width = 8, height = 6, units = "in", res = 300
+)
+
+draw(heatmap_1 + heatmap_2)
+
+dev.off()
 
 draw(heatmap_1 + heatmap_2)
 
