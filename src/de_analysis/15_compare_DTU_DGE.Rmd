@@ -113,7 +113,7 @@ for (i in dte_files) {
 }
 ```
 
-Finally, load in the DTU data for comparisons. It is imporant to note here that because some of it is stored in lists, I need two different ways of importing the data.
+Finally, load in the DTU data for comparisons. It is important to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
 ```{r load in DTU data}
 # start with region region
@@ -223,39 +223,39 @@ Now that everything is extracted, we need to make it into lists. I'll start with
 
 ```{r prep region region lists}
 cerebellum_cortex_list <- list(
-  `cerebellum cortex DGE` = cerebellum_cortex_dge_genes,
-  `cerebellum cortex DTE` = cerebellum_cortex_dte_genes,
-  `cerebellum cortex DTU` = cerebellum_cortex_dtu_genes
+  `DGE` = cerebellum_cortex_dge_genes,
+  `DTE` = cerebellum_cortex_dte_genes,
+  `DTU` = cerebellum_cortex_dtu_genes
 )
 
 cerebellum_hippocampus_list <- list(
-  `cerebellum hippocampus DGE` = cerebellum_hippocampus_dge_genes,
-  `cerebellum hippocampus DTE` = cerebellum_hippocampus_dte_genes,
-  `cerebellum hippocampus DTU` = cerebellum_hippocampus_dtu_genes
+  `DGE` = cerebellum_hippocampus_dge_genes,
+  `DTE` = cerebellum_hippocampus_dte_genes,
+  `DTU` = cerebellum_hippocampus_dtu_genes
 )
 
 cerebellum_striatum_list <- list(
-  `cerebellum striatum DGE` = cerebellum_striatum_dge_genes,
-  `cerebellum striatum DTE` = cerebellum_striatum_dte_genes,
-  `cerebellum striatum DTU` = cerebellum_striatum_dtu_genes
+  `DGE` = cerebellum_striatum_dge_genes,
+  `DTE` = cerebellum_striatum_dte_genes,
+  `DTU` = cerebellum_striatum_dtu_genes
 )
 
 cortex_hippocampus_list <- list(
-  `cortex hippocampus DGE` = cortex_hippocampus_dge_genes,
-  `cortex hippocampus DTE` = cortex_hippocampus_dte_genes,
-  `cortex hippocampus DTU` = cortex_hippocampus_dtu_genes
+  `DGE` = cortex_hippocampus_dge_genes,
+  `DTE` = cortex_hippocampus_dte_genes,
+  `DTU` = cortex_hippocampus_dtu_genes
 )
 
 cortex_striatum_list <- list(
-  `cortex striatum DGE` = cortex_striatum_dge_genes,
-  `cortex striatum DTE` = cortex_striatum_dte_genes,
-  `cortex striatum DTU` = cortex_striatum_dtu_genes
+  `DGE` = cortex_striatum_dge_genes,
+  `DTE` = cortex_striatum_dte_genes,
+  `DTU` = cortex_striatum_dtu_genes
 )
 
 hippocampus_striatum_list <- list(
-  `hippocampus striatum DGE` = striatum_hippocampus_dge_genes,
-  `hippocampus striatum DTE` = striatum_hippocampus_dte_genes,
-  `hippocampus striatum DTU` = hippocampus_striatum_dtu_genes
+  `DGE` = striatum_hippocampus_dge_genes,
+  `DTE` = striatum_hippocampus_dte_genes,
+  `DTU` = hippocampus_striatum_dtu_genes
 )
 ```
 
@@ -264,27 +264,27 @@ Next, we can do for the individual regions.
 ```{r prep single region data}
 # make results into a list
 cerebellum_list <- list(
-  `cerebellum DGE` = cerebellum_dge_genes,
-  `cerebellum DTE` = cerebellum_dte_genes,
-  `cerebellum DTU` = cerebellum_dtu_genes
+  `DGE` = cerebellum_dge_genes,
+  `DTE` = cerebellum_dte_genes,
+  `DTU` = cerebellum_dtu_genes
 )
 
 cortex_list <- list(
-  `cortex DGE` = cortex_dge_genes,
-  `cortex DTE` = cortex_dte_genes,
-  `cortex DTU` = cortex_dtu_genes
+  `DGE` = cortex_dge_genes,
+  `DTE` = cortex_dte_genes,
+  `DTU` = cortex_dtu_genes
 )
 
 hippocampus_list <- list(
-  `hippocampus DGE` = hippocampus_dge_genes,
-  `hippocampus DTE` = hippocampus_dte_genes,
-  `hippocampus DTU` = hippocampus_dtu_genes
+  `DGE` = hippocampus_dge_genes,
+  `DTE` = hippocampus_dte_genes,
+  `DTU` = hippocampus_dtu_genes
 )
 
 striatum_list <- list(
-  `striatum DGE` = striatum_dge_genes,
-  `striatum DTE` = striatum_dte_genes,
-  `striatum DTU` = striatum_dtu_genes
+  `DGE` = striatum_dge_genes,
+  `DTE` = striatum_dte_genes,
+  `DTU` = striatum_dtu_genes
 )
 ```
 
@@ -293,27 +293,27 @@ Finally, we want to compare to within brain regions across sex.
 ```{r make list for comparing within brain region across sex}
 # make results into a list
 cerebellum_sex_list <- list(
-  `cerebellum sex DGE` = cerebellum_sex_dge_genes,
-  `cerebellum sex DTE` = cerebellum_sex_dte_genes,
-  `cerebellum sex DTU` = cerebellum_sex_dtu_genes
+  `DGE` = cerebellum_sex_dge_genes,
+  `DTE` = cerebellum_sex_dte_genes,
+  `DTU` = cerebellum_sex_dtu_genes
 )
 
 cortex_sex_list <- list(
-  `cortex sex DGE` = cortex_sex_dge_genes,
-  `cortex sex DTE` = cortex_sex_dte_genes,
-  `cortex sex DTU` = cortex_sex_dtu_genes
+  `DGE` = cortex_sex_dge_genes,
+  `DTE` = cortex_sex_dte_genes,
+  `DTU` = cortex_sex_dtu_genes
 )
 
 hippocampus_sex_list <- list(
-  `hippocampus sex DGE` = hippocampus_sex_dge_genes,
-  `hippocampus sex DTE` = hippocampus_sex_dte_genes,
-  `hippocampus sex DTU` = hippocampus_sex_dtu_genes
+  `DGE` = hippocampus_sex_dge_genes,
+  `DTE` = hippocampus_sex_dte_genes,
+  `DTU` = hippocampus_sex_dtu_genes
 )
 
 striatum_sex_list <- list(
-  `striatum sex DGE` = striatum_sex_dge_genes,
-  `striatum sex DTE` = striatum_sex_dte_genes,
-  `striatum sex DTU` = striatum_sex_dtu_genes
+  `DGE` = striatum_sex_dge_genes,
+  `DTE` = striatum_sex_dte_genes,
+  `DTU` = striatum_sex_dtu_genes
 )
 ```
 
