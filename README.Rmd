@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Authors
 
-Emma Jones, TC Howton, Victoria Flanary, and Brittany Lasseigne. 
+Emma Jones, TC Howton, Victoria Flanary, Amanda Clark, and Brittany Lasseigne. 
 
 ## Purpose 
 

@@ -11,17 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Dataset Overview Figure
 
-The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get sample metadata. It takes less than 3 minutes to run and is not finished but is mainly on the shelf for now.
+The purpose of this script is to provide a dataset overview to serve as manuscript figure 1. It is dependent on scripts 00 and 01 to get cpm and sample metadata. 
 
----
-Remaining to do:
-- What about nanopore stats/ long-read information
-- Transcripts lengths etc
-- Consider turning into a table
-- X-axis is squished in panel E
-- Remove underscores from labels
-- delete useless code
----
+Many of the plots from this script contribute to figure 1 of the manuscript. To completely make figure 1, you must also include content from script 10 (the VST PCA, panel B), so you may want to run this script later in your analysis.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -40,20 +32,237 @@ suppressPackageStartupMessages({
   library(here)
   library(hexbin)
   library(viridis)
+  library(cowplot)
+  library(DESeq2)
+  library(patchwork)
 })
+```
+
+I also want to set the color palette.
+
+```{r set color palette}
+# this palette is based on the colorblind-safe light palette by paul tol, with
+# added colors
+EJ_custom_palette <- c(
+  "#EEDD88", "#77AADD", "#FFAABB", "#5D69B1", "#EE8866",
+  "#52BCA3", "#99C945", "#99DDFF", "#DDDDDD"
+)
+
+# set region colors, set to cerebellum, cortex, hippocampus, and striatum
+region_colors <- c("#EE8866", "#99C945", "#52BCA3", "#5D69B1")
+
+# other colors are representing annotated and novel transcripts and/or genes
+other_colors <- c("#77AADD", "#EEDD88")
 ```
 
 #### Load in data
 
+First, we need to load in the processed counts and metadata.
+
 ```{r load in data}
+# load in cpm data
 load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
 
+# drop 0 for accurate counts of transcripts
 counts_drop0 <- merged_counts_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
 
+# drop 0 for accurate cpm of transcripts
+cpm_drop0 <- cpm_iso[rowSums(merged_counts_iso[, -1]) > 0, ]
+
+# drop 0 for accurate counts of genes
 gene_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, -1]
+
+# drop 0 for accurate counts of genes and transcripts
+both_counts_drop0 <- merged_counts[rowSums(merged_counts_iso[, -1]) > 0, ]
 ```
 
-## Plot things!!
+We also need the gtf file for useful information about our transcripts.
+
+```{r read in the gtf file}
+annotation <- read_table(
+  here("data", "nextflow", "bambu", "extended_annotations.gtf"),
+  col_names = c("location", "method", "type", "start", "stop", "blank1", "strand", "blank2", "geneid", "gene_id", "transcriptid", "transcript_id")
+)
+
+# need to message df a little bit
+annotation <- annotation[,-c(2, 6, 8, 9, 11)]
+
+annotation$gene_id <- str_sub(annotation$gene_id, 2, -3)
+
+annotation$transcript_id <- str_sub(annotation$transcript_id, 2, -3)
+
+# pull out info for only transcripts
+transcripts_annotation <- annotation[annotation$type == "transcript",-2]
+```
+
+### Load in VST data for PCA
+
+```{r load in vst data}
+
+source(here("src", "de_analysis", "de_functions.R"))
+
+# read in gene counts data
+gene_counts <- read.table(
+  here("data", "nextflow", "bambu", "counts_gene.txt"),
+  header = TRUE
+)
+
+# rename columns
+colnames(gene_counts) <- str_extract(colnames(gene_counts), "sample..")
+
+dds <- DESeqDataSetFromMatrix(
+  countData = round(gene_counts),
+  colData = sample_collection_metadata,
+  design = ~ sex + tissue
+)
+nrow(dds)
+
+keep <- rowSums(counts(dds)) > 1
+dds <- dds[keep, ]
+nrow(dds)
+
+# vst normalization
+vsd <- vst(dds, blind = FALSE)
+head(assay(vsd), 3)
+
+colData(vsd)
+
+vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) + 
+  scale_color_manual(values = region_colors,
+       labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")) +
+  theme_minimal(base_size = 12) +
+  labs(color = "Tissue") +
+  theme(text = element_text(face = "bold"))
+
+vst_tissue_pca
+```
+### Metadata plots
+
+Here, I want to plot the number of reads per sample. Also, the calculate total number of reads. This will become panel C of figure 1.
+
+```{r make barplot for reads per tissue}
+# geom bar for reads per tissue
+reads_per_tissue_plot <- ggplot(
+  sample_collection_metadata,
+  aes(y = total_reads, x = tissue, fill = tissue)
+) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = region_colors) +
+  scale_x_discrete(
+    labels =
+      c("Cerebellum", "Cortex", "Hippocampus", "Striatum")
+  ) +
+  theme_minimal(base_size = 12) +
+  labs(fill = "Tissue") +
+  xlab("Tissue") +
+  ylab("Total Number of Reads") +
+  theme(axis.title.x.bottom = element_blank(),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    legend.position = "none"
+  ) +
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(reads_per_tissue_plot, here("results", "plots", "bar_plots", "reads_per_sample.png"),
+  width = 6, height = 5
+)
+
+# get sum of total reads
+sum(sample_collection_metadata$total_reads)
+```
+
+total reads: 85909493
+
+I can also plot other metadata, such as RIN and read length, as histograms. These metadata histograms can be part of the supplementary information.
+
+```{r plot other metadata histograms}
+# reads per sample
+ggplot(sample_collection_metadata, aes(x = total_reads)) +
+  geom_histogram(bins = 10) +
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
+  width = 6, height = 4
+)
+
+# RIN per sample
+ggplot(sample_collection_metadata, aes(x = RIN)) +
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(here("results", "plots", "histograms", "RIN_per_sample.png"),
+  width = 6, height = 4
+)
+
+# median length per sample
+ggplot(sample_collection_metadata, aes(x = med_len)) +
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(here("results", "plots", "histograms", "length_per_sample.png"),
+  width = 6, height = 4
+)
+
+# N50 per sample
+ggplot(sample_collection_metadata, aes(x = N50)) +
+  geom_histogram() +
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(here("results", "plots", "histograms", "n50_per_sample.png"),
+  width = 6, height = 4
+)
+```
+
+### Novel genes and transcripts
+
+For figure 1, we are interested in plotting the numbers of novel genes and transcripts. 
+
+First, we can start with a bar plot of the number of novel genes. Any novel gene identified by bambu will have a "gene." prefix and a number. This corresponds to panel D.
+
+```{r barplot genes}
+# get number of unique genes
+genes <- unique(gene_counts_drop0$GENEID)
+
+# pull novel unique genes
+novel_genes <- genes[!is.na(str_extract(genes, "gene*..."))]
+# get number of novel unique genes
+length(novel_genes)
+
+# make into data frame
+gene_data <- data.frame(
+  gene_novelty = c("novel", "annotated"),
+  count = c(length(novel_genes), length(genes) - length(novel_genes))
+)
+
+# barplot
+novel_genes_plot <- ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = other_colors) +
+  geom_text(aes(label = count),
+    position = position_dodge(width = 0.9), vjust = -0.25
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels = c("Annotated", "Novel")) +
+  xlab("Gene Novelty") +
+  ylab("Number of Genes")+
+  theme(text = element_text(face = "bold")) +
+  coord_cartesian(clip = "off")
+
+# save
+ggsave(novel_genes_plot, here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+  width = 3, height = 4
+)
+```
+
+Next, we can start with a bar plot of the number of novel transcripts. Any novel transcript identified by bambu will have a "tx." prefix and a number. This corresponds to panel E.
 
 ```{r barplot txs}
 # get number of novel transcripts
@@ -66,110 +275,207 @@ transcript_data <- data.frame(
 )
 
 # barplot
-ggplot(transcript_data, aes(
+novel_txs_plot <- ggplot(transcript_data, aes(
   x = transcript_novelty, y = count,
   fill = transcript_novelty
 )) +
   geom_bar(position = "dodge", stat = "identity") +
-  scale_fill_viridis(discrete = TRUE, begin = 0.3, end = 0.9) +
-  geom_text(aes(label = count),
-    position = position_dodge(width = 0.9),
-    vjust = -0.25
-  )
-
-# save
-ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
-  width = 3, height = 4
-)
-```
-
-```{r barplot genes}
-# get number of unique genes
-genes <- unique(gene_counts_drop0$GENEID)
-
-# get novel unique genes
-gns <- sum(!is.na(str_extract(genes, "gene*...")))
-
-# make into data frame
-gene_data <- data.frame(
-  gene_novelty = c("novel", "annotated"),
-  count = c(gns, length(genes) - gns)
-)
-
-# barplot
-ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  scale_fill_viridis(discrete = TRUE, begin = 0.2, end = 0.6) +
+  scale_fill_manual(values = other_colors) +
   geom_text(aes(label = count),
     position = position_dodge(width = 0.9), vjust = -0.25
-  )
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(labels = c("Annotated", "Novel")) +
+  xlab("Transcript Novelty") +
+  ylab("Number of Transcripts")+
+  theme(text = element_text(face = "bold")) +
+  coord_cartesian(clip = "off")
 
 # save
-ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+ggsave(novel_txs_plot <- here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
   width = 3, height = 4
 )
 ```
 
-transcripts per gene
+In addition, you can also calculate the number of transcripts per gene and make a histogram. This corresponds to panel F.
 
 ```{r get transcripts per gene}
-gene_matches <- merged_counts[, 1:2]
+# get just transcripts and gene ids
+gene_matches <- both_counts_drop0[, 1:2]
 
+# group by gene
 tx_per_gene <- gene_matches %>%
   group_by(GENEID) %>%
   summarise(`transcript count` = n(), .groups = "drop")
 
-ggplot(tx_per_gene, aes(x = `transcript count`)) +
+# save table
+write_csv(tx_per_gene,
+          here("results", "all_txs", "txs_per_gene.csv"),
+          quote = "none")
+
+# plot
+tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
-  xlim(0, 25)
+  xlim(0, 25) +
+  xlab("Transcripts per Gene") +
+  ylab("Number of Genes") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
 
-ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+# save
+ggsave(tx_per_gene_plot, here("results", "plots", "histograms", "transcripts_per_gene.png"))
+
+# what is the mean number of tx per gene
+mean(tx_per_gene$`transcript count`)
+```
+
+Another request I had was to make a histogram of novel transcripts by gene. 
+
+So, I will first pull out the novel genes, then do the reverse.
+
+```{r make histogram of transcripts by novel gene}
+# pull out novel transcripts by gene
+tx_per_novel_gene <- tx_per_gene[tx_per_gene$GENEID %in% novel_genes, ]
+
+# save table
+write_csv(tx_per_novel_gene,
+          here("results", "novel_genes", "txs_per_novel_gene.csv"),
+          quote = "none")
+
+# plot
+ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Transcripts per Gene") +
+  ylab("Number of Genes") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
+
+# save
+ggsave(here("results", "plots", "histograms", "transcripts_per_novel_gene.png"))
+```
+
+I also want to make a supplemental table of these transcripts so that it can be referenced.
+
+```{r make supp table for novel transcripts}
+# isolate novel transcripts
+novel_txs <- gene_matches[!is.na(str_extract(gene_matches$TXNAME, "tx*...")), ]
+
+# save novel transcripts with gene id
+write_csv(novel_txs,
+          here("results", "novel_txs", "novel_txs_geneids.csv"),
+          quote = "none")
+
+# count number of novel transcripts that belong to a novel gene
+nrow(novel_txs[!is.na(str_extract(novel_txs$GENEID, "gene*...")), ]) # 309
+
+# how many novel transcripts belong to a known gene?
+nrow(novel_txs[is.na(str_extract(novel_txs$GENEID, "gene*...")), ]) # 73
+
+# group by gene
+novel_tx_per_gene <- novel_txs %>%
+  group_by(GENEID) %>%
+  summarise(`transcript count` = n(), .groups = "drop")
+
+# save table
+write_csv(novel_tx_per_gene,
+          here("results", "novel_txs", "novel_txs_per_gene.csv"),
+          quote = "none")
+
+# plot
+ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Transcripts per Gene") +
+  ylab("Number of Genes") +
+  theme_minimal(base_size = 12) +
+  theme(text = element_text(face = "bold"))
+
+# save plot
+ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
+
+```
+
+I also want to have more location about these novel transcripts, such as their chromosomal locations. I can get this from the annotation gtf.
+
+```{r pull novel transcripts from annotation}
+
+novel_transcripts_annotation <- transcripts_annotation[transcripts_annotation$transcript_id %in% novel_txs$TXNAME,]
+
+write_csv(novel_transcripts_annotation,
+          here("results", "novel_txs", "novel_txs_annotation.csv"),
+          quote = "none")
+  
+```
+
+I also want to do this for novel genes and include and all transcripts for these genes.
+
+```{r pull novel genes from annotation}
+
+novel_genes_annotation <- transcripts_annotation[transcripts_annotation$gene_id %in% novel_genes,]
+
+write_csv(novel_genes_annotation,
+          here("results", "novel_genes", "novel_genes_annotation.csv"),
+          quote = "none")
+  
+```
+
+## Create final figure
+
+Now that individual plots have been saved, I can create the final figure, aside from the cartoon. I will use plot_grid from cowplot for this
+
+```{r put all plots together}
+
+top_row <- plot_grid(vst_tissue_pca, reads_per_tissue_plot, labels = c("B", "C"), rel_widths = c(2, 1))
+
+top_row
+
+bottom_row <- plot_grid(novel_genes_plot, novel_txs_plot, tx_per_gene_plot, labels = c("D", "E", "F"), rel_widths = c(0.5, 0.5, 1), nrow = 1)
+
+bottom_row
+
+final_figure1 <- plot_grid(top_row, bottom_row, ncol = 1)
+
+final_figure1
+
+png(here("results", "finished_figures", "figure1.png"), width = 8, height = 7, units = "in", res = 300)
+final_figure1
+dev.off()
+
 ```
 
 
-```{r plot metadata histograms}
-# reads per sample
-ggplot(sample_collection_metadata, aes(x = total_reads)) +
-  geom_histogram(bins = 10)
+### Biological replicate agreement
 
-ggsave(here("results", "plots", "histograms", "reads_per_sample.png"),
-  width = 6, height = 4
-)
+Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill, meaning they are both from female cerebellum. Just choosing two samples may not be the best way to show this, potentially could make a heatmap of all correlations and annotate the heatmap with correct sample information.
 
-# RIN per sample
-ggplot(sample_collection_metadata, aes(x = RIN)) +
-  geom_histogram()
+```{r biological replicate agreement}
+# plot
+ggplot(log10(cpm + 1), aes(x = sample06, y = sample14)) +
+  geom_hex(binwidth = c(0.08, 0.13)) +
+  scale_fill_viridis_c(limits = c(0, 500))
 
-# median length per sample
-ggplot(sample_collection_metadata, aes(x = med_len)) +
-  geom_histogram()
-
-# N50 per sample
-ggplot(sample_collection_metadata, aes(x = N50)) +
-  geom_histogram()
-
-# geom bar for reads per tissue
-ggplot(
-  sample_collection_metadata,
-  aes(y = total_reads, x = tissue, fill = tissue)
-) +
-  geom_bar(stat = "identity")
-
-ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
-  width = 6, height = 4
-)
-
-sum(sample_collection_metadata$total_reads)
+# what is the correlation between these samples?
+cor.test(cpm$sample06, cpm$sample14, method = "pearson")
 ```
-total reads: 85909493
 
-what are the most highly expressed novel transcripts??
+Expected results: cor 0.9304667, p-value < 2.2e-16
 
-```{r pull highest expressed transcripts}
+### Transcript exploration
+
+The goal of this part of the analysis is to look at expression levels of novel  genes and transcripts.
+
+So, what are the some of the most highly expressed novel transcripts?
+
+```{r look at expression (counts) of annotated vs novel txs}
 novel_counts <- merged_counts_iso[merged_counts_iso$isoform_id %like% "tx", ]
 novel_counts$means <- apply(novel_counts[, -1], 1, mean)
 
 novel_tx_count_means <- novel_counts[, c(1, 42)]
+
+hist(novel_tx_count_means$means)
 
 # compare to annotated
 annotated_counts <-
@@ -185,72 +491,96 @@ merged_counts_iso_means$means <- apply(merged_counts_iso[, -1], 1, mean)
 merged_counts_iso_means$novel <- merged_counts_iso$isoform_id %like% "tx"
 ```
 
-actually, lets see if that agrees when I do to cpm normalized counts
+Actually, I think it is better to use the cpm normalized counts for this, so let's do the same thing again.
 
-```{r cpm iso}
+```{r look at expression (cpm) of annotated vs novel txs}
+# pull out novel tx cpm expression
 novel_cpm <- cpm_iso[cpm_iso$isoform_id %like% "tx", ]
 novel_cpm$means <- apply(novel_cpm[, -1], 1, mean)
 
 novel_tx_cpm_means <- novel_cpm[, c(1, 42)]
+
+hist(novel_tx_cpm_means$means)
+
+# compare to annotated
+annotated_cpm <-
+  cpm_iso[!cpm_iso$isoform_id %like% "tx", ]
+annotated_cpm$means <- apply(annotated_cpm[, -1], 1, mean)
+
+annotated_tx_cpm_means <- annotated_cpm[, c(1, 42)]
+
+hist(annotated_tx_cpm_means$means)
 ```
 
-Once I get the top novel genes, I can look at their locations using the genome annotation file that we get as an output from bambu.
+The histograms aren't quite right, and I think we want a more direct comparison between annotated and novel transcripts, so I'll make a density plot.
 
-```{r read in the gtf file}
-annotation <- read_table(
-  here("data", "nextflow", "bambu", "extended_annotations.gtf"),
-  col_names = FALSE
-)
+```{r plot denisty plot of expression distributions}
+# plot - need to data wrangle
+merged_cpm_iso_means <- cpm_drop0
+merged_cpm_iso_means$means <- apply(merged_cpm_iso_means[, -1], 1, mean)
+
+merged_cpm_iso_means$novel <- merged_cpm_iso_means$isoform_id %like% "tx"
+
+merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
+
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = other_colors,
+                    name = "Transcript\nClassification",
+                    labels = c("Annotated", "Novel")) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
+
+ggsave(here("results", "finished_figures", "supp1.png"))
+
 ```
 
-Here I am manually looking up the chr locataions of the toel novel genes. I should try to automate this somehow but have not gotten to it yet.
+What % are expressed with a mean CPM of 1 or higher? 
 
-### Biological replicate agreement
+There are multiple ways we can do this, most simply is looking at the mean across all samples, but if we pivot longer we could be able to look at all of the values.
 
-Another thing we can do to show dataset quality is to show biological replicate agreement for samples that are the same brain region and sex across batches. I'm going to show samples 14 and 6 since they fit that bill.
+```{r how many are transcripts are expressed at what level}
 
-```{r biological replicate agreement}
-ggplot(cpm, aes(x = log2(sample06), y = log2(sample14))) +
-  geom_point()
+novel_cpm_means_df <- merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$novel == TRUE,]
 
-ggplot(cpm, aes(x = log10(sample06), y = log10(sample14))) +
-  geom_point()
-
-ggplot(cpm, aes(x = sample06, y = sample14, alpha = 0.1)) +
-  geom_point()
-
-ggplot(log2(cpm + 1), aes(x = sample06, y = sample14, alpha = 0.1)) +
-  geom_point()
-
-cor(cpm$sample06, cpm$sample16, method = "pearson")
-
-cor.test(cpm$sample09, cpm$sample14, method = "pearson")
-
-ggplot(log10(cpm + 1), aes(x = sample06, y = sample14)) +
-  geom_hex(binwidth = c(0.08, 0.13)) +
-  scale_fill_viridis_c(limits = c(0, 500))
-
-ggplot(log2(cpm + 1), aes(x = sample06, y = sample14)) +
-  geom_hex(binwidth = c(0.3, 0.4)) +
-  scale_fill_viridis_c(limits = c(0, 600)) +
-  geom_abline(slope = 1, intercept = 0)
+sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
 ```
 
-Expected results: cor 0.9304667, p-value < 2.2e-16
+Now, I'm going to try and pivot the data and run the same stat.
 
-I can also extract the top 50 expressed transcripts for interproscan, though we dont get much information out of this.
+```{r transcript expression pivoted version}
 
-```{r extract top 50 expressed novel transcripts}
-novel_tx_cpm_means <- novel_tx_cpm_means[order(-novel_tx_cpm_means$means), ]
+novel_cpm <- merged_cpm_iso_means[merged_cpm_iso_means$novel == TRUE, ]
 
-top50_txs <- head(novel_tx_cpm_means$isoform_id, 50)
+novel_cpm_pivot <- pivot_longer(novel_cpm, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
 
-write.table(top50_txs,
-  here("data", "interproscan", "top50_txs.txt"),
-  quote = FALSE,
-  row.names = FALSE, col.names = FALSE
-)
+sum(novel_cpm_pivot$CPM >= 1) / nrow(novel_cpm_pivot) # only 64% now
+
+
 ```
+
+Not sure how helpful this is. But the pivot may be useful if we pivot the entire df and then make supp figure again?
+
+```{r pivot entire df}
+
+merged_cpm_iso_means_long <- pivot_longer(merged_cpm_iso_means, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
+
+ggplot(merged_cpm_iso_means_long, aes(x = log10(CPM + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(values = other_colors,
+                    name = "Transcript\nClassification",
+                    labels = c("Annotated", "Novel")) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12)+
+  theme(text = element_text(face = "bold"))
+
+```
+
+Yeah, I think mean was better anyway. Was worth a try though!
 
 #### Clean up script
 

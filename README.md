@@ -1,12 +1,13 @@
 README
 ================
-2023-07-27
+2023-10-11
 
 # Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
 
 ## Authors
 
-Emma Jones, TC Howton, Victoria Flanary, and Brittany Lasseigne.
+Emma Jones, TC Howton, Victoria Flanary, Amanda Clark, and Brittany
+Lasseigne.
 
 ## Purpose
 
@@ -24,6 +25,8 @@ isoform usage differences across brain region and sex.
     ## │   ├── 12_DESeq2_region_sex.Rmd
     ## │   ├── 13_incorporate_de_results.Rmd
     ## │   ├── 15_compare_DTU_DGE.Rmd
+    ## │   ├── 19_compare_region_pairwise_results.Rmd
+    ## │   ├── 20_enrichment_analysis.Rmd
     ## │   └── de_functions.R
     ## ├── dtu_analyses
     ## │   ├── 01_calculate_cpm.R
@@ -46,6 +49,23 @@ isoform usage differences across brain region and sex.
     ## │   ├── 20010631.c0158.err.txt
     ## │   ├── 20010631.c0158.out.txt
     ## │   └── README
+    ## ├── shiny_app
+    ## │   ├── app.R
+    ## │   ├── complete_switchlists
+    ## │   │   ├── region_all_list_orf_de_pfam.Rds
+    ## │   │   ├── region_region_orf_de_pfam.Rds
+    ## │   │   └── region_sex_list_orf_de_pfam.Rds
+    ## │   ├── server.R
+    ## │   ├── ui.R
+    ## │   └── www
+    ## │       ├── DTU_example.png
+    ## │       ├── code.js
+    ## │       ├── favicon.ico
+    ## │       ├── graphical_abstract.png
+    ## │       ├── logo_only.png
+    ## │       └── style.css
+    ## ├── shiny_support
+    ## │   └── calculate_cpm_convert_ids.R
     ## └── worm_analysis
     ##     ├── 17_dtu_whole_worm.Rmd
     ##     ├── 18_compare_worm_mouse.Rmd
