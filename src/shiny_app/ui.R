@@ -25,7 +25,7 @@ welcome_about <- tabPanel(
       "used long-read",
       a("Oxford Nanopore Technologies", href = "https://nanoporetech.com/"),
       "RNA sequencing (RNA-Seq) to sequence 40 mouse brain cDNA libraries",
-      "from 10 mice and calculated differential transcript usage.",
+      "from 10 wild type mice and calculated differential transcript usage.",
       "We found that there is strong evidence of differential transcript usage",
       "across brain regions as well as differential expression at the gene and",
       "transcript level.",
@@ -107,8 +107,8 @@ welcome_about <- tabPanel(
     p(
       class = "welcome-about-p",
       "For any issues or inquiries about this website or its related",
-      "publication, please contact Emma Jones (efjones@uab.edu) or",
-      "Brittany Lasseigne (bnp0001@uab.edu)."
+      "publication, please contact Emma Jones (efjones -at- uab.edu) or",
+      "Brittany Lasseigne (bnp0001 -at- uab.edu)."
     ),
     hr(),
     div(
@@ -175,7 +175,7 @@ single_region_plot <- tabPanel(
     sidebarPanel(
       p(
         "Are you interested in comparing differential transcript usage across",
-        "a single brain region compared to other regions?"
+        "a single brain region compared to other regions in aggregate?"
       ),
       p(
         "If you are, select a gene name and a brain region to focus on.",
@@ -216,7 +216,7 @@ single_region_plot <- tabPanel(
 
 # pairwise brain region switchplot tab
 pairwise_region_plot <- tabPanel(
-  title = "Compare Two Brain Regions",
+  title = "Pairwise Brain Region Comparison",
   br(),
   br(),
   br(),
@@ -278,7 +278,7 @@ pairwise_region_plot <- tabPanel(
 
 # within brain region across sexes switchplot tab
 sex_region_plot <- tabPanel(
-  title = "Compare Sex Within a Brain Region",
+  title = "Compare Sexes Within a Brain Region",
   br(),
   br(),
   br(),
@@ -332,7 +332,7 @@ ui <- navbarPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
     tags$script(type = "text/javascript", src = "code.js")
   ),
-  title = "Visualizing Isoform Switches in Wild Type Mouse Brain",
+  title = "Visualizing Isoform Switches in Wild-Type Mouse Brain",
   position = "fixed-top",
   welcome_about,
   gene_exp_heatmap,
