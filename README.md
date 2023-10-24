@@ -1,19 +1,31 @@
 README
 ================
-2023-10-11
+2023-10-24
 
-# Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
+# Nanopore long-read RNA sequencing shows region-specific sex differences in wild-type mouse brain mRNA isoform expression and usage
+
+Preprint DOI Docker DOI Zenodo DOI GEO
 
 ## Authors
 
-Emma Jones, TC Howton, Victoria Flanary, Amanda Clark, and Brittany
-Lasseigne.
+**Emma F. Jones, Timothy C. Howton, Victoria L. Flanary, Amanda D.
+Clark, and Brittany N. Lasseigne.**
 
-## Purpose
+The University of Alabama at Birmingham, Heersink School of Medicine,
+Department of Cell, Developmental and Integrative Biology
+
+## Project Overview
 
 The purpose of this project is to analyze Oxford Nanopore RNA sequencing
-from four wildtype mouse brain regions balanced for sex, to assay
-isoform usage differences across brain region and sex.
+from four wild-type mouse brain regions balanced for sex, to assay
+isoform usage and expression differences across brain region and sex.
+
+<figure>
+<img
+src="https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png"
+alt="project overview figure" />
+<figcaption aria-hidden="true">project overview figure</figcaption>
+</figure>
 
 ## Scripts
 
@@ -27,6 +39,8 @@ isoform usage differences across brain region and sex.
     ## │   ├── 15_compare_DTU_DGE.Rmd
     ## │   ├── 19_compare_region_pairwise_results.Rmd
     ## │   ├── 20_enrichment_analysis.Rmd
+    ## │   ├── 21_create_supp_fig_2.Rmd
+    ## │   ├── 22_investigate_non-sig_dte.Rmd
     ## │   └── de_functions.R
     ## ├── dtu_analyses
     ## │   ├── 01_calculate_cpm.R
@@ -172,14 +186,28 @@ RUN IN PFAM DOCKER!
 ***Script 15: de_analysis/15_compare_DTU_DGE.Rmd*** - This script
 depends on scripts 00-14. The purpose of this script is to compare genes
 with differential gene expression, differential transcript usage, and
-differential transcript expression. Run back in github docker. It is not
-currently finished.
+differential transcript expression. Must run in docker 1.7 to have all
+packages.
 
 ***Script 16: de_analysis/16_dataset_overview_figure.Rmd*** - The
 purpose of this script is to provide a dataset overview to serve as
 manuscript figure 1. It is dependent on scripts 00 and 01 to get sample
-metadata. It takes less than 3 minutes to run and is not finished but is
-mainly on the shelf for now.
+metadata. Must run in github docker 1.7 or above.
+
+***Script 19: de_analysis/19_compare_region_pairwise_results.Rmd*** -
+The purpose of this script is to determine how many DTU genes or DEGs
+are specific to a study design. I used Jaccard Similarity to see how
+similar the results are to each other and create supp figure 3. Must run
+in github docker 1.7 or above.
+
+***Script 20: de_analysis/20_enrichment_analysis.Rmd*** - The purpose of
+this script is to perform functional enrichment analysis with the
+package gprofiler2 on the DGE and DTE genes. This script is fully
+dependent on scripts 00-12. Must run in github docker 1.7 or above.
+
+***Script 21: de_analysis/21_create_supp_fig_2.Rmd*** - The purpose of
+this script is to create supplementary figure 2. This script is fully
+dependent on scripts 00-12.
 
 #### Other Scripts
 
@@ -217,10 +245,14 @@ UAB Lab Startup funds (PI: Lasseigne)
 
 ## Acknowledgements
 
-We acknowledge the members of the Lasseigne Lab for their thoughtful
-feedback.
+We acknowledge all current and past members of the Lasseigne Lab for
+their thoughtful feedback, especially Vishal H. Oza, Tabea M. Soelter,
+and Elizabeth J. Wilk.
 
 ## License
 
 This repository is licensed under the MIT License, see LICENSE
 documentation within this repository for more details.
+
+[![MIT
+License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
