@@ -536,6 +536,11 @@ ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
 
 ggsave(here("results", "finished_figures", "supp1.png"))
 
+rank_sum <- wilcox.test(merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == TRUE],
+           merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE])
+
+rank_sum[["p.value"]]
+
 ```
 
 What % are expressed with a mean CPM of 1 or higher? 
