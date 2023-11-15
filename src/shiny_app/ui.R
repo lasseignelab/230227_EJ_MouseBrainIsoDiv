@@ -43,8 +43,8 @@ welcome_about <- tabPanel(
       align = "center",
       tags$img(
         src = "graphical_abstract.png",
-        width = "1001px",
-        height = "273px"
+        width = "900px",
+        height = "225px"
       ),
       tags$figcaption(
         "Graphical overview of our data generation and analysis",

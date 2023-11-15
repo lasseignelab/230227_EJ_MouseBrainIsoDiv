@@ -1,17 +1,7 @@
-README
+Nanopore long-read RNA sequencing shows region-specific sex differences
+in wild-type mouse brain mRNA isoform expression and usage
 ================
-2023-10-24
-
-# Nanopore long-read RNA sequencing shows region-specific sex differences in wild-type mouse brain mRNA isoform expression and usage
-
-Preprint DOI  
-Docker DOI  
-Zenodo DOI  
-GEO
-
-You can also visit our Shiny Application that accompanies this analysis:
-
-<https://lasseignelab.shinyapps.io/mouse_brain_iso_div/>
+2023-11-15
 
 ## Authors
 
@@ -27,16 +17,19 @@ The purpose of this project is to analyze Oxford Nanopore RNA sequencing
 from four wild-type mouse brain regions balanced for sex, to assay
 isoform usage and expression differences across brain region and sex.
 
-<figure>
-<img
-src="https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png"
-alt="We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses" />
-<figcaption aria-hidden="true">We extracted RNA from 40 samples, four
-brain regions each from 10 mice balanced for sex with and sequenced on
-an ONT GridION. We processed this data with the nf-core nanoseq pipeline
-and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for
-downstream analyses</figcaption>
-</figure>
+![We extracted RNA from 40 samples, four brain regions each from 10 mice
+balanced for sex with and sequenced on an ONT GridION. We processed this
+data with the nf-core nanoseq pipeline and used DESeq2,
+IsoformSwitchAnalyzeR, and custom scripts for downstream
+analyses](https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png)
+Preprint DOI  
+Docker DOI  
+Zenodo DOI  
+<https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705>
+
+You can also visit our Shiny Application that accompanies this analysis:
+
+<https://lasseignelab.shinyapps.io/mouse_brain_iso_div/>
 
 ## Scripts
 
@@ -47,8 +40,6 @@ downstream analyses</figcaption>
     ## ├── 02_get_genome_annotations.sh
     ## ├── 03_create_isoform_fa.sh
     ## ├── 16_dataset_overview_figure.Rmd
-    ## ├── 20010631.c0158.err.txt
-    ## ├── 20010631.c0158.out.txt
     ## └── README
 
 ***Script 00: preprocessing/00_run_nanoseq.sh*** - This script can be
@@ -218,6 +209,13 @@ to work.
     ## │   ├── region_all_list_orf_de_pfam.Rds
     ## │   ├── region_region_orf_de_pfam.Rds
     ## │   └── region_sex_list_orf_de_pfam.Rds
+    ## ├── data
+    ## │   ├── combined_cpm.Rds
+    ## │   └── sample_collection_metadata.Rds
+    ## ├── rsconnect
+    ## │   └── shinyapps.io
+    ## │       └── lasseignelab
+    ## │           └── mouse_brain_iso_div.dcf
     ## ├── server.R
     ## ├── ui.R
     ## └── www
@@ -273,8 +271,11 @@ UAB Lab Startup funds (PI: Lasseigne)
 ## Acknowledgements
 
 We acknowledge all current and past members of the Lasseigne Lab for
-their thoughtful feedback, especially Vishal H. Oza, Tabea M. Soelter,
-and Elizabeth J. Wilk.
+their thoughtful feedback, especially Tabea M. Soelter, Jordan H.
+Whitlock, Vishal H. Oza, and Elizabeth J. Wilk. We would like to thank
+the UAB Biological Data Sciences (UAB-BDS) core for its expertise,
+institutional support, and maintenance of the nf-core nanoseq pipeline
+and docker/singularity container documentation.
 
 ## License
 

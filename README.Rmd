@@ -1,5 +1,5 @@
 ---
-title: "README"
+title: "Nanopore long-read RNA sequencing shows region-specific sex differences in wild-type mouse brain mRNA isoform expression and usage"
 author:
 output: github_document
 date: "`r Sys.Date()`"
@@ -8,17 +8,6 @@ date: "`r Sys.Date()`"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-# Nanopore long-read RNA sequencing shows region-specific sex differences in wild-type mouse brain mRNA isoform expression and usage
-
-Preprint DOI  
-Docker DOI  
-Zenodo DOI  
-GEO  
-
-You can also visit our Shiny Application that accompanies this analysis:  
-  
-https://lasseignelab.shinyapps.io/mouse_brain_iso_div/
 
 ## Authors
 
@@ -31,6 +20,14 @@ The University of Alabama at Birmingham, Heersink School of Medicine, Department
 The purpose of this project is to analyze Oxford Nanopore RNA sequencing from four wild-type mouse brain regions balanced for sex, to assay isoform usage and expression differences across brain region and sex.
 
 ![We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses](https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png)
+Preprint DOI  
+Docker DOI  
+Zenodo DOI  
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705  
+
+You can also visit our Shiny Application that accompanies this analysis:  
+  
+https://lasseignelab.shinyapps.io/mouse_brain_iso_div/
 
 ## Scripts 
 
@@ -138,7 +135,7 @@ UAB Lab Startup funds (PI: Lasseigne)
 
 ## Acknowledgements 
 
-We acknowledge all current and past members of the Lasseigne Lab for their thoughtful feedback, especially Vishal H. Oza, Tabea M. Soelter, and Elizabeth J. Wilk.
+We acknowledge all current and past members of the Lasseigne Lab for their thoughtful feedback, especially Tabea M. Soelter, Jordan H. Whitlock, Vishal H. Oza, and Elizabeth J. Wilk. We would like to thank the UAB Biological Data Sciences (UAB-BDS) core for its expertise, institutional support, and maintenance of the nf-core nanoseq pipeline and docker/singularity container documentation.
 
 ## License 
 
