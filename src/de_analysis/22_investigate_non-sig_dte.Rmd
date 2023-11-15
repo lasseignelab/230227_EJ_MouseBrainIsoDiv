@@ -1,0 +1,67 @@
+---
+title: "Investigate non-significant DTE results"
+author: "Emma Jones"
+date: "2023-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The purpose of this script is to figure out why so many genes have non-significant DTE/isoform expression but do have significant DTU/isoform usage.
+
+### Load in packages
+
+```{r load in packages}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+  library(eulerr)
+  library(circlize)
+})
+
+```
+
+
+
+```{r read in data}
+load(here("data", "cpm_out", "cpm_counts_metadata.RData"))
+
+region_region_switchlist <- readRDS(
+  here("data", "switchlist_objects", "de_added", "region_region_orf_de.Rds")
+)
+
+region_all_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_all_switchlist_list_orf_de.Rds"
+  )
+)
+
+region_sex_switchlist_list <- readRDS(
+  here(
+    "data", "switchlist_objects", "de_added",
+    "region_sex_switchlist_list_orf_de.Rds"
+  )
+)
+```
+
+I want to pull my genes of interest, and make ridge plots so I can see expression levels.
+
+Our genes we are most interested in are Anxa7, Mtcl1, and Rab28. The ensembl IDs for these are ENSMUSG00000021814.18, ENSMUSG00000052105.18
+
+```{r pull genes}
+
+interesting_genes <- c("ENSMUSG00000021814.18", "ENSMUSG00000052105.18", "ENSMUSG00000029128.13")
+
+cpm_geneids <- cbind(merged_counts[,1:2], cpm)
+
+interesting_cpm <- cpm_geneids[cpm_geneids$GENEID %in% interesting_genes,]
+
+```
