@@ -163,7 +163,7 @@ reads_per_tissue_plot <- ggplot(
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(reads_per_tissue_plot, here("results", "plots", "bar_plots", "reads_per_sample.png"),
+ggsave(reads_per_tissue_plot <- here("results", "plots", "bar_plots", "reads_per_sample.png"),
   width = 6, height = 5
 )
 
@@ -257,7 +257,7 @@ novel_genes_plot <- ggplot(gene_data, aes(x = gene_novelty, y = count, fill = ge
   coord_cartesian(clip = "off")
 
 # save
-ggsave(novel_genes_plot, here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+ggsave(novel_genes_plot <- here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
   width = 3, height = 4
 )
 ```
@@ -327,7 +327,7 @@ tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(tx_per_gene_plot, here("results", "plots", "histograms", "transcripts_per_gene.png"))
+ggsave(tx_per_gene_plot <- here("results", "plots", "histograms", "transcripts_per_gene.png"))
 
 # what is the mean number of tx per gene
 mean(tx_per_gene$`transcript count`)
