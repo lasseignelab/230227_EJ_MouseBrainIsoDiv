@@ -1,5 +1,5 @@
 ---
-title: "comparing DTU and DGE"
+title: "Comparing DTU, DTE, and DGE"
 author: "Emma Jones"
 date: "2023-06-01"
 output: html_document
@@ -9,9 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Comparing DTU, DTE, and DGE
+# Comparing DTU, DTE, and DGE
 
-The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. It requires the eulerr package, which is in docker 1.6 and above. To create figure 2 using cowplot, you must be using docker 1.7.
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression. You must be using docker 1.7. It makes eulerr and upset plots for all overlapping comparisons. These eulerr plots are used in figure 3 of the manuscript.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -39,33 +39,22 @@ suppressPackageStartupMessages({
 source("de_functions.R")
 ```
 
-Set color palettes
+### Set color palettes
 
-```{r get stacked bar plot colors}
-# get colors
+I get my colors based on palettes from Paul Tol: https://personal.sron.nl/~pault/
 
-# From Paul Tol: https://personal.sron.nl/~pault/
+My palette borrows other colors from tol_light that were less similar to the three I chose for my eulerr diagrams.
 
-Tol_muted <- c(
-  "#88CCEE", "#44AA99", "#117733", "#332288", "#DDCC77", "#999933",
-  "#CC6677", "#882255", "#AA4499", "#DDDDDD"
-)
-
-Tol_light <- c(
-  "#44BB99", "#BBCC33", "#FFAABB", "#EE8866", "#EEDD88", "#77AADD",
-  "#99DDFF", "#DDDDDD", "#AAAA00"
-)
-
-# my palette borrows other colors from tol_light not similar to the three I
-# chose for my venn diagrams
-
+```{r get colors}
 EJ_custom_palette <- c(
-  "#EEDD88", "#77AADD", "#FFAABB", "#5D69B1", "#EE8866",
-  "#52BCA3", "#99C945", "#99DDFF", "#DDDDDD"
+  "#EEDD88", "#77AADD", "#FFAABB", "#5D69B1", "#EE8866", "#52BCA3", "#99C945",
+  "#99DDFF", "#DDDDDD"
 )
 ```
 
-### Load in Data
+## Load in Data
+
+#### Load in DGE data
 
 First, we want to load in the DGE data
 
@@ -85,6 +74,8 @@ for (i in dge_files) {
   )
 }
 ```
+
+#### Load in DTE data
 
 Next, we need to pull in the transcript counts files to get gene name information for all transcripts and load in the DTE lists.
 
@@ -112,6 +103,8 @@ for (i in dte_files) {
   )
 }
 ```
+
+#### Load in DTU data
 
 Finally, load in the DTU data for comparisons. It is important to note here that because some of it is stored in lists, I need two different ways of importing the data.
 
@@ -169,13 +162,12 @@ for (i in names(region_sex_switchlist_list)) {
 
 Next, we can pull what we need from each file to make single comparison lists.
 
-```{r pull out comparisons}
+```{r pull out individual dtu comparisons}
 # cerebellum cortex
 cerebellum_cortex_subset <- filter(
   sig_region_region,
   condition_1 == "cerebellum" & condition_2 == "cortex"
 )
-
 cerebellum_cortex_dtu_genes <- cerebellum_cortex_subset$gene_id
 
 # cerebellum hippocampus
@@ -183,7 +175,6 @@ cerebellum_hippocampus_subset <- filter(
   sig_region_region,
   condition_1 == "cerebellum" & condition_2 == "hippocampus"
 )
-
 cerebellum_hippocampus_dtu_genes <- cerebellum_hippocampus_subset$gene_id
 
 # cerebellum striatum
@@ -191,7 +182,6 @@ cerebellum_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "cerebellum" & condition_2 == "striatum"
 )
-
 cerebellum_striatum_dtu_genes <- cerebellum_striatum_subset$gene_id
 
 # cortex hippocampus
@@ -199,7 +189,6 @@ cortex_hippocampus_subset <- filter(
   sig_region_region,
   condition_1 == "cortex" & condition_2 == "hippocampus"
 )
-
 cortex_hippocampus_dtu_genes <- cortex_hippocampus_subset$gene_id
 
 # cortex striatum
@@ -207,7 +196,6 @@ cortex_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "cortex" & condition_2 == "striatum"
 )
-
 cortex_striatum_dtu_genes <- cortex_striatum_subset$gene_id
 
 # hippocampus striatum
@@ -215,9 +203,12 @@ hippocampus_striatum_subset <- filter(
   sig_region_region,
   condition_1 == "hippocampus" & condition_2 == "striatum"
 )
-
 hippocampus_striatum_dtu_genes <- hippocampus_striatum_subset$gene_id
 ```
+
+## Make comparison lists for stats and plotting
+
+#### Make pairwise lists
 
 Now that everything is extracted, we need to make it into lists. I'll start with region-region direct comparisons.
 
@@ -259,6 +250,8 @@ hippocampus_striatum_list <- list(
 )
 ```
 
+#### Make single region lists 
+
 Next, we can do for the individual regions.
 
 ```{r prep single region data}
@@ -287,6 +280,8 @@ striatum_list <- list(
   `DTU` = striatum_dtu_genes
 )
 ```
+
+#### Make across sex within region lists
 
 Finally, we want to compare to within brain regions across sex.
 
@@ -317,73 +312,15 @@ striatum_sex_list <- list(
 )
 ```
 
-### Plotting DGE, DTE, and DTU overlap
+#### Make compound lists
 
-I created a make comparision plots function to create venn diagrams and upset plots for overlapping genes.
+I also want to look at the overlap of DGE and DTE with themselves, as compared to the DTU in script 5. This code allows us to make lists, the corresponding matrices and combination matrices required for the upset plots. 
 
-```{r plot comparisions for region region}
-make_comparison_plots(cerebellum_cortex_list,
-  save_path = here("results", "plots")
-)
+##### Pairwise comparision
 
-make_comparison_plots(cerebellum_hippocampus_list,
-  save_path = here("results", "plots")
-)
+I'll start with the pairwise genes identified, the largest gene lists.
 
-make_comparison_plots(cerebellum_striatum_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(cortex_hippocampus_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(cortex_striatum_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(hippocampus_striatum_list,
-  save_path = here("results", "plots")
-)
-```
-
-I also want to run this function on the single region comparisons.
-
-```{r run plotting function on single brain regions}
-make_comparison_plots(cerebellum_list, save_path = here("results", "plots"))
-
-make_comparison_plots(cortex_list, save_path = here("results", "plots"))
-
-make_comparison_plots(hippocampus_list, save_path = here("results", "plots"))
-
-make_comparison_plots(striatum_list, save_path = here("results", "plots"))
-```
-
-And finally, plot comparisons within brain regions across sex.
-
-```{r plot comps within region across sex}
-make_comparison_plots(cerebellum_sex_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(cortex_sex_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(hippocampus_sex_list,
-  save_path = here("results", "plots")
-)
-
-make_comparison_plots(striatum_sex_list,
-  save_path = here("results", "plots")
-)
-```
-
-I also want to look at the overlap of DGE and DTE with themselves, as compared to the DTU in script 5. This code allows us to make lists, the corresponding matrices and combination matrices required for the upset plots. I'll start with the pairwise genes identified, the largest gene lists.
-
-First create the lists.
-
-```{r create lists of DGE and DTE overlap}
+```{r create pairwise lists of DGE and DTE overlap}
 dge_main_list <- list(
   `Cerebellum vs. Cortex` = cerebellum_cortex_dge_genes,
   `Cerebellum vs. Hippocampus` = cerebellum_hippocampus_dge_genes,
@@ -412,6 +349,8 @@ dtu_main_list <- list(
 )
 ```
 
+##### Single region comparisons
+
 Also, I want to make lists of all dge and dtu single region comparisons.
 
 ```{r make lists of all dge and dtu single region comparisons}
@@ -428,7 +367,16 @@ dte_single_list <- list(
   `Cortex` = cortex_dte_genes,
   `Striatum` = striatum_dte_genes
 )
+
+dtu_single_list <- list(
+  `Cerebellum` = cerebellum_dtu_genes,
+  `Hippocampus` = hippocampus_dtu_genes,
+  `Cortex` = cortex_dtu_genes,
+  `Striatum` = striatum_dtu_genes
+)
 ```
+
+##### Sex region comparisions
 
 And, I want to make make lists of all dge and dtu sex comparisons.
 
@@ -446,11 +394,105 @@ dte_sex_list <- list(
   `Cortex` = cortex_sex_dte_genes,
   `Striatum` = striatum_sex_dte_genes
 )
+
+dtu_sex_list <- list(
+  `Cerebellum` = cerebellum_sex_dtu_genes,
+  `Hippocampus` = hippocampus_sex_dtu_genes,
+  `Cortex` = cortex_sex_dtu_genes,
+  `Striatum` = striatum_sex_dtu_genes
+)
 ```
 
-Once we have made these lists, we can use them to get some basic stats on how many genes overlap and how many are unique. This is mainly for the manuscript.
+We use all of these lists a lot, so I save them as an intermediate R object for simplicity's sake. You can now more easily load this data if you find you need to plot it again for any reason.
 
-```{r get pairwise comparisions stats}
+```{r save object lists}
+save.image(file = here(
+  "data", "comparison_gene_lists",
+  "all_comparison_gene_lists.Rdata"
+))
+
+# you can also load the data here, if needed
+```
+
+## Plotting DGE, DTE, and DTU overlaps!
+
+I created a make comparison plots function to create eulerr diagrams and upset plots for overlapping genes. We can save these all in the next few code chunks.
+
+#### Pairwise region overlap plotting
+
+We can run the function first on all pairwise brain region comparisons.
+
+```{r plot comparisions for pairwise region}
+make_comparison_plots(cerebellum_cortex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cerebellum_hippocampus_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cerebellum_striatum_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_hippocampus_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_striatum_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(hippocampus_striatum_list,
+  save_path = here("results", "plots")
+)
+```
+
+#### Single region overlap plotting
+
+I also want to run this function on the single region comparisons.
+
+```{r run plotting function on single brain regions}
+make_comparison_plots(cerebellum_list, save_path = here("results", "plots"))
+
+make_comparison_plots(cortex_list, save_path = here("results", "plots"))
+
+make_comparison_plots(hippocampus_list, save_path = here("results", "plots"))
+
+make_comparison_plots(striatum_list, save_path = here("results", "plots"))
+```
+
+#### Sex with region overlap plotting
+
+And finally, plot comparisons within brain regions across sex. This output is what is actually used for figure 3.
+
+```{r plot comps within region across sex}
+make_comparison_plots(cerebellum_sex_list,
+  save_path = here("results", "plots")
+)
+
+make_comparison_plots(cortex_sex_list,
+  save_path = here("results", "plots")
+)
+
+
+make_comparison_plots(hippocampus_sex_list,
+  save_path = here("results", "plots")
+
+)
+
+make_comparison_plots(striatum_sex_list,
+  save_path = here("results", "plots")
+)
+```
+
+## Additional statistics
+
+Once we have made these lists from earlier, we can also use them to get some basic statistics on how many genes overlap and how many are unique. This is mainly for the manuscript.
+
+First I aggregate all dge and dte genes together into a long list.
+
+```{r aggregate all genes together}
 # aggregate all dge genes
 all_pairwise_dge_genes <- unique(c(
   cerebellum_cortex_dge_genes, cerebellum_hippocampus_dge_genes,
@@ -458,6 +500,7 @@ all_pairwise_dge_genes <- unique(c(
   cortex_striatum_dge_genes,
   striatum_hippocampus_dge_genes
 ))
+
 
 # aggregate all dte genes
 all_pairwise_dte_genes <- unique(c(
@@ -467,11 +510,6 @@ all_pairwise_dte_genes <- unique(c(
   striatum_hippocampus_dte_genes
 ))
 
-# how many intersect?
-length(intersect(all_pairwise_dge_genes, all_pairwise_dte_genes))
-
-# all dge or dte genes
-all_dge_dte <- union(all_pairwise_dge_genes, all_pairwise_dte_genes)
 
 # aggregate all pairwise dtu genes
 all_pairwise_dtu_genes <- unique(c(
@@ -480,28 +518,60 @@ all_pairwise_dtu_genes <- unique(c(
   cortex_striatum_dtu_genes,
   hippocampus_striatum_dtu_genes
 ))
+```
 
+Now when can get the lengths of the unque genes in these lists.
+
+```{r get pirwise comparisions stats part 1 - how many intersect?}
+# how many pairwise dge and dte genes intersect?
+length(intersect(all_pairwise_dge_genes, all_pairwise_dte_genes))
+```
+
+Expected results: 3042
+
+```{r get pairwise comparisions stats part 2 - how much overlap}
 # how many pairwise dtu genes overlap with dge
 length(intersect(all_pairwise_dge_genes, all_pairwise_dtu_genes))
 
-# and what percent?
+# and what percent dtu genes overlap with dge?
 length(intersect(all_pairwise_dge_genes, all_pairwise_dtu_genes)) /
   length(all_pairwise_dtu_genes)
 
 # how many pairwise dtu genes overlap with dte
 length(intersect(all_pairwise_dte_genes, all_pairwise_dtu_genes))
 
-# and what percent?
+# and what percent dtu genes overlap with dte?
 length(intersect(all_pairwise_dte_genes, all_pairwise_dtu_genes)) /
   length(all_pairwise_dtu_genes)
+```
+
+Expected results:
+[1] 328
+[1] 0.5061728
+[1] 504
+[1] 0.7777778
+
+What about any genes identified with DESeq2 at all?
+
+```{r get pairwise comparisions stats part 3 - what about all DESeq2}
+# all dge or dte genes
+all_dge_dte <- union(all_pairwise_dge_genes, all_pairwise_dte_genes)
 
 # how many pairwise dtu genes overlap with dge or dte
 length(intersect(all_dge_dte, all_pairwise_dtu_genes))
 
-# and what percent?
+# and what percent dtu genes overlap with dge or dte?
 length(intersect(all_dge_dte, all_pairwise_dtu_genes)) /
   length(all_pairwise_dtu_genes)
+```
 
+Expected results:
+[1] 512
+[1] 0.7901235
+
+How many DTU genes were unidentified by DGE or DTE?
+
+```{r get more pairwise stats part 4 - how many unidentified}
 # leaving how many unidentified?
 length(all_pairwise_dtu_genes) - length(intersect(
   all_dge_dte,
@@ -516,1144 +586,11 @@ length(all_pairwise_dtu_genes) - length(intersect(
   length(all_pairwise_dtu_genes)
 ```
 
-### Creating More UpSet Plots!
-
-Then create the upset plots from combination matrices. 
-
-First for DGE.
-
-```{r create upset plots for examining DGE overlap}
-# create matrix
-dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_main_list)
-
-# generate combination matrix
-dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
-
-# make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_region_dge_upset.png"),
-  width = 10, height = 4, units = "in", res = 300
-)
-dge_pairwise_upset_plot <- UpSet(dge_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
-  comb_col = "#5D69B1",
-  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dge_pairwise_upset_plot)
-dev.off()
-
-dge_pairwise_upset_plot
-```
-
-Region others
-
-```{r do this for region others}
-# create matrix
-dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_single_list)
-
-# generate combination matrix
-dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
-
-
-# make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_others_dge_upset.pdf"),
-  width = 12, height = 6
-)
-dge_single_upset_plot <- UpSet(dge_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
-  comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
-  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dge_single_upset_plot)
-dev.off()
-
-dge_single_upset_plot
-```
-And region sex
-
-```{r do this for region others}
-# create matrix
-dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_sex_list)
-
-# generate combination matrix
-dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
-
-
-# make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_sex_dge_upset.pdf"),
-  width = 12, height = 6
-)
-dge_sex_upset_plot <- UpSet(dge_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
-  comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
-  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dge_sex_upset_plot)
-dev.off()
-
-dge_sex_upset_plot
-```
-Then, for DTE.
-
-```{r create upsetplots for DTE overlap}
-# create matrix
-dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_main_list)
-
-# generate combination matrix
-dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
-
-# make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_region_dte_upset.png"),
-  width = 10, height = 4, units = "in", res = 300
-)
-dte_pairwise_upset_plot <- UpSet(dte_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
-  comb_col = "#52BCA3",
-  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dte_pairwise_upset_plot)
-dev.off()
-
-dte_pairwise_upset_plot
-```
-
-I can also do this for region other and region sex, just as above.
-
-Region others
-
-```{r do this for region others}
-# create matrix
-dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_single_list)
-
-# generate combination matrix
-dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
-
-
-# make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_others_dte_upset.pdf"),
-  width = 12, height = 6
-)
-dte_single_upset_plot <- UpSet(dte_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
-  comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
-  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dte_single_upset_plot)
-dev.off()
-
-dte_single_upset_plot
-```
-And region sex
-
-```{r do this for region others}
-# create matrix
-dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_sex_list)
-
-# generate combination matrix
-dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
-
-
-# make UpSet plot (ComplexHeatmap)
-pdf(here("results", "plots", "upset_plots", "region_sex_dte_upset.pdf"),
-  width = 12, height = 6
-)
-dte_sex_upset_plot <- UpSet(dte_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
-  comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
-  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dte_sex_upset_plot)
-dev.off()
-
-dte_sex_upset_plot
-```
-
-Finally, do this for the DTU. We did this already, but this version is actually for the manuscript figure.
-
-```{r create upset plots for examining DGE overlap}
-# create matrix
-dtu_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dtu_main_list)
-
-# generate combination matrix
-dtu_overlap_list_comb_mat <- make_comb_mat(dtu_overlap_list_mat)
-
-# make UpSet plot (ComplexHeatmap)
-png(here("results", "plots", "upset_plots", "region_region_dtu_upset.png"),
-  width = 10, height = 4, units = "in", res = 300
-)
-dtu_pairwise_upset_plot <- UpSet(dtu_overlap_list_comb_mat,
-  comb_order = order(-comb_size(dtu_overlap_list_comb_mat)),
-  comb_col = "#99C945",
-  top_annotation = upset_top_annotation(dtu_overlap_list_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(dtu_overlap_list_comb_mat,
-    add_numbers = TRUE
-  )
-)
-draw(dtu_pairwise_upset_plot)
-dev.off()
-
-dtu_pairwise_upset_plot
-```
-
-### Stacked bar plots
-
-One way to show numbers of genes is stacked bar plots, though this will not show the overlap. Maybe if I make a category for each in the stack it will be ok? So for each brain region or pairwise comparision, there would be 7 possible combinations.
-
-For simplicity, I'll do this for only 4 brain regions first.
-
-```{r stacked bar plots}
-stacked_barplot <- data.frame(
-  "brain_region" = c(
-    rep("cerebellum", 3), rep("cortex", 3),
-    rep("hippocampus", 3), rep("striatum", 3)
-  ),
-  "analysis" = rep(c("DGE", "DTE", "DTU"), 4),
-  "n_genes" = c(
-    length(cerebellum_dge_genes),
-    length(cerebellum_dte_genes),
-    length(cerebellum_dtu_genes),
-    length(cortex_dge_genes),
-    length(cortex_dte_genes),
-    length(cortex_dtu_genes),
-    length(hippocampus_dge_genes),
-    length(hippocampus_dte_genes),
-    length(hippocampus_dtu_genes),
-    length(striatum_dge_genes),
-    length(striatum_dte_genes),
-    length(striatum_dtu_genes)
-  )
-)
-
-ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
-  geom_bar(position = "stack", stat = "identity")
-
-ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
-  geom_bar(position = "fill", stat = "identity")
-
-ggsave(here("results", "plots", "bar_plots", "stacked_region_others.png"),
-  width = 6, height = 4
-)
-```
-
-Next, we can create the dataframe for stacked bar plot with overlap.
-
-```{r create stacked barplot}
-stacked_barplot <- data.frame(
-  "brain_region" = c(
-    rep("cerebellum", 7), rep("cortex", 7),
-    rep("hippocampus", 7), rep("striatum", 7)
-  ),
-  "analysis" = rep(c(
-    "DGE only", "DTE only", "DTU only", "DGE and DTE",
-    "DGE and DTU", "DTE and DTU", "all"
-  ), 4),
-  "n_genes" = c(
-    # dge only
-    length(setdiff(
-      cerebellum_dge_genes,
-      union(
-        intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-        intersect(cerebellum_dge_genes, cerebellum_dtu_genes)
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cerebellum_dte_genes,
-      union(
-        intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-        intersect(cerebellum_dte_genes, cerebellum_dtu_genes)
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cerebellum_dtu_genes,
-      union(
-        intersect(cerebellum_dge_genes, cerebellum_dtu_genes),
-        intersect(cerebellum_dte_genes, cerebellum_dtu_genes)
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      cerebellum_dge_genes, cerebellum_dte_genes
-    )) -
-      length(intersect(
-        intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-        cerebellum_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(cerebellum_dge_genes, cerebellum_dtu_genes)) -
-      length(intersect(
-        intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-        cerebellum_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(cerebellum_dtu_genes, cerebellum_dte_genes)) -
-      length(intersect(
-        intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-        cerebellum_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(cerebellum_dge_genes, cerebellum_dte_genes),
-      cerebellum_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(cortex_dge_genes, union(intersect(
-      cortex_dge_genes,
-      cortex_dte_genes
-    ), intersect(cortex_dge_genes, cortex_dtu_genes)))),
-    # dte only
-    length(setdiff(cortex_dte_genes, union(intersect(
-      cortex_dge_genes,
-      cortex_dte_genes
-    ), intersect(cortex_dte_genes, cortex_dtu_genes)))),
-    # dtu only
-    length(setdiff(cortex_dtu_genes, union(intersect(
-      cortex_dge_genes,
-      cortex_dtu_genes
-    ), intersect(cortex_dte_genes, cortex_dtu_genes)))),
-    # dge and dte
-    length(intersect(cortex_dge_genes, cortex_dte_genes)) - length(intersect(
-      intersect(cortex_dge_genes, cortex_dte_genes),
-      cortex_dtu_genes
-    )),
-    # dge and dtu
-    length(intersect(cortex_dge_genes, cortex_dtu_genes)) - length(intersect(
-      intersect(cortex_dge_genes, cortex_dte_genes),
-      cortex_dtu_genes
-    )),
-    # dte and dtu
-    length(intersect(cortex_dtu_genes, cortex_dte_genes)) - length(intersect(
-      intersect(cortex_dge_genes, cortex_dte_genes),
-      cortex_dtu_genes
-    )),
-    # all
-    length(intersect(
-      intersect(cortex_dge_genes, cortex_dte_genes),
-      cortex_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(hippocampus_dge_genes, union(
-      intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-      intersect(hippocampus_dge_genes, hippocampus_dtu_genes)
-    ))),
-    # dte only
-    length(setdiff(hippocampus_dte_genes, union(
-      intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-      intersect(hippocampus_dte_genes, hippocampus_dtu_genes)
-    ))),
-    # dtu only
-    length(setdiff(hippocampus_dtu_genes, union(
-      intersect(hippocampus_dge_genes, hippocampus_dtu_genes),
-      intersect(hippocampus_dte_genes, hippocampus_dtu_genes)
-    ))),
-    # dge and dte
-    length(intersect(hippocampus_dge_genes, hippocampus_dte_genes)) -
-      length(intersect(
-        intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-        hippocampus_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(hippocampus_dge_genes, hippocampus_dtu_genes)) -
-      length(intersect(
-        intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-        hippocampus_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(hippocampus_dtu_genes, hippocampus_dte_genes)) -
-      length(intersect(
-        intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-        hippocampus_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(hippocampus_dge_genes, hippocampus_dte_genes),
-      hippocampus_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(striatum_dge_genes, union(
-      intersect(
-        striatum_dge_genes, striatum_dte_genes
-      ),
-      intersect(
-        striatum_dge_genes, striatum_dtu_genes
-      )
-    ))),
-    # dte only
-    length(setdiff(striatum_dte_genes, union(
-      intersect(
-        striatum_dge_genes, striatum_dte_genes
-      ),
-      intersect(
-        striatum_dte_genes, striatum_dtu_genes
-      )
-    ))),
-    # dtu only
-    length(setdiff(striatum_dtu_genes, union(
-      intersect(
-        striatum_dge_genes, striatum_dtu_genes
-      ),
-      intersect(
-        striatum_dte_genes, striatum_dtu_genes
-      )
-    ))),
-    # dge and dte
-    length(intersect(striatum_dge_genes, striatum_dte_genes)) -
-      length(intersect(
-        intersect(striatum_dge_genes, striatum_dte_genes),
-        striatum_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(striatum_dge_genes, striatum_dtu_genes)) -
-      length(intersect(
-        intersect(striatum_dge_genes, striatum_dte_genes),
-        striatum_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(striatum_dtu_genes, striatum_dte_genes)) -
-      length(intersect(
-        intersect(striatum_dge_genes, striatum_dte_genes),
-        striatum_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(striatum_dge_genes, striatum_dte_genes),
-      striatum_dtu_genes
-    ))
-  )
-)
-```
-
-Now that the dataframe has been created, we can plot.
-
-```{r plot stacked barplot for unpaired}
-ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
-  geom_bar(position = "stack", stat = "identity")
-
-ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = EJ_custom_palette) +
-  xlab("Brain Region") +
-  ylab("Proportion of Total Genes") +
-  theme_minimal()
-
-ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
-  width = 6, height = 4
-)
-```
-
-This is a neat idea in theory but in practice not so sure about it because of all the arguments and lengths needed to manually calculate. there should be a way to simplify this the same way an upset plot works. and at that point, it just is an upset plot.
-
-```{r create paired stacked barplot dataframe}
-stacked_barplot_paired <- data.frame(
-  "brain_regions" = c(
-    rep("Cerebellum vs. Cortex", 7),
-    rep("Cerebellum vs. Hippocampus", 7),
-    rep("Cerebellum vs. Striatum", 7),
-    rep("Cortex vs. Hippocampus", 7),
-    rep("Cortex vs. Striatum", 7),
-    rep("Hippocampus vs. Striatum", 7)
-  ),
-  "Analysis" = rep(c(
-    "DGE only", "DTE only", "DTU only", "DGE and DTE",
-    "DGE and DTU", "DTE and DTU", "all"
-  ), 6),
-  "n_genes" = c(
-    # dge only
-    length(setdiff(
-      cerebellum_cortex_dge_genes,
-      union(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dte_genes
-        ),
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dtu_genes
-        )
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cerebellum_cortex_dte_genes,
-      union(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dte_genes
-        ),
-        intersect(
-          cerebellum_cortex_dte_genes,
-          cerebellum_cortex_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cerebellum_cortex_dtu_genes,
-      union(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dtu_genes
-        ),
-        intersect(
-          cerebellum_cortex_dte_genes,
-          cerebellum_cortex_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      cerebellum_cortex_dge_genes,
-      cerebellum_cortex_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dte_genes
-        ),
-        cerebellum_cortex_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(
-      cerebellum_cortex_dge_genes,
-      cerebellum_cortex_dtu_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dte_genes
-        ),
-        cerebellum_cortex_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(
-      cerebellum_cortex_dtu_genes,
-      cerebellum_cortex_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_cortex_dge_genes,
-          cerebellum_cortex_dte_genes
-        ),
-        cerebellum_cortex_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(
-        cerebellum_cortex_dge_genes,
-        cerebellum_cortex_dte_genes
-      ),
-      cerebellum_cortex_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(
-      cerebellum_hippocampus_dge_genes,
-      union(
-        intersect(
-          cerebellum_hippocampus_dge_genes,
-          cerebellum_hippocampus_dte_genes
-        ),
-        intersect(
-          cerebellum_hippocampus_dge_genes,
-          cerebellum_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cerebellum_hippocampus_dte_genes,
-      union(
-        intersect(
-          cerebellum_hippocampus_dge_genes,
-          cerebellum_hippocampus_dte_genes
-        ),
-        intersect(
-          cerebellum_hippocampus_dte_genes,
-          cerebellum_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cerebellum_hippocampus_dtu_genes,
-      union(
-        intersect(
-          cerebellum_hippocampus_dge_genes,
-          cerebellum_hippocampus_dtu_genes
-        ),
-        intersect(
-          cerebellum_hippocampus_dte_genes,
-          cerebellum_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      cerebellum_hippocampus_dge_genes,
-      cerebellum_hippocampus_dte_genes
-    )) - length(intersect(
-      intersect(
-        cerebellum_hippocampus_dge_genes,
-        cerebellum_hippocampus_dte_genes
-      ),
-      cerebellum_hippocampus_dtu_genes
-    )),
-    # dge and dtu
-    length(intersect(
-      cerebellum_hippocampus_dge_genes,
-      cerebellum_hippocampus_dtu_genes
-    )) - length(intersect(
-      intersect(
-        cerebellum_hippocampus_dge_genes,
-        cerebellum_hippocampus_dte_genes
-      ),
-      cerebellum_hippocampus_dtu_genes
-    )),
-    # dte and dtu
-    length(intersect(
-      cerebellum_hippocampus_dtu_genes,
-      cerebellum_hippocampus_dte_genes
-    )) - length(intersect(
-      intersect(
-        cerebellum_hippocampus_dge_genes,
-        cerebellum_hippocampus_dte_genes
-      ),
-      cerebellum_hippocampus_dtu_genes
-    )),
-    # all
-    length(intersect(
-      intersect(
-        cerebellum_hippocampus_dge_genes,
-        cerebellum_hippocampus_dte_genes
-      ),
-      cerebellum_hippocampus_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(
-      cerebellum_striatum_dge_genes,
-      union(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dte_genes
-        ),
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dtu_genes
-        )
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cerebellum_striatum_dte_genes,
-      union(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dte_genes
-        ),
-        intersect(
-          cerebellum_striatum_dte_genes,
-          cerebellum_striatum_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cerebellum_striatum_dtu_genes,
-      union(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dtu_genes
-        ),
-        intersect(
-          cerebellum_striatum_dte_genes,
-          cerebellum_striatum_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      cerebellum_striatum_dge_genes,
-      cerebellum_striatum_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dte_genes
-        ),
-        cerebellum_striatum_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(
-      cerebellum_striatum_dge_genes,
-      cerebellum_striatum_dtu_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dte_genes
-        ),
-        cerebellum_striatum_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(
-      cerebellum_striatum_dtu_genes,
-      cerebellum_striatum_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          cerebellum_striatum_dge_genes,
-          cerebellum_striatum_dte_genes
-        ),
-        cerebellum_striatum_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(
-        cerebellum_striatum_dge_genes,
-        cerebellum_striatum_dte_genes
-      ),
-      cerebellum_striatum_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(
-      cortex_hippocampus_dge_genes,
-      union(
-        intersect(
-          cortex_hippocampus_dge_genes,
-          cortex_hippocampus_dte_genes
-        ),
-        intersect(
-          cortex_hippocampus_dge_genes,
-          cortex_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cortex_hippocampus_dte_genes,
-      union(
-        intersect(
-          cortex_hippocampus_dge_genes,
-          cortex_hippocampus_dte_genes
-        ),
-        intersect(
-          cortex_hippocampus_dte_genes,
-          cortex_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cortex_hippocampus_dtu_genes,
-      union(
-        intersect(
-          cortex_hippocampus_dge_genes,
-          cortex_hippocampus_dtu_genes
-        ),
-        intersect(
-          cortex_hippocampus_dte_genes,
-          cortex_hippocampus_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      cortex_hippocampus_dge_genes,
-      cortex_hippocampus_dte_genes
-    )) -
-      length(intersect(intersect(
-        cortex_hippocampus_dge_genes,
-        cortex_hippocampus_dte_genes
-      ), cortex_hippocampus_dtu_genes)),
-    # dge and dtu
-    length(intersect(
-      cortex_hippocampus_dge_genes,
-      cortex_hippocampus_dtu_genes
-    )) - length(intersect(intersect(
-      cortex_hippocampus_dge_genes,
-      cortex_hippocampus_dte_genes
-    ), cortex_hippocampus_dtu_genes)),
-    # dte and dtu
-    length(intersect(
-      cortex_hippocampus_dtu_genes,
-      cortex_hippocampus_dte_genes
-    )) - length(intersect(intersect(
-      cortex_hippocampus_dge_genes,
-      cortex_hippocampus_dte_genes
-    ), cortex_hippocampus_dtu_genes)),
-    # all
-    length(intersect(
-      intersect(
-        cortex_hippocampus_dge_genes,
-        cortex_hippocampus_dte_genes
-      ),
-      cortex_hippocampus_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(
-      cortex_striatum_dge_genes,
-      union(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dte_genes
-        ),
-        intersect(cortex_striatum_dge_genes, cortex_striatum_dtu_genes)
-      )
-    )),
-    # dte only
-    length(setdiff(
-      cortex_striatum_dte_genes,
-      union(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dte_genes
-        ),
-        intersect(
-          cortex_striatum_dte_genes,
-          cortex_striatum_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      cortex_striatum_dtu_genes,
-      union(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dtu_genes
-        ),
-        intersect(
-          cortex_striatum_dte_genes,
-          cortex_striatum_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(cortex_striatum_dge_genes, cortex_striatum_dte_genes)) -
-      length(intersect(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dte_genes
-        ),
-        cortex_striatum_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(cortex_striatum_dge_genes, cortex_striatum_dtu_genes)) -
-      length(intersect(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dte_genes
-        ),
-        cortex_striatum_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(cortex_striatum_dtu_genes, cortex_striatum_dte_genes)) -
-      length(intersect(
-        intersect(
-          cortex_striatum_dge_genes,
-          cortex_striatum_dte_genes
-        ),
-        cortex_striatum_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(
-        cortex_striatum_dge_genes,
-        cortex_striatum_dte_genes
-      ),
-      cortex_striatum_dtu_genes
-    )),
-
-    # dge only
-    length(setdiff(
-      striatum_hippocampus_dge_genes,
-      union(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          striatum_hippocampus_dte_genes
-        ),
-        intersect(
-          striatum_hippocampus_dge_genes,
-          hippocampus_striatum_dtu_genes
-        )
-      )
-    )),
-    # dte only
-    length(setdiff(
-      hippocampus_striatum_dte_genes,
-      union(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          striatum_hippocampus_dte_genes
-        ),
-        intersect(
-          hippocampus_striatum_dte_genes,
-          hippocampus_striatum_dtu_genes
-        )
-      )
-    )),
-    # dtu only
-    length(setdiff(
-      hippocampus_striatum_dtu_genes,
-      union(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          hippocampus_striatum_dtu_genes
-        ),
-        intersect(
-          striatum_hippocampus_dte_genes,
-          hippocampus_striatum_dtu_genes
-        )
-      )
-    )),
-    # dge and dte
-    length(intersect(
-      striatum_hippocampus_dge_genes,
-      striatum_hippocampus_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          striatum_hippocampus_dte_genes
-        ),
-        hippocampus_striatum_dtu_genes
-      )),
-    # dge and dtu
-    length(intersect(
-      striatum_hippocampus_dge_genes,
-      hippocampus_striatum_dtu_genes
-    )) -
-      length(intersect(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          striatum_hippocampus_dte_genes
-        ),
-        hippocampus_striatum_dtu_genes
-      )),
-    # dte and dtu
-    length(intersect(
-      hippocampus_striatum_dtu_genes,
-      striatum_hippocampus_dte_genes
-    )) -
-      length(intersect(
-        intersect(
-          striatum_hippocampus_dge_genes,
-          striatum_hippocampus_dte_genes
-        ),
-        hippocampus_striatum_dtu_genes
-      )),
-    # all
-    length(intersect(
-      intersect(
-        striatum_hippocampus_dge_genes,
-        striatum_hippocampus_dte_genes
-      ),
-      hippocampus_striatum_dtu_genes
-    ))
-  )
-)
-```
-
-Now that we have made the dataframe, we can make the ggplot.
-
-```{r create stacked paired barplot}
-stacked_barplot_paired_plot_horiz <-
-  ggplot(
-    stacked_barplot_paired,
-    aes(fill = Analysis, y = n_genes, x = brain_regions)
-  ) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = EJ_custom_palette) +
-  xlab("Brain Regions") +
-  ylab("Proportion of Total Genes") +
-  theme_minimal() +
-  coord_flip() +
-  theme(text = element_text(face = "bold"), legend.position = "bottom",
-        axis.text.y = element_text(color = "black")) +
-  guides(fill = guide_legend(nrow = 4))
-
-stacked_barplot_paired_plot_horiz
-
-ggsave(
-  here(
-    "results", "plots", "bar_plots", "stacked_region_region_overlap.png"
-  ),
-  width = 6, height = 4
-)
-```
-
-Now that I have all of the individual plots we are interested in, we can assemble figure 2.
-
-```{r assemble figure 2}
-# export complexheatmap objects
-dge_pairwise_upset_plot_grab <- grid.grabExpr(draw(dge_pairwise_upset_plot))
-dte_pairwise_upset_plot_grab <- grid.grabExpr(draw(dte_pairwise_upset_plot))
-dtu_pairwise_upset_plot_grab <- grid.grabExpr(draw(dtu_pairwise_upset_plot))
-
-# make left side
-left_side <-
-  plot_grid(dge_pairwise_upset_plot_grab, dte_pairwise_upset_plot_grab,
-    dtu_pairwise_upset_plot_grab,
-    ncol = 1
-  )
-
-left_side
-
-right_side <- plot_grid(NULL, stacked_barplot_paired_plot_horiz, NULL,
-                        ncol = 1, rel_heights = c(0.2, 1, 0.2))
-
-right_side
-
-full_figure2 <-
-  plot_grid(left_side, right_side, rel_widths = c(3, 1))
-
-full_figure2
-
-full_figure2 <-
-  plot_grid(left_side, stacked_barplot_paired_plot_horiz, rel_widths = c(3, 1))
-
-full_figure2
-
-```
-
-```{r try making upset plots smaller}
-# dtu
-dtu_comb_mat_small <- dtu_overlap_list_comb_mat[comb_size(dtu_overlap_list_comb_mat) >= 5]
-
-dtu_comb_mat_small
-
-dtu_pairwise_upset_plot_smaller <- UpSet(dtu_comb_mat_small,
-  comb_order = order(-comb_size(dtu_comb_mat_small)),
-  comb_col = "#99C945",
-  top_annotation = upset_top_annotation(dtu_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  right_annotation = upset_right_annotation(dtu_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  row_names_gp = gpar(fontface = "bold")
-)
-
-dtu_pairwise_upset_plot_smaller
-
-# dge
-dge_comb_mat_small <- dge_overlap_list_comb_mat[comb_size(dge_overlap_list_comb_mat) >= 40]
-
-dge_comb_mat_small
-
-dge_pairwise_upset_plot_smaller <- UpSet(dge_comb_mat_small,
-  comb_order = order(-comb_size(dge_comb_mat_small)),
-  comb_col = "#5D69B1",
-  top_annotation = upset_top_annotation(dge_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  right_annotation = upset_right_annotation(dge_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  row_names_gp = gpar(fontface = "bold")
-)
-
-dge_pairwise_upset_plot_smaller
-
-# dte
-dte_comb_mat_small <- dte_overlap_list_comb_mat[comb_size(dte_overlap_list_comb_mat) >= 40]
-
-dte_comb_mat_small
-
-dte_pairwise_upset_plot_smaller <- UpSet(dte_comb_mat_small,
-  comb_order = order(-comb_size(dte_comb_mat_small)),
-  comb_col = "#52BCA3",
-  top_annotation = upset_top_annotation(dte_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  right_annotation = upset_right_annotation(dte_comb_mat_small,
-    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
-    axis_param = list(gp = gpar(fontface = "bold")),
-    numbers_gp = gpar(fontface = "bold")
-  ),
-  row_names_gp = gpar(fontface = "bold")
-)
-
-dte_pairwise_upset_plot_smaller
-
-```
-
-```{r assemble figure 2 with smaller upsets}
-# export complexheatmap objects
-dge_pairwise_upset_plot_grab <- grid.grabExpr(draw(dge_pairwise_upset_plot_smaller))
-dte_pairwise_upset_plot_grab <- grid.grabExpr(draw(dte_pairwise_upset_plot_smaller))
-dtu_pairwise_upset_plot_grab <- grid.grabExpr(draw(dtu_pairwise_upset_plot_smaller))
-
-# make left side
-left_side <-
-  plot_grid(dge_pairwise_upset_plot_grab, dte_pairwise_upset_plot_grab,
-    dtu_pairwise_upset_plot_grab,
-    ncol = 1
-  )
-
-left_side
-
-right_side <- plot_grid(NULL, stacked_barplot_paired_plot_horiz, NULL,
-                        ncol = 1, rel_heights = c(0.4, 1, 0.2))
-
-final_figure2 <-
-  plot_grid(left_side, right_side, rel_widths = c(1, 0.7))
-
-final_figure2
-
-png(here("results", "finished_figures", "figure2.png"), width = 12, height = 9, units = "in", res = 300)
-final_figure2
-dev.off()
-
-```
+Expected results:
+[1] 136
+[1] 0.2098765
+
+This means that 21% of DTU genes would not have been identified without using satuRn.
 
 #### Clean up script
 
@@ -1675,6 +612,8 @@ fptm <- proc.time() - ptm
 fptm[3] / 60
 ```
 
+22 minutes to run, including the time it took to edit all text and comment.
+
 #### Software versions
 
 My software versions will be commented below.
@@ -1683,9 +622,9 @@ My software versions will be commented below.
 sessionInfo()
 ```
 
-R version 4.3.0 beta (2023-04-12 r84240)
+R version 4.3.1 (2023-06-16)
 Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Ubuntu 22.04.2 LTS
+Running under: Ubuntu 22.04.3 LTS
 
 Matrix products: default
 BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -1705,92 +644,89 @@ attached base packages:
 [9] base     
 
 other attached packages:
- [1] here_1.0.1                    lintr_3.0.2                  
- [3] styler_1.9.1                  ggvenn_0.1.10                
- [5] viridis_0.6.2                 viridisLite_0.4.2            
- [7] ComplexHeatmap_2.16.0         IsoformSwitchAnalyzeR_1.99.17
- [9] pfamAnalyzeR_1.0.0            sva_3.48.0                   
-[11] genefilter_1.82.0             mgcv_1.8-42                  
-[13] nlme_3.1-162                  satuRn_1.8.0                 
-[15] DEXSeq_1.46.0                 RColorBrewer_1.1-3           
-[17] AnnotationDbi_1.62.0          DESeq2_1.40.0                
-[19] SummarizedExperiment_1.30.0   GenomicRanges_1.52.0         
-[21] GenomeInfoDb_1.36.0           IRanges_2.34.0               
-[23] S4Vectors_0.38.0              MatrixGenerics_1.12.0        
-[25] matrixStats_0.63.0            Biobase_2.60.0               
-[27] BiocGenerics_0.46.0           BiocParallel_1.34.0          
-[29] limma_3.56.0                  lubridate_1.9.2              
-[31] forcats_1.0.0                 stringr_1.5.0                
-[33] dplyr_1.1.2                   purrr_1.0.1                  
-[35] readr_2.1.4                   tidyr_1.3.0                  
-[37] tibble_3.2.1                  ggplot2_3.4.2                
-[39] tidyverse_2.0.0              
+ [1] cowplot_1.1.1               eulerr_7.0.0                here_1.0.1                 
+ [4] lintr_3.1.0                 styler_1.10.2               viridis_0.6.4              
+ [7] viridisLite_0.4.2           ComplexHeatmap_2.16.0       IsoformSwitchAnalyzeR_2.1.3
+[10] pfamAnalyzeR_1.0.1          sva_3.48.0                  genefilter_1.82.1          
+[13] mgcv_1.9-0                  nlme_3.1-163                satuRn_1.8.0               
+[16] DEXSeq_1.46.0               RColorBrewer_1.1-3          AnnotationDbi_1.62.2       
+[19] DESeq2_1.40.2               SummarizedExperiment_1.30.2 GenomicRanges_1.52.0       
+[22] GenomeInfoDb_1.36.3         IRanges_2.34.1              S4Vectors_0.38.1           
+[25] MatrixGenerics_1.12.3       matrixStats_1.0.0           Biobase_2.60.0             
+[28] BiocGenerics_0.46.0         BiocParallel_1.34.2         limma_3.56.2               
+[31] lubridate_1.9.2             forcats_1.0.0               stringr_1.5.0              
+[34] dplyr_1.1.3                 purrr_1.0.2                 readr_2.1.4                
+[37] tidyr_1.3.0                 tibble_3.2.1                ggplot2_3.4.3              
+[40] tidyverse_2.0.0            
 
 loaded via a namespace (and not attached):
-  [1] splines_4.3.0                 later_1.3.0                  
+  [1] splines_4.3.1                 later_1.3.1                  
   [3] BiocIO_1.10.0                 bitops_1.0-7                 
   [5] filelock_1.0.2                R.oo_1.25.0                  
-  [7] rex_1.2.1                     XML_3.99-0.14                
-  [9] lifecycle_1.0.3               rprojroot_2.0.3              
- [11] edgeR_3.42.0                  doParallel_1.0.17            
- [13] processx_3.8.0                lattice_0.21-8               
- [15] ensembldb_2.24.0              magrittr_2.0.3               
- [17] rmarkdown_2.21                remotes_2.4.2                
- [19] yaml_2.3.7                    httpuv_1.6.9                 
- [21] pbapply_1.7-0                 DBI_1.1.3                    
- [23] zlibbioc_1.46.0               R.cache_0.16.0               
- [25] R.utils_2.12.2                AnnotationFilter_1.24.0      
- [27] RCurl_1.98-1.12               rappdirs_0.3.3               
- [29] circlize_0.4.15               GenomeInfoDbData_1.2.10      
- [31] annotate_1.78.0               codetools_0.2-19             
- [33] DelayedArray_0.25.0           xml2_1.3.4                   
- [35] tidyselect_1.2.0              shape_1.4.6                  
- [37] futile.logger_1.4.3           locfdr_1.1-8                 
- [39] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
- [41] jsonlite_1.8.4                GetoptLong_1.0.5             
- [43] ellipsis_0.3.2                survival_3.5-5               
- [45] iterators_1.0.14              foreach_1.5.2                
- [47] tools_4.3.0                   progress_1.2.2               
- [49] Rcpp_1.0.10                   glue_1.6.2                   
- [51] gridExtra_2.3                 xfun_0.39                    
- [53] withr_2.5.0                   formatR_1.14                 
- [55] BiocManager_1.30.20           fastmap_1.1.1                
- [57] boot_1.3-28.1                 fansi_1.0.4                  
- [59] callr_3.7.3                   digest_0.6.31                
- [61] timechange_0.2.0              R6_2.5.1                     
- [63] mime_0.12                     colorspace_2.1-0             
- [65] biomaRt_2.56.0                RSQLite_2.3.1                
- [67] R.methodsS3_1.8.2             utf8_1.2.3                   
- [69] generics_0.1.3                tximeta_1.18.0               
- [71] rtracklayer_1.60.0            prettyunits_1.1.1            
- [73] httr_1.4.5                    pkgconfig_2.0.3              
- [75] gtable_0.3.3                  blob_1.2.4                   
- [77] hwriter_1.3.2.1               XVector_0.40.0               
- [79] htmltools_0.5.5               geneplotter_1.78.0           
- [81] ProtGenerics_1.32.0           clue_0.3-64                  
- [83] scales_1.2.1                  cyclocomp_1.1.0              
- [85] png_0.1-8                     knitr_1.42                   
- [87] lambda.r_1.2.4                rstudioapi_0.14              
- [89] tzdb_0.3.0                    reshape2_1.4.4               
- [91] rjson_0.2.21                  curl_5.0.0                   
- [93] cachem_1.0.8                  GlobalOptions_0.1.2          
- [95] BiocVersion_3.17.1            parallel_4.3.0               
- [97] desc_1.4.2                    restfulr_0.0.15              
- [99] pillar_1.9.0                  vctrs_0.6.3                  
-[101] promises_1.2.0.1              dbplyr_2.3.2                 
-[103] xtable_1.8-4                  cluster_2.1.4                
-[105] tximport_1.28.0               evaluate_0.20                
-[107] VennDiagram_1.7.3             GenomicFeatures_1.52.0       
-[109] cli_3.6.1                     locfit_1.5-9.7               
-[111] fptm futile.options_1.0.1         
-[113] Rsamtools_2.16.0              rlang_1.1.1                  
-[115] crayon_1.5.2                  ps_1.7.4                     
-[117] plyr_1.8.8                    stringi_1.7.12               
-[119] munsell_0.5.0                 Biostrings_2.68.0            
-[121] lazyeval_0.2.2                Matrix_1.5-4                 
-[123] BSgenome_1.68.0               hms_1.1.3                    
-[125] bit64_4.0.5                   KEGGREST_1.40.0              
-[127] statmod_1.5.0                 shiny_1.7.4                  
-[129] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
-[131] memoise_2.0.1                 bit_4.0.5                    
-[133] xmlparsedata_1.0.5     
+  [7] polyclip_1.10-6               rex_1.2.1                    
+  [9] XML_3.99-0.14                 lifecycle_1.0.3              
+ [11] rprojroot_2.0.3               edgeR_3.42.4                 
+ [13] doParallel_1.0.17             processx_3.8.2               
+ [15] lattice_0.21-8                ensembldb_2.24.0             
+ [17] backports_1.4.1               magrittr_2.0.3               
+ [19] rmarkdown_2.24                remotes_2.4.2.1              
+ [21] yaml_2.3.7                    httpuv_1.6.11                
+ [23] pbapply_1.7-2                 DBI_1.1.3                    
+ [25] abind_1.4-5                   zlibbioc_1.46.0              
+ [27] R.cache_0.16.0                R.utils_2.12.2               
+ [29] AnnotationFilter_1.24.0       RCurl_1.98-1.12              
+ [31] rappdirs_0.3.3                circlize_0.4.15              
+ [33] GenomeInfoDbData_1.2.10       annotate_1.78.0              
+ [35] codetools_0.2-19              DelayedArray_0.26.7          
+ [37] xml2_1.3.5                    tidyselect_1.2.0             
+ [39] shape_1.4.6                   futile.logger_1.4.3          
+ [41] locfdr_1.1-8                  farver_2.1.1                 
+ [43] BiocFileCache_2.8.0           GenomicAlignments_1.36.0     
+ [45] jsonlite_1.8.7                GetoptLong_1.0.5             
+ [47] ellipsis_0.3.2                survival_3.5-7               
+ [49] iterators_1.0.14              polylabelr_0.2.0             
+ [51] foreach_1.5.2                 tools_4.3.1                  
+ [53] progress_1.2.2                Rcpp_1.0.11                  
+ [55] glue_1.6.2                    gridExtra_2.3                
+ [57] xfun_0.40                     withr_2.5.0                  
+ [59] formatR_1.14                  BiocManager_1.30.22          
+ [61] fastmap_1.1.1                 boot_1.3-28.1                
+ [63] fansi_1.0.4                   callr_3.7.3                  
+ [65] digest_0.6.33                 timechange_0.2.0             
+ [67] R6_2.5.1                      mime_0.12                    
+ [69] colorspace_2.1-0              biomaRt_2.56.1               
+ [71] RSQLite_2.3.1                 R.methodsS3_1.8.2            
+ [73] utf8_1.2.3                    generics_0.1.3               
+ [75] data.table_1.14.8             tximeta_1.18.3               
+ [77] rtracklayer_1.60.1            prettyunits_1.1.1            
+ [79] httr_1.4.7                    S4Arrays_1.0.6               
+ [81] pkgconfig_2.0.3               gtable_0.3.4                 
+ [83] blob_1.2.4                    hwriter_1.3.2.1              
+ [85] XVector_0.40.0                htmltools_0.5.6              
+ [87] geneplotter_1.78.0            ProtGenerics_1.32.0          
+ [89] clue_0.3-64                   scales_1.2.1                 
+ [91] cyclocomp_1.1.1               png_0.1-8                    
+ [93] knitr_1.44                    lambda.r_1.2.4               
+ [95] rstudioapi_0.15.0             tzdb_0.4.0                   
+ [97] reshape2_1.4.4                rjson_0.2.21                 
+ [99] curl_5.0.2                    cachem_1.0.8                 
+[101] GlobalOptions_0.1.2           BiocVersion_3.17.1           
+[103] parallel_4.3.1                desc_1.4.2                   
+[105] restfulr_0.0.15               pillar_1.9.0                 
+[107] vctrs_0.6.3                   promises_1.2.1               
+[109] dbplyr_2.3.3                  cluster_2.1.4                
+[111] xtable_1.8-4                  tximport_1.28.0              
+[113] evaluate_0.21                 VennDiagram_1.7.3            
+[115] GenomicFeatures_1.52.2        cli_3.6.1                    
+[117] locfit_1.5-9.8                compiler_4.3.1               
+[119] futile.options_1.0.1          Rsamtools_2.16.0             
+[121] rlang_1.1.1                   crayon_1.5.2                 
+[123] ps_1.7.5                      plyr_1.8.8                   
+[125] stringi_1.7.12                munsell_0.5.0                
+[127] Biostrings_2.68.1             lazyeval_0.2.2               
+[129] Matrix_1.6-1                  BSgenome_1.68.0              
+[131] hms_1.1.3                     bit64_4.0.5                  
+[133] KEGGREST_1.40.0               statmod_1.5.0                
+[135] shiny_1.7.5                   interactiveDisplayBase_1.38.0
+[137] AnnotationHub_3.8.0           memoise_2.0.1                
+[139] bit_4.0.5                     xmlparsedata_1.0.5  
