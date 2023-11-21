@@ -475,8 +475,10 @@ make_comparison_plots(cortex_sex_list,
   save_path = here("results", "plots")
 )
 
+
 make_comparison_plots(hippocampus_sex_list,
   save_path = here("results", "plots")
+
 )
 
 make_comparison_plots(striatum_sex_list,
@@ -499,6 +501,7 @@ all_pairwise_dge_genes <- unique(c(
   striatum_hippocampus_dge_genes
 ))
 
+
 # aggregate all dte genes
 all_pairwise_dte_genes <- unique(c(
   cerebellum_cortex_dte_genes, cerebellum_hippocampus_dte_genes,
@@ -506,6 +509,7 @@ all_pairwise_dte_genes <- unique(c(
   cortex_striatum_dte_genes,
   striatum_hippocampus_dte_genes
 ))
+
 
 # aggregate all pairwise dtu genes
 all_pairwise_dtu_genes <- unique(c(
