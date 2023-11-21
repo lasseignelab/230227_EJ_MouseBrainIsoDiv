@@ -27,9 +27,7 @@ suppressPackageStartupMessages({
   library(eulerr)
   library(circlize)
 })
-
 ```
-
 
 ### Load in Data
 
@@ -213,7 +211,6 @@ length(cortex_hippocampus_dge_genes) # 329
 sum(hippocampus_dge_genes %in% cortex_hippocampus_dge_genes)# 160
 # what percent is that total?
 sum(hippocampus_dge_genes %in% cortex_hippocampus_dge_genes) / length(hippocampus_dge_genes) # 0.41
-
 ```
 
 do for dtu 
@@ -242,7 +239,6 @@ length(cortex_hippocampus_dtu_genes) # 41
 sum(hippocampus_dtu_genes %in% cortex_hippocampus_dtu_genes) # 2
 # what percent is that total?
 sum(hippocampus_dtu_genes %in% cortex_hippocampus_dtu_genes) / length(hippocampus_dtu_genes) # 0.045
-
 ```
 
 Then striatum
@@ -299,8 +295,8 @@ length(cortex_striatum_dtu_genes) # 276
 sum(striatum_dtu_genes %in% cortex_striatum_dtu_genes) # 0
 # what percent is that total?
 sum(striatum_dtu_genes %in% cortex_striatum_dtu_genes) / length(striatum_dtu_genes) # 0
-
 ```
+
 Cortex
 ```{r cortex dge}
 # get length of single vs all
@@ -326,7 +322,6 @@ length(cortex_striatum_dge_genes) # 634
 sum(cortex_dge_genes %in% cortex_striatum_dge_genes) # 230
 # what percent is that total?
 sum(cortex_dge_genes %in% cortex_striatum_dge_genes) / length(cortex_dge_genes) # 0.42
-
 ```
 
 do for dtu 
@@ -518,11 +513,11 @@ cerebellum_not_present_list <- cerebellum_dtu_genes[!cerebellum_dtu_genes %in% c
 
 switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_present_list[1])
 
-switchPlot(region_region_switchlist, gene = present_list[1], condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist, gene = cerebellum_present_list[1], condition1 = "cerebellum", condition2 = "striatum")
 
 switchPlot(region_all_switchlist_list[["cerebellum"]], gene = cerebellum_not_present_list[1])
 
-switchPlot(region_region_switchlist, gene = not_present_list[1], condition1 = "cerebellum", condition2 = "striatum")
+switchPlot(region_region_switchlist, gene = cerebellum_not_present_list[1], condition1 = "cerebellum", condition2 = "striatum")
 ```
 
 ```{r look at more examples}
