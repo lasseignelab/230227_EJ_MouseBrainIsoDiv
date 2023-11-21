@@ -761,7 +761,7 @@ ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
 ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
   geom_bar(position = "fill", stat = "identity")
 
-ggsave(here("results/plots/bar_plots/stacked_region_others.png"),
+ggsave(here("results", "plots", "bar_plots", "stacked_region_others.png"),
   width = 6, height = 4
 )
 ```
@@ -971,7 +971,7 @@ ggplot(stacked_barplot, aes(fill = analysis, y = n_genes, x = brain_region)) +
   ylab("Proportion of Total Genes") +
   theme_minimal()
 
-ggsave(here("results/plots/bar_plots/stacked_region_others_overlap.png"),
+ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
   width = 6, height = 4
 )
 ```
@@ -1495,38 +1495,6 @@ stacked_barplot_paired <- data.frame(
 Now that we have made the dataframe, we can make the ggplot.
 
 ```{r create stacked paired barplot}
-stacked_barplot_paired_plot <-
-  ggplot(
-    stacked_barplot_paired,
-    aes(fill = analysis, y = n_genes, x = brain_regions)
-  ) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = EJ_custom_palette) +
-  xlab("Brain Regions") +
-  ylab("Proportion of Total Genes") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-
-stacked_barplot_paired_plot
-
-# make horizontal
-stacked_barplot_paired_plot_horiz_rot <-
-  ggplot(
-    stacked_barplot_paired,
-    aes(fill = analysis, y = n_genes, x = brain_regions)
-  ) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = EJ_custom_palette) +
-  xlab("Brain Regions") +
-  ylab("Proportion of Total Genes") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(angle = 45, hjust = .8)) +
-  coord_flip() +
-  theme(text = element_text(face = "bold"))
-
-stacked_barplot_paired_plot_horiz_rot
-
-# try without rotated labels
 stacked_barplot_paired_plot_horiz <-
   ggplot(
     stacked_barplot_paired,
@@ -1546,8 +1514,7 @@ stacked_barplot_paired_plot_horiz
 
 ggsave(
   here(
-    "results/plots/bar_plots/stacked_region_region_overlap.png",
-    stacked_barplot_paired_plot
+    "results", "plots", "bar_plots", "stacked_region_region_overlap.png"
   ),
   width = 6, height = 4
 )

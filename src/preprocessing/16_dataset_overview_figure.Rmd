@@ -141,6 +141,7 @@ vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) +
 
 vst_tissue_pca
 ```
+
 ### Metadata plots
 
 Here, I want to plot the number of reads per sample. Also, the calculate total number of reads. This will become panel C of figure 1.
@@ -169,6 +170,7 @@ reads_per_tissue_plot <- ggplot(
   theme(text = element_text(face = "bold"))
 
 # save
+
 ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
   width = 6, height = 5
 )
@@ -266,6 +268,7 @@ novel_genes_plot <- ggplot(gene_data, aes(
   coord_cartesian(clip = "off")
 
 # save
+
 ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
   width = 3, height = 4
 )
@@ -305,6 +308,7 @@ novel_txs_plot <- ggplot(transcript_data, aes(
   coord_cartesian(clip = "off")
 
 # save
+
 ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
   width = 3, height = 4
 )
@@ -338,6 +342,7 @@ tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
 
 # save
 ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+
 
 # what is the mean number of tx per gene
 mean(tx_per_gene$`transcript count`)
@@ -426,6 +431,7 @@ write_csv(novel_transcripts_annotation,
 I also want to do this for novel genes and include and all transcripts for these genes.
 
 ```{r pull novel genes from annotation}
+
 novel_genes_annotation <-
   transcripts_annotation[transcripts_annotation$gene_id %in% novel_genes, ]
 
@@ -451,6 +457,7 @@ bottom_row <- plot_grid(novel_genes_plot, novel_txs_plot, tx_per_gene_plot,
   nrow = 1
 )
 
+
 bottom_row
 
 final_figure1 <- plot_grid(top_row, bottom_row, ncol = 1)
@@ -464,7 +471,6 @@ png(here("results", "finished_figures", "figure1.png"),
 final_figure1
 dev.off()
 ```
-
 
 ### Biological replicate agreement
 
@@ -563,6 +569,7 @@ rank_sum <- wilcox.test(
 )
 
 rank_sum[["p.value"]]
+
 ```
 Expected p-value: 1.570014e-113
 
@@ -571,8 +578,10 @@ What % are expressed with a mean CPM of 1 or higher?
 There are multiple ways we can do this, most simply is looking at the mean across all samples, but if we pivot longer we could be able to look at all of the values.
 
 ```{r how many are transcripts are expressed at what level}
+
 novel_cpm_means_df <-
   merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$novel == TRUE, ]
+
 
 sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
 ```
@@ -583,6 +592,7 @@ Now, I'm going to try and pivot the data and run the same stat.
 novel_cpm <- merged_cpm_iso_means[merged_cpm_iso_means$novel == TRUE, ]
 
 novel_cpm_pivot <- pivot_longer(novel_cpm,
+
   cols = c(2:41),
   values_to = "CPM", names_to = "sample_id"
 )
