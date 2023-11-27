@@ -587,7 +587,7 @@ final_supp_2
 dev.off()
 ```
 
-#### Style and lint
+#### Clean up script
 
 ```{r tidy script}
 style_file("21_create_supp_fig_2.Rmd")
@@ -598,6 +598,13 @@ lint("21_create_supp_fig_2.Rmd",
     object_usage_linter = NULL
   )
 )
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
 ```
 
 #### Versions
