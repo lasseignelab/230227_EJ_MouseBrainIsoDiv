@@ -1,0 +1,5 @@
+,query,significant,p_value,term_size,query_size,intersection_size,precision,recall,term_id,source,term_name,effective_domain_size,source_order,parents
+1,query_1,TRUE,0.049948586255221,1,45,1,0.0222222222222222,1,CORUM:823,CORUM,PAR-3-VE-cadherin complex, endothelial,13288,121,CORUM:0000000
+2,query_1,TRUE,0.049948586255221,1,45,1,0.0222222222222222,1,CORUM:861,CORUM,Par-3-p75NTR complex,13288,123,CORUM:0000000
+3,query_1,TRUE,0.049948586255221,1,45,1,0.0222222222222222,1,CORUM:3193,CORUM,G protein complex (Hdac5, Gnb1, Gng2),13288,352,CORUM:0000000
+4,query_1,TRUE,0.0001888372850744,2747,45,23,0.511111111111111,0.00837277029486713,WP:000000,WP,WIKIPATHWAYS,13288,1,character(0)

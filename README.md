@@ -1,73 +1,51 @@
-README
+Nanopore long-read RNA sequencing shows region-specific sex differences
+in wild-type mouse brain mRNA isoform expression and usage
 ================
-2023-07-27
-
-# Quantifying Isoform-Level Diversity with lrRNA-Seq in WT Mouse Brain
+2023-11-15
 
 ## Authors
 
-Emma Jones, TC Howton, Victoria Flanary, and Brittany Lasseigne.
+**Emma F. Jones, Timothy C. Howton, Victoria L. Flanary, Amanda D.
+Clark, and Brittany N. Lasseigne.**
 
-## Purpose
+The University of Alabama at Birmingham, Heersink School of Medicine,
+Department of Cell, Developmental and Integrative Biology
+
+## Project Overview
 
 The purpose of this project is to analyze Oxford Nanopore RNA sequencing
-from four wildtype mouse brain regions balanced for sex, to assay
-isoform usage differences across brain region and sex.
+from four wild-type mouse brain regions balanced for sex, to assay
+isoform usage and expression differences across brain region and sex.
+
+![We extracted RNA from 40 samples, four brain regions each from 10 mice
+balanced for sex with and sequenced on an ONT GridION. We processed this
+data with the nf-core nanoseq pipeline and used DESeq2,
+IsoformSwitchAnalyzeR, and custom scripts for downstream
+analyses](https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png)
+Preprint DOI  
+Docker DOI  
+Zenodo DOI  
+<https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705>
+
+You can also visit our Shiny Application that accompanies this analysis:
+
+<https://lasseignelab.shinyapps.io/mouse_brain_iso_div/>
 
 ## Scripts
 
-    ## src
-    ## ├── README
-    ## ├── de_analysis
-    ## │   ├── 10_DESeq2_region_region.Rmd
-    ## │   ├── 11_DESeq2_region_others.Rmd
-    ## │   ├── 12_DESeq2_region_sex.Rmd
-    ## │   ├── 13_incorporate_de_results.Rmd
-    ## │   ├── 15_compare_DTU_DGE.Rmd
-    ## │   └── de_functions.R
-    ## ├── dtu_analyses
-    ## │   ├── 01_calculate_cpm.R
-    ## │   ├── 04_pca_eda.Rmd
-    ## │   ├── 05_dtu_region_region.Rmd
-    ## │   ├── 06_dtu_region_others.Rmd
-    ## │   ├── 07_dtu_region_sex.Rmd
-    ## │   ├── 08_dtu_neuro_diseases.Rmd
-    ## │   ├── 09_dtu_isoform_switching.Rmd
-    ## │   ├── 14_protein_domain_info.Rmd
-    ## │   ├── compare_satuRn_DEXSeq_results.Rmd
-    ## │   ├── functions.R
-    ## │   ├── isoformswitchanalyzer_overflow.Rmd
-    ## │   └── size_power.R
-    ## ├── preprocessing
-    ## │   ├── 00_run_nanoseq.sh
-    ## │   ├── 02_get_genome_annotations.sh
-    ## │   ├── 03_create_isoform_fa.sh
-    ## │   ├── 16_dataset_overview_figure.Rmd
-    ## │   ├── 20010631.c0158.err.txt
-    ## │   ├── 20010631.c0158.out.txt
-    ## │   └── README
-    ## └── worm_analysis
-    ##     ├── 17_dtu_whole_worm.Rmd
-    ##     ├── 18_compare_worm_mouse.Rmd
-    ##     └── salmon_quant.sh
+#### Preprocessing
 
-### Reproducibility
-
-HPC user session info: I used the short partition with 1-2 nodes and
-80GB per node, which is generous. None of my scripts take longer than 12
-hours so I would stay on the short partition, unless you want to have
-one long session on another partition which is fine.
+    ## src/preprocessing
+    ## ├── 00_run_nanoseq.sh
+    ## ├── 02_get_genome_annotations.sh
+    ## ├── 03_create_isoform_fa.sh
+    ## ├── 16_dataset_overview_figure.Rmd
+    ## └── README
 
 ***Script 00: preprocessing/00_run_nanoseq.sh*** - This script can be
 skipped if you are working from counts files. Does not require a docker.
 You need raw input fasta files, a genome file, and genome annotation
 file. I used GENCODE mouse release M31.
-
-#### Start here
-
-***Script 01: dtu_analyses/01_calculate_cpm.R*** - This script is very
-short and depends on having transcript counts available either by
-downloading or running the nanoseq pipeline. Takes less than one minute.
 
 ***Script 02: preprocessing/02_get_genome_annotations.sh*** - You need
 genome annotations available for gffread to run, but you also need
@@ -81,6 +59,34 @@ download.
 depends on script 02. It is a single command but needs to be run in a
 docker (either RStudio docker I made has gffread) or on a local machine
 with gffread.
+
+***Script 16: preprocessing/16_dataset_overview_figure.Rmd*** - The
+purpose of this script is to provide a dataset overview to serve as
+manuscript figure 1. It is dependent on scripts 00 and 01 to get sample
+metadata. Must run in github docker 1.7 or above.
+
+#### DTU Analyses
+
+    ## src/dtu_analyses
+    ## ├── 01_calculate_cpm.R
+    ## ├── 04_pca_eda.Rmd
+    ## ├── 05_dtu_region_region.Rmd
+    ## ├── 06_dtu_region_others.Rmd
+    ## ├── 07_dtu_region_sex.Rmd
+    ## ├── 08_dtu_neuro_diseases.Rmd
+    ## ├── 09_dtu_isoform_switching.Rmd
+    ## ├── 14_protein_domain_info.Rmd
+    ## ├── compare_satuRn_DEXSeq_results.Rmd
+    ## ├── functions.R
+    ## ├── isoformswitchanalyzer_overflow.Rmd
+    ## └── size_power.R
+
+***dtu_analysis/functions.R*** - This is a function script for all Rmd
+files in the dtu directory.
+
+***Script 01: dtu_analyses/01_calculate_cpm.R*** - This script is very
+short and depends on having transcript counts available either by
+downloading or running the nanoseq pipeline. Takes less than one minute.
 
 ***Script 04: dtu_analyses/04_pca_eda.Rmd*** - This script is for
 exploratory data analysis and PCA. It depends on script 01. If data
@@ -115,6 +121,29 @@ is also for plotting and saving switch plots, which show the significant
 isoform switching events. It is dependent on scripts 01-07 and the
 functions script. This script also takes 36 minutes to run.
 
+***Script 14: dtu_analyses/14_protein_domain_info.Rmd*** - This script
+depends on scripts 00-13, and also includes a shell script for running
+perl code. The purpose of this script is to extract nucleotide and amino
+acid sequences and run pfam to annotate the protein domains. NEEDS TO
+RUN IN PFAM DOCKER!
+
+#### DGE and DTE Analyses
+
+    ## src/de_analysis
+    ## ├── 10_DESeq2_region_region.Rmd
+    ## ├── 11_DESeq2_region_others.Rmd
+    ## ├── 12_DESeq2_region_sex.Rmd
+    ## ├── 13_incorporate_de_results.Rmd
+    ## ├── 15_compare_DTU_DGE.Rmd
+    ## ├── 19_compare_region_pairwise_results.Rmd
+    ## ├── 20_enrichment_analysis.Rmd
+    ## ├── 21_create_supp_fig_2.Rmd
+    ## ├── 22_investigate_non-sig_dte.Rmd
+    ## └── de_functions.R
+
+***de_analysis/de_functions.R*** - This is a function script for all Rmd
+files in the de directory.
+
 ***Script 10: de_analysis/10_DESeq2_region_region.Rmd*** - This script
 is dependent on script 00/01 or having gene and transcript level count
 data with metadata in your /data/ directory and the de functions script.
@@ -143,31 +172,75 @@ and subsequently, plots. This enables us to plot them all with
 significance values for DGE, DTE, and DTU. This script takes 12 minutes
 to run.
 
-***Script 14: dtu_analyses/14_protein_domain_info.Rmd*** - This script
-depends on scripts 00-13, and also includes a shell script for running
-perl code. The purpose of this script is to extract nucleotide and amino
-acid sequences and run pfam to annotate the protein domains. NEEDS TO
-RUN IN PFAM DOCKER!
-
 ***Script 15: de_analysis/15_compare_DTU_DGE.Rmd*** - This script
 depends on scripts 00-14. The purpose of this script is to compare genes
 with differential gene expression, differential transcript usage, and
-differential transcript expression. Run back in github docker. It is not
-currently finished.
+differential transcript expression. Must run in docker 1.7 to have all
+packages.
 
-***Script 16: de_analysis/16_dataset_overview_figure.Rmd*** - The
-purpose of this script is to provide a dataset overview to serve as
-manuscript figure 1. It is dependent on scripts 00 and 01 to get sample
-metadata. It takes less than 3 minutes to run and is not finished but is
-mainly on the shelf for now.
+***Script 19: de_analysis/19_compare_region_pairwise_results.Rmd*** -
+The purpose of this script is to determine how many DTU genes or DEGs
+are specific to a study design. I used Jaccard Similarity to see how
+similar the results are to each other and create supp figure 3. Must run
+in github docker 1.7 or above.
 
-#### Other Scripts
+***Script 20: de_analysis/20_enrichment_analysis.Rmd*** - The purpose of
+this script is to perform functional enrichment analysis with the
+package gprofiler2 on the DGE and DTE genes. This script is fully
+dependent on scripts 00-12. Must run in github docker 1.7 or above.
 
-***dtu_analysis/functions.R*** - This is a function script for all Rmd
-files in the dtu directory.
+***Script 21: de_analysis/21_create_supp_fig_2.Rmd*** - The purpose of
+this script is to create supplementary figure 2. This script is fully
+dependent on scripts 00-12.
 
-***de_analysis/de_functions.R*** - This is a function script for all Rmd
-files in the de directory.
+#### Shiny Application scripts
+
+    ## src/shiny_support
+    ## └── calculate_cpm_convert_ids.R
+
+***shiny_support/calculate_cpm_convert_ids.R*** - This script enables
+the gene IDs for the Shiny App to be either ENSEMBL IDs or gene symbols
+and does some other needed reformatting of the data for the application
+to work.
+
+    ## src/shiny_app
+    ## ├── app.R
+    ## ├── complete_switchlists
+    ## │   ├── region_all_list_orf_de_pfam.Rds
+    ## │   ├── region_region_orf_de_pfam.Rds
+    ## │   └── region_sex_list_orf_de_pfam.Rds
+    ## ├── data
+    ## │   ├── combined_cpm.Rds
+    ## │   └── sample_collection_metadata.Rds
+    ## ├── rsconnect
+    ## │   └── shinyapps.io
+    ## │       └── lasseignelab
+    ## │           └── mouse_brain_iso_div.dcf
+    ## ├── server.R
+    ## ├── ui.R
+    ## └── www
+    ##     ├── DTU_example.png
+    ##     ├── code.js
+    ##     ├── favicon.ico
+    ##     ├── graphical_abstract.png
+    ##     ├── logo_only.png
+    ##     └── style.css
+
+***shiny_app/app.R*** - This script runs the entire Shiny application.
+
+***shiny_app/server.R*** - The purpose of this script is to run the
+back-end code needed for generating plots and data for the Shiny
+application.
+
+***shiny_app/ui.R*** - The purpose of this script is to run the user
+interface for shiny web application.
+
+#### Archived scripts
+
+    ## src/worm_analysis
+    ## ├── 17_dtu_whole_worm.Rmd
+    ## ├── 18_compare_worm_mouse.Rmd
+    ## └── salmon_quant.sh
 
 ***Script 17: worm_analysis/17_dtu_whole_worm.Rmd*** - The purpose of
 this script is to examine differential transcript usage by sex in
@@ -197,10 +270,17 @@ UAB Lab Startup funds (PI: Lasseigne)
 
 ## Acknowledgements
 
-We acknowledge the members of the Lasseigne Lab for their thoughtful
-feedback.
+We acknowledge all current and past members of the Lasseigne Lab for
+their thoughtful feedback, especially Tabea M. Soelter, Jordan H.
+Whitlock, Vishal H. Oza, and Elizabeth J. Wilk. We would like to thank
+the UAB Biological Data Sciences (UAB-BDS) core for its expertise,
+institutional support, and maintenance of the nf-core nanoseq pipeline
+and docker/singularity container documentation.
 
 ## License
 
 This repository is licensed under the MIT License, see LICENSE
 documentation within this repository for more details.
+
+[![MIT
+License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
