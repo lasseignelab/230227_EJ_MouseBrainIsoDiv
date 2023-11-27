@@ -81,24 +81,27 @@ We also need the gtf file for useful information about our transcripts.
 ```{r read in the gtf file}
 annotation <- read_table(
   here("data", "nextflow", "bambu", "extended_annotations.gtf"),
-  col_names = c("location", "method", "type", "start", "stop", "blank1", "strand", "blank2", "geneid", "gene_id", "transcriptid", "transcript_id")
+  col_names = c(
+    "location", "method", "type", "start", "stop", "blank1",
+    "strand", "blank2", "geneid", "gene_id", "transcriptid",
+    "transcript_id"
+  )
 )
 
 # need to message df a little bit
-annotation <- annotation[,-c(2, 6, 8, 9, 11)]
+annotation <- annotation[, -c(2, 6, 8, 9, 11)]
 
 annotation$gene_id <- str_sub(annotation$gene_id, 2, -3)
 
 annotation$transcript_id <- str_sub(annotation$transcript_id, 2, -3)
 
 # pull out info for only transcripts
-transcripts_annotation <- annotation[annotation$type == "transcript",-2]
+transcripts_annotation <- annotation[annotation$type == "transcript", -2]
 ```
 
 ### Load in VST data for PCA
 
 ```{r load in vst data}
-
 source(here("src", "de_analysis", "de_functions.R"))
 
 # read in gene counts data
@@ -127,15 +130,18 @@ head(assay(vsd), 3)
 
 colData(vsd)
 
-vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) + 
-  scale_color_manual(values = region_colors,
-       labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")) +
+vst_tissue_pca <- plotPCA(vsd, intgroup = c("tissue")) +
+  scale_color_manual(
+    values = region_colors,
+    labels = c("Cerebellum", "Cortex", "Hippocampus", "Striatum")
+  ) +
   theme_minimal(base_size = 12) +
   labs(color = "Tissue") +
   theme(text = element_text(face = "bold"))
 
 vst_tissue_pca
 ```
+
 ### Metadata plots
 
 Here, I want to plot the number of reads per sample. Also, the calculate total number of reads. This will become panel C of figure 1.
@@ -156,14 +162,16 @@ reads_per_tissue_plot <- ggplot(
   labs(fill = "Tissue") +
   xlab("Tissue") +
   ylab("Total Number of Reads") +
-  theme(axis.title.x.bottom = element_blank(),
+  theme(
+    axis.title.x.bottom = element_blank(),
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
     legend.position = "none"
   ) +
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(reads_per_tissue_plot, here("results", "plots", "bar_plots", "reads_per_sample.png"),
+
+ggsave(here("results", "plots", "bar_plots", "reads_per_sample.png"),
   width = 6, height = 5
 )
 
@@ -225,7 +233,7 @@ First, we can start with a bar plot of the number of novel genes. Any novel gene
 
 ```{r barplot genes}
 # get number of unique genes
-genes <- unique(gene_counts_drop0$GENEID)
+genes <- unique(gene_counts_drop0$GENEID) # 28,853
 
 # pull novel unique genes
 novel_genes <- genes[!is.na(str_extract(genes, "gene*..."))]
@@ -239,7 +247,10 @@ gene_data <- data.frame(
 )
 
 # barplot
-novel_genes_plot <- ggplot(gene_data, aes(x = gene_novelty, y = count, fill = gene_novelty)) +
+novel_genes_plot <- ggplot(gene_data, aes(
+  x = gene_novelty, y = count,
+  fill = gene_novelty
+)) +
   geom_bar(position = "dodge", stat = "identity") +
   scale_fill_manual(values = other_colors) +
   geom_text(aes(label = count),
@@ -252,12 +263,13 @@ novel_genes_plot <- ggplot(gene_data, aes(x = gene_novelty, y = count, fill = ge
   ) +
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Gene Novelty") +
-  ylab("Number of Genes")+
+  ylab("Number of Genes") +
   theme(text = element_text(face = "bold")) +
   coord_cartesian(clip = "off")
 
 # save
-ggsave(novel_genes_plot, here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
+
+ggsave(here("results", "plots", "bar_plots", "novel_genes_barplot.png"),
   width = 3, height = 4
 )
 ```
@@ -291,12 +303,13 @@ novel_txs_plot <- ggplot(transcript_data, aes(
   ) +
   scale_x_discrete(labels = c("Annotated", "Novel")) +
   xlab("Transcript Novelty") +
-  ylab("Number of Transcripts")+
+  ylab("Number of Transcripts") +
   theme(text = element_text(face = "bold")) +
   coord_cartesian(clip = "off")
 
 # save
-ggsave(novel_txs_plot <- here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
+
+ggsave(here("results", "plots", "bar_plots", "novel_transcripts_barplot.png"),
   width = 3, height = 4
 )
 ```
@@ -314,8 +327,9 @@ tx_per_gene <- gene_matches %>%
 
 # save table
 write_csv(tx_per_gene,
-          here("results", "all_txs", "txs_per_gene.csv"),
-          quote = "none")
+  here("results", "all_txs", "txs_per_gene.csv"),
+  quote = "none"
+)
 
 # plot
 tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
@@ -323,14 +337,15 @@ tx_per_gene_plot <- ggplot(tx_per_gene, aes(x = `transcript count`)) +
   xlim(0, 25) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 12)+
+  theme_minimal(base_size = 12) +
   theme(text = element_text(face = "bold"))
 
 # save
-ggsave(tx_per_gene_plot, here("results", "plots", "histograms", "transcripts_per_gene.png"))
+ggsave(here("results", "plots", "histograms", "transcripts_per_gene.png"))
+
 
 # what is the mean number of tx per gene
-mean(tx_per_gene$`transcript count`)
+mean(tx_per_gene$`transcript count`) # expected result 3.29
 ```
 
 Another request I had was to make a histogram of novel transcripts by gene. 
@@ -343,15 +358,16 @@ tx_per_novel_gene <- tx_per_gene[tx_per_gene$GENEID %in% novel_genes, ]
 
 # save table
 write_csv(tx_per_novel_gene,
-          here("results", "novel_genes", "txs_per_novel_gene.csv"),
-          quote = "none")
+  here("results", "novel_genes", "txs_per_novel_gene.csv"),
+  quote = "none"
+)
 
 # plot
 ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
   geom_histogram(binwidth = 1) +
   xlab("Transcripts per Gene") +
   ylab("Number of Genes") +
-  theme_minimal(base_size = 12)+
+  theme_minimal(base_size = 12) +
   theme(text = element_text(face = "bold"))
 
 # save
@@ -366,8 +382,9 @@ novel_txs <- gene_matches[!is.na(str_extract(gene_matches$TXNAME, "tx*...")), ]
 
 # save novel transcripts with gene id
 write_csv(novel_txs,
-          here("results", "novel_txs", "novel_txs_geneids.csv"),
-          quote = "none")
+  here("results", "novel_txs", "novel_txs_geneids.csv"),
+  quote = "none"
+)
 
 # count number of novel transcripts that belong to a novel gene
 nrow(novel_txs[!is.na(str_extract(novel_txs$GENEID, "gene*...")), ]) # 309
@@ -382,8 +399,9 @@ novel_tx_per_gene <- novel_txs %>%
 
 # save table
 write_csv(novel_tx_per_gene,
-          here("results", "novel_txs", "novel_txs_per_gene.csv"),
-          quote = "none")
+  here("results", "novel_txs", "novel_txs_per_gene.csv"),
+  quote = "none"
+)
 
 # plot
 ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
@@ -395,31 +413,31 @@ ggplot(novel_tx_per_gene, aes(x = `transcript count`)) +
 
 # save plot
 ggsave(here("results", "plots", "histograms", "novel_transcripts_per_gene.png"))
-
 ```
 
 I also want to have more location about these novel transcripts, such as their chromosomal locations. I can get this from the annotation gtf.
 
 ```{r pull novel transcripts from annotation}
-
-novel_transcripts_annotation <- transcripts_annotation[transcripts_annotation$transcript_id %in% novel_txs$TXNAME,]
+novel_transcripts_annotation <- transcripts_annotation[
+  transcripts_annotation$transcript_id %in% novel_txs$TXNAME,
+]
 
 write_csv(novel_transcripts_annotation,
-          here("results", "novel_txs", "novel_txs_annotation.csv"),
-          quote = "none")
-  
+  here("results", "novel_txs", "novel_txs_annotation.csv"),
+  quote = "none"
+)
 ```
 
 I also want to do this for novel genes and include and all transcripts for these genes.
 
 ```{r pull novel genes from annotation}
-
-novel_genes_annotation <- transcripts_annotation[transcripts_annotation$gene_id %in% novel_genes,]
+novel_genes_annotation <-
+  transcripts_annotation[transcripts_annotation$gene_id %in% novel_genes, ]
 
 write_csv(novel_genes_annotation,
-          here("results", "novel_genes", "novel_genes_annotation.csv"),
-          quote = "none")
-  
+  here("results", "novel_genes", "novel_genes_annotation.csv"),
+  quote = "none"
+)
 ```
 
 ## Create final figure
@@ -427,12 +445,17 @@ write_csv(novel_genes_annotation,
 Now that individual plots have been saved, I can create the final figure, aside from the cartoon. I will use plot_grid from cowplot for this
 
 ```{r put all plots together}
-
-top_row <- plot_grid(vst_tissue_pca, reads_per_tissue_plot, labels = c("B", "C"), rel_widths = c(2, 1))
+top_row <- plot_grid(vst_tissue_pca, reads_per_tissue_plot,
+  labels = c("B", "C"), rel_widths = c(2, 1)
+)
 
 top_row
 
-bottom_row <- plot_grid(novel_genes_plot, novel_txs_plot, tx_per_gene_plot, labels = c("D", "E", "F"), rel_widths = c(0.5, 0.5, 1), nrow = 1)
+bottom_row <- plot_grid(novel_genes_plot, novel_txs_plot, tx_per_gene_plot,
+  labels = c("D", "E", "F"), rel_widths = c(0.5, 0.5, 1),
+  nrow = 1
+)
+
 
 bottom_row
 
@@ -440,12 +463,13 @@ final_figure1 <- plot_grid(top_row, bottom_row, ncol = 1)
 
 final_figure1
 
-png(here("results", "finished_figures", "figure1.png"), width = 8, height = 7, units = "in", res = 300)
+png(here("results", "finished_figures", "figure1.png"),
+  width = 8, height = 7,
+  units = "in", res = 300
+)
 final_figure1
 dev.off()
-
 ```
-
 
 ### Biological replicate agreement
 
@@ -526,25 +550,35 @@ merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
 # use ggplot to make density plots showing the two distributions
 ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
   geom_density(alpha = .5) +
-  scale_fill_manual(values = other_colors,
-                    name = "Transcript\nClassification",
-                    labels = c("Annotated", "Novel")) +
+  scale_fill_manual(
+    values = other_colors,
+    name = "Transcript\nClassification",
+    labels = c("Annotated", "Novel")
+  ) +
   xlab("log10(Mean CPM + 1)") +
   ylab("Relative Density") +
-  theme_minimal(base_size = 12)+
+  theme_minimal(base_size = 12) +
   theme(text = element_text(face = "bold"))
 
 ggsave(here("results", "finished_figures", "supp1.png"))
 
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == TRUE],
+  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE]
+)
+
+rank_sum[["p.value"]]
 ```
+Expected p-value: 1.570014e-113
 
 What % are expressed with a mean CPM of 1 or higher? 
 
 There are multiple ways we can do this, most simply is looking at the mean across all samples, but if we pivot longer we could be able to look at all of the values.
 
 ```{r how many are transcripts are expressed at what level}
+novel_cpm_means_df <-
+  merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$novel == TRUE, ]
 
-novel_cpm_means_df <- merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$novel == TRUE,]
 
 sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
 ```
@@ -552,35 +586,15 @@ sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
 Now, I'm going to try and pivot the data and run the same stat.
 
 ```{r transcript expression pivoted version}
-
 novel_cpm <- merged_cpm_iso_means[merged_cpm_iso_means$novel == TRUE, ]
 
-novel_cpm_pivot <- pivot_longer(novel_cpm, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
+novel_cpm_pivot <- pivot_longer(novel_cpm,
+  cols = c(2:41),
+  values_to = "CPM", names_to = "sample_id"
+)
 
 sum(novel_cpm_pivot$CPM >= 1) / nrow(novel_cpm_pivot) # only 64% now
-
-
 ```
-
-Not sure how helpful this is. But the pivot may be useful if we pivot the entire df and then make supp figure again?
-
-```{r pivot entire df}
-
-merged_cpm_iso_means_long <- pivot_longer(merged_cpm_iso_means, cols = c(2:41), values_to = "CPM", names_to = "sample_id")
-
-ggplot(merged_cpm_iso_means_long, aes(x = log10(CPM + 1), fill = novel)) +
-  geom_density(alpha = .5) +
-  scale_fill_manual(values = other_colors,
-                    name = "Transcript\nClassification",
-                    labels = c("Annotated", "Novel")) +
-  xlab("log10(Mean CPM + 1)") +
-  ylab("Relative Density") +
-  theme_minimal(base_size = 12)+
-  theme(text = element_text(face = "bold"))
-
-```
-
-Yeah, I think mean was better anyway. Was worth a try though!
 
 #### Clean up script
 
