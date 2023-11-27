@@ -332,7 +332,7 @@ ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
   ylab("Proportion of Total Genes") +
   theme_minimal()
 
-ggsave(here("results/plots/bar_plots/stacked_region_others_overlap.png"),
+ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
   width = 6, height = 4
 )
 ```
@@ -371,7 +371,7 @@ stacked_barplot_paired_plot_horiz
 
 ggsave(
   here(
-    "results/plots/bar_plots/stacked_region_region_overlap.png"
+    "results", "plots", "bar_plots", "stacked_region_region_overlap.png"
   ),
   width = 6, height = 4
 )
@@ -587,7 +587,7 @@ final_supp_2
 dev.off()
 ```
 
-#### Style and lint
+#### Clean up script
 
 ```{r tidy script}
 style_file("21_create_supp_fig_2.Rmd")
@@ -598,6 +598,13 @@ lint("21_create_supp_fig_2.Rmd",
     object_usage_linter = NULL
   )
 )
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
 ```
 
 #### Versions
