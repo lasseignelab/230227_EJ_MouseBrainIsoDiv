@@ -491,7 +491,7 @@ wrangle_iso_exp <- function(gene_list) {
     pivot_longer(gene_list_values, cols = c("condition_1", "condition_2"),
                  names_to = "condition_name", values_to = "condition")
   
-  # remove uneeded columns
+  # remove unneeded columns
   gene_list_values <- gene_list_values[, -c(3, 5)]
  
    # remove duplicate rows
@@ -502,4 +502,11 @@ wrangle_iso_exp <- function(gene_list) {
    # return object
   return(gene_list_values)
   
+}
+
+# make function for jaccard similarity
+get_jaccard_similarity <- function(A, B) {
+  intersection <- length(intersect(get(A), get(B)))
+  union <- length(get(A)) + length(get(B)) - intersection
+  return(intersection / union)
 }
