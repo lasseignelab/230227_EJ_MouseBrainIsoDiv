@@ -293,6 +293,22 @@ compare_switching_genes <- function(switchlist_obj,
   return(intersect_list)
 }
 
+# edit function to make applicable to region region comparisons
+# in this version, the gene lists must be pulled first.
+compare_switching_genes_simple <- function(sig_features,
+                                    gene_set) {
+  # remove decimals from ENSEMBL ID
+  short_ids <- str_extract(
+    sig_features,
+    "ENSMUSG..........."
+  )
+  # pull short gene ids
+  dtu_genes <- unique(short_ids)
+  # Find Intersect
+  intersect_list <- intersect(dtu_genes, gene_set)
+  return(intersect_list)
+}
+
 ######################### 09_dtu_isoform_switching script ######################
 
 # this function is for adding and saving annotated and novel orfs
