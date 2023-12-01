@@ -51,15 +51,20 @@ source("functions.R", local = knitr::knit_global())
 Load in switchlist objects.
 
 ```{r load in switchlist objects}
-# load object for cerebellum
+# load object for region vs others
 region_all_switchlist_analyzed <- readRDS(
   here("data", "switchlist_objects", "raw", "region_all_switchlist_list.Rds")
+)
+
+# load object for region vs region comparisons
+region_region_switchlist_analyzed <- readRDS(
+  here("data", "switchlist_objects", "raw", "region_region_switchlist_list.Rds")
 )
 ```
 
 #### AD Genes
 
-Load in AD gene set
+Load in AD gene set, from this paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9005347/ 
 
 ```{r read AD gene set}
 # read in from web
@@ -78,7 +83,7 @@ ad_mouse <- mapped_ad_genes$Gene.stable.ID.1
 
 #### Psych Genes
 
-Load in mood disorders gene set. This table does not have individual genes split out, so I need to do that.
+Load in mood disorders gene set. This table does not have individual genes split out, so I need to do that. the paper we pull this gene set from is available here https://www.sciencedirect.com/science/article/pii/S0092867419312760 
 
 ```{r read in mood disorders gene sets}
 # read in from web
@@ -107,9 +112,9 @@ mapped_genes <- convert_human_to_mouse(mood_genes)
 psychiatric_mouse <- mapped_genes$Gene.stable.ID.1
 ```
 
-#### CPAM genes
+#### C-PAM genes
 
-Now, I am going to pull in CPAM case genes from Lizzy. Note for publishing, we might not want to include this file in the public repo if private.
+Now, I am going to pull in C-PAM case genes from UAB's center for precision animal modeling. This information is all publicly available at https://uabcpam.softr.app/full-model-progress
 
 ```{r pull in cpam genes}
 cpam_cases <- read_excel(here("doc", "CPAM", "CPAM_Cases.xlsx"))
@@ -126,10 +131,10 @@ cpam_mouse <- mapped_genes$Gene.stable.ID.1
 Now, I can use the results from this object to get my significant gene lists, Although they should all be saved already as outputs. To keep the ensembl ids, I will be doing this. I made a function to pull out the gene lists, compare, and save objects.
 
 ```{r run analysis}
-# compare gene lists 
+# compare gene lists
 all_ad_genes <- lapply(
-  region_all_switchlist_analyzed, 
-  compare_switching_genes, 
+  region_all_switchlist_analyzed,
+  compare_switching_genes,
   ad_mouse
 )
 all_cpam_genes <- lapply(
@@ -144,48 +149,226 @@ all_psych_genes <- lapply(
 )
 ```
 
+Now, save your data.
 
 ```{r save compare lists}
 saveRDS(
   all_psych_genes,
-  here("results", "psych_dtu_genes", "all_psych_genes.Rds")
+  here("results", "neuro_dtu_genes", "all_psych_genes.Rds")
+)
+
+saveRDS(
+  all_cpam_genes,
+  here("results", "neuro_dtu_genes", "all_cpam_genes.Rds")
 )
 ```
-So, from these, there are no switching genes that are known ad risk genes. In addition, the striatum has no overlap with any gene lists, which makes sense because I only see 2 significant switching genes. For hippocampus and cortex, there is only one psych genes compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list (129 vs less than 50).
 
-Either way, I can still make an upset plot for psychiatric genes at minimum.
+So, from these, there are some switching genes with psych disorders and cpam cases, but no switching genes that are known ad risk genes. For hippocampus and cortex, there is only one psych gene each region compared to the 7 for cerebellum, likely more reflective of having more genes in the cerebellum list.
 
-```{r make upset plots}
-# make matrix
-all_psych_genes_mat <- list_to_matrix(all_psych_genes)
+## Repeat for region vs region comparisons
 
-# create combination matrix
-all_psych_genes_comb_mat <- make_comb_mat(all_psych_genes_mat)
+First, I need to pull out the individual dtu comparisons.
 
-# save
-png(here("results", "psych_dtu_genes", "psych_genes_region_upset.png"))
-
-# make UpSet plot (ComplexHeatmap)
-upset_psych_genes <- UpSet(
-  all_psych_genes_comb_mat,
-  comb_order = order(-comb_size(all_psych_genes_comb_mat)),
-  comb_col = viridis(4)[comb_degree(all_psych_genes_comb_mat)],
-  top_annotation = upset_top_annotation(all_psych_genes_comb_mat,
-    add_numbers = TRUE
-  ),
-  right_annotation = upset_right_annotation(all_psych_genes_comb_mat,
-    add_numbers = TRUE
-  )
+```{r pull out individual dtu comparisons}
+sig_region_region <- dplyr::filter(
+  region_region_switchlist_analyzed$isoformFeatures,
+  abs(dIF) > 0.1 & isoform_switch_q_value < 0.05
 )
 
-draw(upset_psych_genes,
-  column_title = "Overlap of DTU psychiatric risk genes by brain region"
+# cerebellum cortex
+cerebellum_cortex_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "cortex"
 )
+cerebellum_cortex_dtu_genes <- cerebellum_cortex_subset$gene_id
 
-dev.off()
+# cerebellum hippocampus
+cerebellum_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "hippocampus"
+)
+cerebellum_hippocampus_dtu_genes <- cerebellum_hippocampus_subset$gene_id
+
+# cerebellum striatum
+cerebellum_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cerebellum" & condition_2 == "striatum"
+)
+cerebellum_striatum_dtu_genes <- cerebellum_striatum_subset$gene_id
+
+# cortex hippocampus
+cortex_hippocampus_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "hippocampus"
+)
+cortex_hippocampus_dtu_genes <- cortex_hippocampus_subset$gene_id
+
+# cortex striatum
+cortex_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "cortex" & condition_2 == "striatum"
+)
+cortex_striatum_dtu_genes <- cortex_striatum_subset$gene_id
+
+# hippocampus striatum
+hippocampus_striatum_subset <- filter(
+  sig_region_region,
+  condition_1 == "hippocampus" & condition_2 == "striatum"
+)
+hippocampus_striatum_dtu_genes <- hippocampus_striatum_subset$gene_id
 ```
 
-It looks like there is no overlap of psychiatric risk genes.
+We want to be able to apply our function again, so I will make a list of all these comparisons
+
+```{r make list of gene lists}
+all_comparisons <- list(
+  cerebellum_cortex_dtu_genes = cerebellum_cortex_dtu_genes,
+  cerebellum_hippocampus_dtu_genes = cerebellum_hippocampus_dtu_genes,
+  cerebellum_striatum_dtu_genes = cerebellum_striatum_dtu_genes,
+  cortex_hippocampus_dtu_genes = cortex_hippocampus_dtu_genes,
+  cortex_striatum_dtu_genes = cortex_striatum_dtu_genes,
+  hippocampus_striatum_dtu_genes = hippocampus_striatum_dtu_genes
+)
+```
+
+I want to run the "simple" version of this function to preserve the gene lists and skip the step of using a switchlist object.
+
+```{r run another analysis}
+# compare gene lists
+region_region_ad_genes <- lapply(
+  all_comparisons,
+  compare_switching_genes_simple,
+  ad_mouse
+)
+region_region_cpam_genes <- lapply(
+  all_comparisons,
+  compare_switching_genes_simple,
+  cpam_mouse
+)
+region_region_psych_genes <- lapply(
+  all_comparisons,
+  compare_switching_genes_simple,
+  psychiatric_mouse
+)
+```
+
+Great, looks like we have genes for all three of these lists, even if there are not many for ad or cpam compared to the psychiatric list.
+
+Now, save your data.
+
+```{r save compare lists}
+saveRDS(
+  region_region_ad_genes,
+  here("results", "neuro_dtu_genes", "region_region_ad_genes.Rds")
+)
+saveRDS(
+  region_region_cpam_genes,
+  here("results", "neuro_dtu_genes", "region_region_cpam_genes.Rds")
+)
+saveRDS(
+  region_region_psych_genes,
+  here("results", "neuro_dtu_genes", "region_region_psych_genes.Rds")
+)
+```
+
+To make supplementary file 6, we can reformat these gene slightly and to make them more informative.
+
+```{r format table for psych genes}
+supp_file_6 <- data.frame(matrix(ncol = 4, nrow = 50))
+
+supp_file_6$comparison <- c(
+  rep("Cerebellum vs. Cortex", 17),
+  rep("Cerebellum vs. Hippocampus", 7),
+  rep("Cerebellum vs. Striatum", 17),
+  rep("Cortex vs. Hippocampus", 1),
+  rep("Cortex vs. Striatum", 5),
+  rep("Hippocampus vs. Striatum", 3)
+)
+
+supp_file_6$gene_id <- c(
+  region_region_psych_genes[[1]],
+  region_region_psych_genes[[2]],
+  region_region_psych_genes[[3]],
+  region_region_psych_genes[[4]],
+  region_region_psych_genes[[5]],
+  region_region_psych_genes[[6]]
+)
+
+human_switching_disease_genes <- convert_mouse_to_human(supp_file_6$gene_id)
+
+human_switching_disease_genes <- human_switching_disease_genes[-20, ]
+
+order <-
+  match(supp_file_6$gene_id, human_switching_disease_genes$Gene.stable.ID)
+
+supp_file_6$gene_symbol <- human_switching_disease_genes$HGNC.symbol[order]
+
+supp_file_6$diseases <- "Psychiatric"
+```
+
+
+```{r format table for cpam genes}
+cpam_rows <- data.frame(matrix(ncol = 4, nrow = 12))
+
+cpam_rows$comparison <- c(
+  rep("Cerebellum vs. Cortex", 3),
+  rep("Cerebellum vs. Hippocampus", 1),
+  rep("Cerebellum vs. Striatum", 3),
+  rep("Cortex vs. Hippocampus", 1),
+  rep("Cortex vs. Striatum", 4)
+)
+
+cpam_rows$gene_id <- c(
+  region_region_cpam_genes[[1]],
+  region_region_cpam_genes[[2]],
+  region_region_cpam_genes[[3]],
+  region_region_cpam_genes[[4]],
+  region_region_cpam_genes[[5]]
+)
+
+human_switching_cpam_genes <- convert_mouse_to_human(cpam_rows$gene_id)
+
+order <- match(cpam_rows$gene_id, human_switching_cpam_genes$Gene.stable.ID)
+
+cpam_rows$gene_symbol <- human_switching_cpam_genes$HGNC.symbol[order]
+
+cpam_rows$diseases <- "Rare Disease"
+```
+
+Now, bind the two dfs together and add the single AD gene
+
+```{r bind dataframes}
+# bind df
+supp_file_6 <- rbind(supp_file_6[, 5:8], cpam_rows[, 5:8])
+
+# make alzheimers disease gene row
+alz_row <- data.frame(matrix(ncol = 4, nrow = 1))
+
+alz_row$comparison <- "Cortex vs. Striatum"
+
+alz_row$gene_id <- c(region_region_ad_genes[[5]])
+
+human_switching_alz_genes <- convert_mouse_to_human(alz_row$gene_id)
+
+alz_row$gene_symbol <- human_switching_alz_genes$HGNC.symbol
+
+alz_row$diseases <- "Alzheimer's Disease"
+
+# add alz gene or genes to final file
+supp_file_6 <- rbind(supp_file_6, alz_row[, 5:8])
+
+# reorder
+supp_file_6 <- supp_file_6[, c(3, 1, 2, 4)]
+```
+
+Finally, we can save our table.
+
+```{r save csv file}
+write.csv(supp_file_6,
+  quote = FALSE, row.names = FALSE,
+  file = here("results", "neuro_dtu_genes", "Supplementary_File_6.csv")
+)
+```
 
 #### Clean up script
 

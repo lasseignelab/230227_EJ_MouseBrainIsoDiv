@@ -273,6 +273,25 @@ convert_human_to_mouse <- function(gene_list) {
   return(genes)
 }
 
+# this function is for converting mouse gene names to human gene names
+convert_mouse_to_human <- function(gene_list) {
+  human <- useMart("ENSEMBL_MART_ENSEMBL",
+                   dataset = "hsapiens_gene_ensembl",
+                   host = "https://dec2021.archive.ensembl.org"
+  )
+  mouse <- useMart("ENSEMBL_MART_ENSEMBL",
+                   dataset = "mmusculus_gene_ensembl",
+                   host = "https://dec2021.archive.ensembl.org"
+  )
+  # use biomaRt to get homologous genes
+  genes <- getLDS(
+    attributes = c("ensembl_gene_id"),
+    filters = "ensembl_gene_id", values = gene_list, mart = mouse,
+    attributesL = c("hgnc_symbol"),
+    martL = human, uniqueRows = TRUE
+  )
+  return(genes)
+}
 # this function is for pulling significant genes and getting overlap for a given
 # brain region with three different gene lists.
 compare_switching_genes <- function(switchlist_obj,
@@ -288,6 +307,22 @@ compare_switching_genes <- function(switchlist_obj,
   )
   # pull short gene ids
   dtu_genes <- unique(sig_features$short_id)
+  # Find Intersect
+  intersect_list <- intersect(dtu_genes, gene_set)
+  return(intersect_list)
+}
+
+# edit function to make applicable to region region comparisons
+# in this version, the gene lists must be pulled first.
+compare_switching_genes_simple <- function(sig_features,
+                                    gene_set) {
+  # remove decimals from ENSEMBL ID
+  short_ids <- str_extract(
+    sig_features,
+    "ENSMUSG..........."
+  )
+  # pull short gene ids
+  dtu_genes <- unique(short_ids)
   # Find Intersect
   intersect_list <- intersect(dtu_genes, gene_set)
   return(intersect_list)
