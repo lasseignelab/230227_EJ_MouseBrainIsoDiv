@@ -1,5 +1,1 @@
-add data object generated from raw data here.
-
-Raw data should be stored here on Cheaha:
-/data/project/lasseigne_lab/DATASET_DIR
-
+This directory contains all data and intermediate data required for running the analyses in this project.

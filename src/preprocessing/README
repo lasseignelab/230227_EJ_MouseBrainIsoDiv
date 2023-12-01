@@ -1,3 +1,5 @@
+This directory contains scripts for processing the data before any differential analyses were run.
+
 Warning! This preprocessing step, by nature, is not fully reproducible. 
 The assignment of novel transcript IDs by Bambu (run with the nf-core nanoseq 
 pipeline) may result in different tx.***** IDs being created and assigned, so 

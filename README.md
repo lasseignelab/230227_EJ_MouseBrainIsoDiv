@@ -1,7 +1,7 @@
 Nanopore long-read RNA sequencing shows region-specific sex differences
 in wild-type mouse brain mRNA isoform expression and usage
 ================
-2023-11-15
+2023-12-01
 
 ## Authors
 
@@ -39,7 +39,9 @@ You can also visit our Shiny Application that accompanies this analysis:
     ## ├── 00_run_nanoseq.sh
     ## ├── 02_get_genome_annotations.sh
     ## ├── 03_create_isoform_fa.sh
-    ## ├── 16_dataset_overview_figure.Rmd
+    ## ├── 16_dataset_overview_figure1.Rmd
+    ## ├── 20010631.c0158.err.txt
+    ## ├── 20010631.c0158.out.txt
     ## └── README
 
 ***Script 00: preprocessing/00_run_nanoseq.sh*** - This script can be
@@ -76,9 +78,8 @@ metadata. Must run in github docker 1.7 or above.
     ## ├── 08_dtu_neuro_diseases.Rmd
     ## ├── 09_dtu_isoform_switching.Rmd
     ## ├── 14_protein_domain_info.Rmd
-    ## ├── compare_satuRn_DEXSeq_results.Rmd
+    ## ├── README
     ## ├── functions.R
-    ## ├── isoformswitchanalyzer_overflow.Rmd
     ## └── size_power.R
 
 ***dtu_analysis/functions.R*** - This is a function script for all Rmd
@@ -129,42 +130,46 @@ RUN IN PFAM DOCKER!
 
 #### DGE and DTE Analyses
 
-    ## src/de_analysis
+    ## src/de_analyses
     ## ├── 10_DESeq2_region_region.Rmd
     ## ├── 11_DESeq2_region_others.Rmd
     ## ├── 12_DESeq2_region_sex.Rmd
     ## ├── 13_incorporate_de_results.Rmd
     ## ├── 15_compare_DTU_DGE.Rmd
-    ## ├── 19_compare_region_pairwise_results.Rmd
-    ## ├── 20_enrichment_analysis.Rmd
-    ## ├── 21_create_supp_fig_2.Rmd
-    ## ├── 22_investigate_non-sig_dte.Rmd
-    ## └── de_functions.R
+    ## ├── 17_compare_region_pairwise_results.Rmd
+    ## ├── 18_enrichment_analysis.Rmd
+    ## ├── 19_create_fig_2.Rmd
+    ## ├── README
+    ## ├── de_functions.R
+    ## └── stacked_barplot_functions.R
 
-***de_analysis/de_functions.R*** - This is a function script for all Rmd
+***de_analyses/de_functions.R*** - This is a function script for all Rmd
 files in the de directory.
 
-***Script 10: de_analysis/10_DESeq2_region_region.Rmd*** - This script
+***de_analyses/stacked_barplot_functions.R*** - This is a function
+script for specifically building stacked barplots for figure 2.
+
+***Script 10: de_analyses/10_DESeq2_region_region.Rmd*** - This script
 is dependent on script 00/01 or having gene and transcript level count
 data with metadata in your /data/ directory and the de functions script.
 The purpose of this script is to run DESeq2 across brain regions at the
 gene and transcript level. It takes less than 5 minutes to run.
 
-***Script 11: de_analysis/11_DESeq2_region_others.Rmd*** - This script
+***Script 11: de_analyses/11_DESeq2_region_others.Rmd*** - This script
 is dependent on script 00/01 or having gene and transcript level count
 data with metadata in your /data/ directory and the de functions script.
 The purpose of this script is to run DESeq2 for each brain region
 compared to an aggregate of other brain regions at the gene and
 transcript level. It takes about 10 minutes to run.
 
-***Script 12: de_analysis/12_DESeq2_region_sex.Rmd*** - This script is
+***Script 12: de_analyses/12_DESeq2_region_sex.Rmd*** - This script is
 dependent on script 00/01 or having gene and transcript level count data
 with metadata in your /data/ directory and the de functions script. The
 purpose of this script is to compare expression at the gene and
 transcript level across sexes within brain regions. It takes less than
 10 minutes to run.
 
-***Script 13: de_analysis/13_incorporate_de_results.Rmd*** - This script
+***Script 13: de_analyses/13_incorporate_de_results.Rmd*** - This script
 is fully dependent on scripts 01-09 and the de_analysis DESeq2 scripts
 10-12 and the de functions script. The purpose of this script is to wrap
 in all DESeq2 significance values into my isoformSwitchAnalyzeR objects
@@ -172,30 +177,31 @@ and subsequently, plots. This enables us to plot them all with
 significance values for DGE, DTE, and DTU. This script takes 12 minutes
 to run.
 
-***Script 15: de_analysis/15_compare_DTU_DGE.Rmd*** - This script
+***Script 15: de_analyses/15_compare_DTU_DGE.Rmd*** - This script
 depends on scripts 00-14. The purpose of this script is to compare genes
 with differential gene expression, differential transcript usage, and
 differential transcript expression. Must run in docker 1.7 to have all
 packages.
 
-***Script 19: de_analysis/19_compare_region_pairwise_results.Rmd*** -
+***Script 17: de_analyses/17_compare_region_pairwise_results.Rmd*** -
 The purpose of this script is to determine how many DTU genes or DEGs
 are specific to a study design. I used Jaccard Similarity to see how
 similar the results are to each other and create supp figure 3. Must run
 in github docker 1.7 or above.
 
-***Script 20: de_analysis/20_enrichment_analysis.Rmd*** - The purpose of
+***Script 18: de_analyses/18_enrichment_analysis.Rmd*** - The purpose of
 this script is to perform functional enrichment analysis with the
 package gprofiler2 on the DGE and DTE genes. This script is fully
 dependent on scripts 00-12. Must run in github docker 1.7 or above.
 
-***Script 21: de_analysis/21_create_supp_fig_2.Rmd*** - The purpose of
-this script is to create supplementary figure 2. This script is fully
-dependent on scripts 00-12.
+***Script 19: de_analyses/19_create_fig_2.Rmd*** - The purpose of this
+script is to create supplementary figure 2. This script is fully
+dependent on scripts 00-12. Must run in github docker 1.7 or above.
 
 #### Shiny Application scripts
 
     ## src/shiny_support
+    ## ├── README
     ## └── calculate_cpm_convert_ids.R
 
 ***shiny_support/calculate_cpm_convert_ids.R*** - This script enables
@@ -204,18 +210,12 @@ and does some other needed reformatting of the data for the application
 to work.
 
     ## src/shiny_app
+    ## ├── README
     ## ├── app.R
     ## ├── complete_switchlists
     ## │   ├── region_all_list_orf_de_pfam.Rds
     ## │   ├── region_region_orf_de_pfam.Rds
     ## │   └── region_sex_list_orf_de_pfam.Rds
-    ## ├── data
-    ## │   ├── combined_cpm.Rds
-    ## │   └── sample_collection_metadata.Rds
-    ## ├── rsconnect
-    ## │   └── shinyapps.io
-    ## │       └── lasseignelab
-    ## │           └── mouse_brain_iso_div.dcf
     ## ├── server.R
     ## ├── ui.R
     ## └── www
@@ -234,27 +234,6 @@ application.
 
 ***shiny_app/ui.R*** - The purpose of this script is to run the user
 interface for shiny web application.
-
-#### Archived scripts
-
-    ## src/worm_analysis
-    ## ├── 17_dtu_whole_worm.Rmd
-    ## ├── 18_compare_worm_mouse.Rmd
-    ## └── salmon_quant.sh
-
-***Script 17: worm_analysis/17_dtu_whole_worm.Rmd*** - The purpose of
-this script is to examine differential transcript usage by sex in
-short-read c elegans data. I am especially interested in comparing this
-DTU to my own mouse data to look for evolutionary conserved genes with
-sex specific splicing. The entire script takes less than 10 minutes to
-run. Must be run in at least docker 1.3 to include c elegans annotation.
-This script does not depend on any other code, with the exception of
-functions.R, which can be sourced.
-
-***Script 18: worm_analysis/18_compare_worm_mouse.Rmd*** - The purpose
-of this script is to compare worm and mouse genes with DTU across sex to
-see if anything is conserved. Nothing was conserved so it was not super
-useful.
 
 ## Lasseigne Lab
 
