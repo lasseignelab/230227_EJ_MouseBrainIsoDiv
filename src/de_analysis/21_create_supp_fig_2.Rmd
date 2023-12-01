@@ -340,6 +340,9 @@ ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"
 Now, we can make a stacked barchart for all six pairwise comparisons.
 
 ```{r create paired stacked barplot dataframe}
+# Rename Hippocampus vs Striatum dte
+hippocampus_striatum_dte_genes <- striatum_hippocampus_dte_genes
+
 stacked_barplot_paired <- create_stacked_dataframe_paired(
   "Cerebellum vs. Cortex", "Cerebellum vs. Hippocampus",
   "Cerebellum vs. Striatum", "Cortex vs. Hippocampus", "Cortex vs. Striatum",

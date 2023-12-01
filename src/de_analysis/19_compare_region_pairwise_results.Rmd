@@ -495,7 +495,7 @@ all_dge_combinations$jaccard_similarity <-
   map2(
     all_dge_combinations$`names(aggregate_dge_comparisons)`,
     all_dge_combinations$`names(pairwise_dge_comparisons)`,
-    jaccard_similarity
+    get_jaccard_similarity
   )
 
 all_dge_combinations$jaccard_similarity <-
