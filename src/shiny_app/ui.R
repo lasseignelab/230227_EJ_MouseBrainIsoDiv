@@ -336,7 +336,6 @@ ui <- navbarPage(
   position = "fixed-top",
   welcome_about,
   gene_exp_heatmap,
-  single_region_plot,
   pairwise_region_plot,
   sex_region_plot
 )
