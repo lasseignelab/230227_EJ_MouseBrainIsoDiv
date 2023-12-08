@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Comparing DTU, DTE, and DGE continued
 
-The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression and create figure 2 and supplemental figure 2. You must be using docker 1.7. This script is dependent on scripts 01-15.
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression and create figure 2. You must be using docker 1.7. This script is dependent on scripts 01-15.
 
 For code review, I am tracking the amount of time that this analysis will take.
 
@@ -315,34 +315,37 @@ dtu_single_upset_plot
 One way to show numbers of genes is stacked bar plots, so for each brain region or pairwise comparison, there would be 7 possible combinations of overlap between DTU, DGE, DTE and all 3.
 Now, we can create the dataframe for stacked bar plot with overlap.
 
-```{r create stacked barplot}
-stacked_barplot <- create_stacked_dataframe(
-  "Cerebellum", "Cortex",
-  "Hippocampus", "Striatum"
-)
-```
+To make these directly comparable, I need to first make sure we are only pulling genes that have dge/dte and at least two transcripts. Therefore, I will be using the bg_genes list that was created for the functional enrichment analysis.
 
-Now that the dataframe has been created, we can plot.
+```{r get list of genes with at least 2 transcripts and filter accordingly}
 
-```{r plot stacked barplot for unpaired}
-ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_manual(values = EJ_custom_palette) +
-  xlab("Brain Region") +
-  ylab("Proportion of Total Genes") +
-  theme_minimal()
+bg_genes <- unique(region_region_switchlist$isoformFeatures$gene_id)
 
-ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
-  width = 6, height = 4
-)
+# I am not changing the gene list names so the function still works, but they will have to be reloaded
+
+cerebellum_cortex_dge_genes <- intersect(bg_genes, cerebellum_cortex_dge_genes)
+cerebellum_cortex_dte_genes <- intersect(bg_genes, cerebellum_cortex_dte_genes)
+
+cerebellum_hippocampus_dge_genes <- intersect(bg_genes, cerebellum_hippocampus_dge_genes)
+cerebellum_hippocampus_dte_genes <- intersect(bg_genes, cerebellum_hippocampus_dte_genes)
+
+cerebellum_striatum_dge_genes <- intersect(bg_genes, cerebellum_striatum_dge_genes)
+cerebellum_striatum_dte_genes <- intersect(bg_genes, cerebellum_striatum_dte_genes)
+
+cortex_hippocampus_dge_genes <- intersect(bg_genes, cortex_hippocampus_dge_genes)
+cortex_hippocampus_dte_genes <- intersect(bg_genes, cortex_hippocampus_dte_genes)
+
+cortex_striatum_dge_genes <- intersect(bg_genes, cortex_striatum_dge_genes)
+cortex_striatum_dte_genes <- intersect(bg_genes, cortex_striatum_dte_genes)
+
+striatum_hippocampus_dge_genes <- intersect(bg_genes, striatum_hippocampus_dge_genes)
+striatum_hippocampus_dte_genes <- intersect(bg_genes, striatum_hippocampus_dte_genes)
+
 ```
 
 Now, we can make a stacked barchart for all six pairwise comparisons.
 
 ```{r create paired stacked barplot dataframe}
-# Rename Hippocampus vs Striatum dte
-hippocampus_striatum_dte_genes <- striatum_hippocampus_dte_genes
-
 stacked_barplot_paired <- create_stacked_dataframe_paired(
   "Cerebellum vs. Cortex", "Cerebellum vs. Hippocampus",
   "Cerebellum vs. Striatum", "Cortex vs. Hippocampus", "Cortex vs. Striatum",
@@ -365,8 +368,9 @@ stacked_barplot_paired_plot_horiz <-
   theme_minimal() +
   coord_flip() +
   theme(
-    text = element_text(face = "bold"), legend.position = "bottom",
-    axis.text.y = element_text(color = "black")
+    text = element_text(face = "bold", size = 13), legend.position = "bottom",
+    axis.text.y = element_text(color = "black", angle = 45, vjust = -1.5,
+                               hjust = 1)
   ) +
   guides(fill = guide_legend(nrow = 4))
 
@@ -511,7 +515,7 @@ right_side <- plot_grid(NULL, stacked_barplot_paired_plot_horiz, NULL,
 )
 
 final_figure2 <-
-  plot_grid(left_side, right_side, rel_widths = c(1, 0.7))
+  plot_grid(left_side, NULL, right_side, NULL, rel_widths = c(1, 0.05, 0.7, 0.05), nrow = 1)
 
 final_figure2
 ```
@@ -520,7 +524,7 @@ Looks great! Now we can save our final figure
 
 ```{r save final figure 2}
 png(here("results", "finished_figures", "figure2.png"),
-  width = 12, height = 9, units = "in", res = 300
+  width = 13, height = 9, units = "in", res = 300
 )
 
 final_figure2
@@ -528,7 +532,32 @@ final_figure2
 dev.off()
 ```
 
-## Make supplementary figure 2
+## Make supplementary figure - not in manuscript.
+
+To make a supplementary figure for one region vs all others in aggregate, you can use the code below. This was figure removed from the final manuscript.
+
+```{r create stacked barplot variable list}
+stacked_barplot <- create_stacked_dataframe(
+  "Cerebellum", "Cortex",
+  "Hippocampus", "Striatum"
+)
+```
+
+Now that the dataframe has been created, we can plot.
+
+```{r plot stacked barplot for unpaired}
+ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = EJ_custom_palette) +
+  xlab("Brain Region") +
+  ylab("Proportion of Total Genes") +
+  theme_minimal()
+
+ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
+  width = 6, height = 4
+)
+```
+
 
 Now that the dataframe has been created, we can plot.
 
@@ -550,7 +579,7 @@ stacked_barplot_single_plot <-
 stacked_barplot_single_plot
 ```
 
-#### Assemble supp figure 2
+#### Assemble supp figure
 
 ```{r assemble figure 2 with smaller upsets}
 # export complexheatmap objects
