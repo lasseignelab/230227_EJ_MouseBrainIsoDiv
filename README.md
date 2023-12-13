@@ -35,12 +35,12 @@ for researchers to further explore the data.
 <figure>
 <img
 src="https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png"
-alt="We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses" />
+alt="We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses." />
 <figcaption aria-hidden="true">We extracted RNA from 40 samples, four
 brain regions each from 10 mice balanced for sex with and sequenced on
 an ONT GridION. We processed this data with the nf-core nanoseq pipeline
 and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for
-downstream analyses</figcaption>
+downstream analyses.</figcaption>
 </figure>
 
 You can also visit our interactive Shiny Application that accompanies
@@ -50,7 +50,7 @@ this analysis:
 
 ## Dataset
 
-The data generated in this project is available on GEO at
+The sequencing data generated in this project is available on GEO at
 [GSE246705](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705)
 
 ## Scripts
@@ -281,7 +281,7 @@ Repository: badge placeholder
 We performed all analyses in docker with R version 4.3.1. The repository
 with all the Docker images used for this project can be found on Docker
 Hub at
-[efjones/mouse_brain_iso_div](https://hub.docker.com/repository/docker/efjones/mouse_brain_iso_div/general).
+[emmafjones/mouse_brain_iso_div](https://hub.docker.com/repository/docker/emmafjones/mouse_brain_iso_div/general).
 While individual docker image tags are noted in every script, we provide
 an overview of analyses and their associated tags below:
 

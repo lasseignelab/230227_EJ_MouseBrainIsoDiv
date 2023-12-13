@@ -21,7 +21,8 @@ The University of Alabama at Birmingham, Heersink School of Medicine, Department
 
 To assess differences in AS across the cerebellum, cortex, hippocampus, and striatum by sex, we generated and analyzed Oxford Nanopore Technologies (ONT) long-read RNA sequencing (lrRNA-Seq) C57BL/6J mouse brain cDNA libraries. From >85 million reads that passed quality control metrics, we calculated differential gene expression (DGE), differential transcript expression (DTE), and differential transcript usage (DTU) across brain regions and by sex. We found significant DGE, DTE, and DTU across brain regions, and that the cerebellum had the most differences compared to the other three regions. Additionally, we found region-specific differential splicing between sexes, with the most sex differences in DTU in the cortex and no DTU in the hippocampus. We also report on two distinct patterns of sex DTU we observed, sex-divergent and sex-specific, that could potentially help explain sex differences in the prevalence and prognosis of various neurological and psychiatric disorders in future studies. Finally, we built a Shiny web application for researchers to further explore the data.
 
-![We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses](https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png)
+![We extracted RNA from 40 samples, four brain regions each from 10 mice balanced for sex with and sequenced on an ONT GridION. We processed this data with the nf-core nanoseq pipeline and used DESeq2, IsoformSwitchAnalyzeR, and custom scripts for downstream analyses.](https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv/blob/main/src/shiny_app/www/graphical_abstract.png)
+
 
 You can also visit our interactive Shiny Application that accompanies this analysis:  
   
@@ -29,7 +30,7 @@ https://lasseignelab.shinyapps.io/mouse_brain_iso_div/
 
 ## Dataset
 
-The data generated in this project is available on GEO at [GSE246705](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705)
+The sequencing data generated in this project is available on GEO at [GSE246705](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE246705)
 
 ## Scripts 
 
@@ -125,7 +126,7 @@ GitHub Repository: badge placeholder
 
 ## Docker
 
-We performed all analyses in docker with R version 4.3.1. The repository with all the Docker images used for this project can be found on Docker Hub at [efjones/mouse_brain_iso_div](https://hub.docker.com/repository/docker/efjones/mouse_brain_iso_div/general). While individual docker image tags are noted in every script, we provide an overview of analyses and their associated tags below:
+We performed all analyses in docker with R version 4.3.1. The repository with all the Docker images used for this project can be found on Docker Hub at [emmafjones/mouse_brain_iso_div](https://hub.docker.com/repository/docker/emmafjones/mouse_brain_iso_div/general). While individual docker image tags are noted in every script, we provide an overview of analyses and their associated tags below:
 
 Tag | Associated Analyses  
 --- | ---
