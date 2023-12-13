@@ -1,0 +1,50 @@
+{
+    "description": "<p>This is repository has the data, docker images, and code required to reproduce all analyses for our manuscript titled Long-read RNA sequencing identifies region- and sex-specific C57BL/6J mouse brain mRNA isoform expression and usage.</p>", 
+    "license": "other-open", 
+    "title": "Long-read RNA sequencing identifies region- and sex-specific C57BL/6J mouse brain mRNA isoform expression and usage", 
+    "upload_type": "software", 
+    "keywords": [
+        "Long-read RNA sequencing", 
+        "brain",
+        "sex",
+        "alternative splicing",
+        "gene expression",
+        "transcript usage",
+        "isoform usage"
+    ], 
+    "creators": [
+        {
+            "orcid": "0000-0003-4244-1456", 
+            "affiliation": "University of Alabama at Birmingham", 
+            "name": "Emma F. Jones"
+        }, 
+        {
+            "orcid": "0000-0002-9423-0135", 
+            "affiliation": "University of Alabama at Birmingham", 
+            "name": "Timothy C. Howton"
+        }, 
+        {
+            "orcid": "0000-0003-4208-3695", 
+            "affiliation": "University of Alabama at Birmingham", 
+            "name": "Victoria L. Flanary"
+        }, 
+        {
+            "orcid": "0000-0002-1186-3114", 
+            "affiliation": "University of Alabama at Birmingham", 
+            "name": "Amanda D. Clark"
+        }, 
+        {
+            "orcid": "0000-0002-1642-8904", 
+            "affiliation": "University of Alabama at Birmingham", 
+            "name": "Brittany N. Lasseigne"
+        }
+    ], 
+    "access_right": "open", 
+    "related_identifiers": [
+        {
+            "scheme": "url", 
+            "identifier": "https://github.com/lasseignelab/230227_EJ_MouseBrainIsoDiv", 
+            "relation": "isIdenticalTo"
+        }
+    ]
+}
