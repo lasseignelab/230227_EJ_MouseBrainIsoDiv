@@ -372,6 +372,9 @@ ggplot(tx_per_novel_gene, aes(x = `transcript count`)) +
 
 # save
 ggsave(here("results", "plots", "histograms", "transcripts_per_novel_gene.png"))
+
+# what is the mean number of tx per gene
+mean(tx_per_novel_gene$`transcript count`) # expected result 1.08
 ```
 
 I also want to make a supplemental table of these transcripts so that it can be referenced.
