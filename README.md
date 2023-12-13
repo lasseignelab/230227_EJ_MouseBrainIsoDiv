@@ -62,6 +62,8 @@ The sequencing data generated in this project is available on GEO at
     ## ├── 02_get_genome_annotations.sh
     ## ├── 03_create_isoform_fa.sh
     ## ├── 16_dataset_overview_figure1.Rmd
+    ## ├── 20010631.c0158.err.txt
+    ## ├── 20010631.c0158.out.txt
     ## └── README
 
 ***Script 00: preprocessing/00_run_nanoseq.sh*** - This script can be
@@ -163,6 +165,7 @@ needs to run in the pfam-tagged docker image (pfamscan.1.1) with perl!
     ## ├── 17_compare_region_pairwise_results.Rmd
     ## ├── 18_enrichment_analysis.Rmd
     ## ├── 19_create_fig_2.Rmd
+    ## ├── 20_compare_enrichment_results.Rmd
     ## ├── README
     ## ├── de_functions.R
     ## └── stacked_barplot_functions.R
@@ -224,6 +227,11 @@ dependent on scripts 00-12. Must run in github docker 1.7.
 script is to create supplementary figure 2. This script is fully
 dependent on scripts 00-12. Must run in github docker 1.7.
 
+***Script 20: de_analyses/20_compare_enrichment_results.Rmd*** - The
+purpose of this script is to get real statistics and values for directly
+comparing functional enrichment analysis results. It is dependent on
+scripts 00-18. Run in github docker 1.7.
+
 #### Shiny Application scripts
 
     ## src/shiny_support
@@ -242,13 +250,6 @@ to work.
     ## │   ├── region_all_list_orf_de_pfam.Rds
     ## │   ├── region_region_orf_de_pfam.Rds
     ## │   └── region_sex_list_orf_de_pfam.Rds
-    ## ├── data
-    ## │   ├── combined_cpm.Rds
-    ## │   └── sample_collection_metadata.Rds
-    ## ├── rsconnect
-    ## │   └── shinyapps.io
-    ## │       └── lasseignelab
-    ## │           └── mouse_brain_iso_div.dcf
     ## ├── server.R
     ## ├── ui.R
     ## └── www
