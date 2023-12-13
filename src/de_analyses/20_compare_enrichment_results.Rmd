@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Compare Enrichment results across DGE, DTE, and DTU.
 
-The purpose of this script is to get real statistics and vaues for directly comparing functional enrichment analysis results. It is dependent on scripts 00-19.
+The purpose of this script is to get real statistics and values for directly comparing functional enrichment analysis results. It is dependent on scripts 00-18.
 Run in github docker 1.7.
 
 ## Load in packages
