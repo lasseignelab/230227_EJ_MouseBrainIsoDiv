@@ -194,6 +194,16 @@ switchPlotTopSwitches(sex_switchlist_analyzed,
   ),
   splitFunctionalConsequences = FALSE
 )
+
+# save Shisa5 - this plot was corrupted for some reason
+png(
+  filename = here("results", "plots", "switch_plots", "raw", "F_vs_M",
+                  "Shisa5.png"),
+  width = 9, height = 6, units = "in", res = 300)
+
+switchPlot(sex_switchlist_analyzed, gene = "Shisa5")
+
+dev.off()
 ```
 
 
