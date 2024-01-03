@@ -102,7 +102,7 @@ transcripts_annotation <- annotation[annotation$type == "transcript", -2]
 ### Load in VST data for PCA
 
 ```{r load in vst data}
-source(here("src", "de_analysis", "de_functions.R"))
+source(here("src", "de_analyses", "de_functions.R"))
 
 # read in gene counts data
 gene_counts <- read.table(
@@ -567,12 +567,15 @@ ggsave(here("results", "finished_figures", "supp1.png"))
 
 rank_sum <- wilcox.test(
   merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == TRUE],
-  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE]
+  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE],
+  conf.int = TRUE
 )
 
 rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
 ```
 Expected p-value: 1.570014e-113
+Expected 95% CI: 2.802303, 4.414794
 
 What % are expressed with a mean CPM of 1 or higher? 
 

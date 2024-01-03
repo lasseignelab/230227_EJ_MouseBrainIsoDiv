@@ -288,7 +288,7 @@ an overview of analyses and their associated tags below:
 
 | Tag          | Associated Analyses      |
 |--------------|--------------------------|
-| github.1.7   | All scripts 01-13, 15-19 |
+| github.1.7   | All scripts 01-13, 15-20 |
 | pfamscan.1.1 | Script 14                |
 
 ## Lasseigne Lab

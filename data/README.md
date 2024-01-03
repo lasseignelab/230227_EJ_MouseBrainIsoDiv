@@ -13,6 +13,7 @@ The data directory should include the following files:
 
     ## .
     ## ├── README.Rmd
+    ## ├── README.md
     ## ├── comparison_gene_lists
     ## │   └── all_comparison_gene_lists.Rdata
     ## ├── cpm_out
@@ -1037,5 +1038,4 @@ The data directory should include the following files:
     ##         ├── region_all_switchlist_list.Rds
     ##         ├── region_region_switchlist_analyzed.Rds
     ##         ├── region_sex_switchlist_list.Rds
-    ##         ├── sex_switchlist.Rds
-    ##         └── worm_switchlist_analyzed.Rds
+    ##         └── sex_switchlist.Rds
