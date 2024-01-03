@@ -25,7 +25,7 @@ welcome_about <- tabPanel(
       "used long-read",
       a("Oxford Nanopore Technologies", href = "https://nanoporetech.com/"),
       "RNA sequencing (RNA-Seq) to sequence 40 mouse brain cDNA libraries",
-      "from 10 wild type mice and calculated differential transcript usage.",
+      "from 10 C57BL/6J mice and calculated differential transcript usage.",
       "We found that there is strong evidence of differential transcript usage",
       "across brain regions as well as differential expression at the gene and",
       "transcript level.",
@@ -332,11 +332,10 @@ ui <- navbarPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
     tags$script(type = "text/javascript", src = "code.js")
   ),
-  title = "Visualizing Isoform Switches in Wild-Type Mouse Brain",
+  title = "Visualizing Isoform Switches in C57BL/6J Mouse Brain",
   position = "fixed-top",
   welcome_about,
   gene_exp_heatmap,
-  single_region_plot,
   pairwise_region_plot,
   sex_region_plot
 )

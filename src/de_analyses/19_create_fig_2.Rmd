@@ -1,0 +1,757 @@
+---
+title: "Supp figure 2"
+author: "Emma Jones"
+date: "2023-10-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Comparing DTU, DTE, and DGE continued
+
+The purpose of this script is to compare genes with differential gene expression, differential transcript usage, and differential transcript expression and create figure 2. You must be using docker 1.7. This script is dependent on scripts 01-15.
+
+For code review, I am tracking the amount of time that this analysis will take.
+
+```{r proc time}
+ptm <- proc.time()
+```
+
+#### Load in Packages
+
+```{r load packages}
+# load packages
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(styler)
+  library(lintr)
+  library(here)
+  library(eulerr)
+  library(cowplot)
+})
+
+# source functions
+source("de_functions.R")
+source("stacked_barplot_functions.R")
+```
+
+## Load in data
+
+Let's load in the data generated in script 15, that has all the lists needed to make upset plots.
+
+```{r load in r environment data}
+load(here("data", "comparison_gene_lists", "all_comparison_gene_lists.Rdata"))
+```
+
+## Create UpSet Plots!
+
+Now create the upset plots from combination matrices. 
+
+#### First create the pairwise upsetplot for DGE
+
+```{r create upset plots for examining DGE overlap}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_main_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+# make UpSet plot (ComplexHeatmap)
+png(here("results", "plots", "upset_plots", "region_region_dge_upset.png"),
+  width = 10, height = 4, units = "in", res = 300
+)
+dge_pairwise_upset_plot <- UpSet(dge_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+  comb_col = "#5D69B1",
+  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
+)
+draw(dge_pairwise_upset_plot)
+dev.off()
+
+dge_pairwise_upset_plot
+```
+
+#### Create pairwise upsetplots for region others
+
+```{r do this for region others}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_single_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_others_dge_upset.pdf"),
+  width = 12, height = 6
+)
+dge_single_upset_plot <- UpSet(dge_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+  comb_col = "#5D69B1",
+  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+draw(dge_single_upset_plot)
+dev.off()
+
+dge_single_upset_plot
+```
+
+#### Now create the pairwise upsetplot for DGE region sex
+
+```{r do this for region others}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_sex_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_sex_dge_upset.pdf"),
+  width = 12, height = 6
+)
+dge_sex_upset_plot <- UpSet(dge_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dge_overlap_list_comb_mat)),
+  comb_col = viridis(6)[comb_degree(dge_overlap_list_comb_mat)],
+  top_annotation = upset_top_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(dge_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
+)
+draw(dge_sex_upset_plot)
+dev.off()
+
+dge_sex_upset_plot
+```
+
+## Now, create upset plots for DTE.
+
+#### First create the pairwise upsetplot for DTE
+
+```{r create upsetplots for DTE overlap}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_main_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+# make UpSet plot (ComplexHeatmap)
+png(here("results", "plots", "upset_plots", "region_region_dte_upset.png"),
+  width = 10, height = 4, units = "in", res = 300
+)
+dte_pairwise_upset_plot <- UpSet(dte_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+  comb_col = "#52BCA3",
+  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
+)
+draw(dte_pairwise_upset_plot)
+dev.off()
+
+dte_pairwise_upset_plot
+```
+
+#### Then create the region others upsetplot for DTE
+
+```{r do this for region others}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_single_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_others_dte_upset.pdf"),
+  width = 12, height = 6
+)
+dte_single_upset_plot <- UpSet(dte_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+  comb_col = "#52BCA3",
+  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+
+draw(dte_single_upset_plot)
+dev.off()
+
+dte_single_upset_plot
+```
+
+#### Finally, create the region others upsetplot for DTE
+
+```{r do this for region sex}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_sex_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_sex_dte_upset.pdf"),
+  width = 12, height = 6
+)
+dte_sex_upset_plot <- UpSet(dte_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dte_overlap_list_comb_mat)),
+  comb_col = viridis(6)[comb_degree(dte_overlap_list_comb_mat)],
+  top_annotation = upset_top_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(dte_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
+)
+draw(dte_sex_upset_plot)
+dev.off()
+
+dte_sex_upset_plot
+```
+
+## Make big comparison upset plots for DTU
+
+Finally, do this for the DTU. We did and saved this already for all comparisons, but these versions are actually for the manuscript figures 2 and supp figure 2.
+
+#### Pairwise
+
+```{r create upset plots for examining DGE overlap}
+# create matrix
+dtu_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dtu_main_list)
+
+# generate combination matrix
+dtu_overlap_list_comb_mat <- make_comb_mat(dtu_overlap_list_mat)
+
+# make UpSet plot (ComplexHeatmap)
+png(here("results", "plots", "upset_plots", "region_region_dtu_upset.png"),
+  width = 10, height = 4, units = "in", res = 300
+)
+dtu_pairwise_upset_plot <- UpSet(dtu_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dtu_overlap_list_comb_mat)),
+  comb_col = "#99C945",
+  top_annotation = upset_top_annotation(dtu_overlap_list_comb_mat,
+    add_numbers = TRUE
+  ),
+  right_annotation = upset_right_annotation(dtu_overlap_list_comb_mat,
+    add_numbers = TRUE
+  )
+)
+draw(dtu_pairwise_upset_plot)
+dev.off()
+
+dtu_pairwise_upset_plot
+```
+
+#### Region others
+
+```{r plot DTU upsetplot for region others}
+# create matrix
+dtu_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dtu_single_list)
+
+# generate combination matrix
+dtu_overlap_list_comb_mat <- make_comb_mat(dtu_overlap_list_mat)
+
+# make UpSet plot (ComplexHeatmap)
+pdf(here("results", "plots", "upset_plots", "region_others_dtu_upset.pdf"),
+  width = 12, height = 6
+)
+dtu_single_upset_plot <- UpSet(dtu_overlap_list_comb_mat,
+  comb_order = order(-comb_size(dtu_overlap_list_comb_mat)),
+  comb_col = "#99C945",
+  top_annotation = upset_top_annotation(dtu_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dtu_overlap_list_comb_mat,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+draw(dtu_single_upset_plot)
+dev.off()
+
+dtu_single_upset_plot
+```
+
+### Stacked bar plots
+
+One way to show numbers of genes is stacked bar plots, so for each brain region or pairwise comparison, there would be 7 possible combinations of overlap between DTU, DGE, DTE and all 3.
+Now, we can create the dataframe for stacked bar plot with overlap.
+
+To make these directly comparable, I need to first make sure we are only pulling genes that have dge/dte and at least two transcripts. Therefore, I will be using the bg_genes list that was created for the functional enrichment analysis.
+
+```{r get list of genes with at least 2 transcripts and filter accordingly}
+
+bg_genes <- unique(region_region_switchlist$isoformFeatures$gene_id)
+
+# I am not changing the gene list names so the function still works, but they will have to be reloaded
+
+cerebellum_cortex_dge_genes <- intersect(bg_genes, cerebellum_cortex_dge_genes)
+cerebellum_cortex_dte_genes <- intersect(bg_genes, cerebellum_cortex_dte_genes)
+
+cerebellum_hippocampus_dge_genes <- intersect(bg_genes, cerebellum_hippocampus_dge_genes)
+cerebellum_hippocampus_dte_genes <- intersect(bg_genes, cerebellum_hippocampus_dte_genes)
+
+cerebellum_striatum_dge_genes <- intersect(bg_genes, cerebellum_striatum_dge_genes)
+cerebellum_striatum_dte_genes <- intersect(bg_genes, cerebellum_striatum_dte_genes)
+
+cortex_hippocampus_dge_genes <- intersect(bg_genes, cortex_hippocampus_dge_genes)
+cortex_hippocampus_dte_genes <- intersect(bg_genes, cortex_hippocampus_dte_genes)
+
+cortex_striatum_dge_genes <- intersect(bg_genes, cortex_striatum_dge_genes)
+cortex_striatum_dte_genes <- intersect(bg_genes, cortex_striatum_dte_genes)
+
+striatum_hippocampus_dge_genes <- intersect(bg_genes, striatum_hippocampus_dge_genes)
+striatum_hippocampus_dte_genes <- intersect(bg_genes, striatum_hippocampus_dte_genes)
+
+```
+
+Now, we can make a stacked barchart for all six pairwise comparisons.
+
+```{r create paired stacked barplot dataframe}
+stacked_barplot_paired <- create_stacked_dataframe_paired(
+  "Cerebellum vs. Cortex", "Cerebellum vs. Hippocampus",
+  "Cerebellum vs. Striatum", "Cortex vs. Hippocampus", "Cortex vs. Striatum",
+  "Hippocampus vs. Striatum"
+)
+```
+
+Now that we have made the dataframe, we can make the ggplot.
+
+```{r create stacked paired barplot}
+stacked_barplot_paired_plot_horiz <-
+  ggplot(
+    stacked_barplot_paired,
+    aes(fill = Analysis, y = n_genes, x = brain_regions)
+  ) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = EJ_custom_palette) +
+  xlab("Brain Regions") +
+  ylab("Proportion of Total Genes") +
+  theme_minimal() +
+  coord_flip() +
+  theme(
+    text = element_text(face = "bold", size = 13), legend.position = "bottom",
+    axis.text.y = element_text(color = "black", angle = 45, vjust = -1.5,
+                               hjust = 1)
+  ) +
+  guides(fill = guide_legend(nrow = 4))
+
+stacked_barplot_paired_plot_horiz
+
+ggsave(
+  here(
+    "results", "plots", "bar_plots", "stacked_region_region_overlap.png"
+  ),
+  width = 6, height = 4
+)
+```
+
+## Plot Figure 2
+
+Now that I have all of the individual plots we are interested in, we can assemble figure 2. I need to make smaller versions of the upset plots to fit in a figure better.
+
+```{r making upset plots smaller - dtu}
+# create matrix
+dtu_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dtu_main_list)
+
+# generate combination matrix
+dtu_overlap_list_comb_mat <- make_comb_mat(dtu_overlap_list_mat)
+
+# dtu
+dtu_comb_mat_small <-
+  dtu_overlap_list_comb_mat[comb_size(dtu_overlap_list_comb_mat) >= 5]
+
+dtu_comb_mat_small
+
+dtu_pairwise_upset_plot_smaller <- UpSet(dtu_comb_mat_small,
+  comb_order = order(-comb_size(dtu_comb_mat_small)),
+  comb_col = "#99C945",
+  top_annotation = upset_top_annotation(dtu_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dtu_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+
+dtu_pairwise_upset_plot_smaller
+```
+
+Yes, this looks better. Let's do for DGE.
+
+```{r making upset plots smaller - dge}
+# create matrix
+dge_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dge_main_list)
+
+# generate combination matrix
+dge_overlap_list_comb_mat <- make_comb_mat(dge_overlap_list_mat)
+
+# dge
+dge_comb_mat_small <-
+  dge_overlap_list_comb_mat[comb_size(dge_overlap_list_comb_mat) >= 40]
+
+dge_comb_mat_small
+
+dge_pairwise_upset_plot_smaller <- UpSet(dge_comb_mat_small,
+  comb_order = order(-comb_size(dge_comb_mat_small)),
+  comb_col = "#5D69B1",
+  top_annotation = upset_top_annotation(dge_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dge_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+
+dge_pairwise_upset_plot_smaller
+```
+
+And do for DTE.
+
+```{r making upset plots smaller - dte}
+# create matrix
+dte_overlap_list_mat <- ComplexHeatmap::list_to_matrix(dte_main_list)
+
+# generate combination matrix
+dte_overlap_list_comb_mat <- make_comb_mat(dte_overlap_list_mat)
+
+# dte
+dte_comb_mat_small <-
+  dte_overlap_list_comb_mat[comb_size(dte_overlap_list_comb_mat) >= 40]
+
+dte_comb_mat_small
+
+dte_pairwise_upset_plot_smaller <- UpSet(dte_comb_mat_small,
+  comb_order = order(-comb_size(dte_comb_mat_small)),
+  comb_col = "#52BCA3",
+  top_annotation = upset_top_annotation(dte_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  right_annotation = upset_right_annotation(dte_comb_mat_small,
+    add_numbers = TRUE, annotation_name_gp = gpar(fontface = "bold"),
+    axis_param = list(gp = gpar(fontface = "bold")),
+    numbers_gp = gpar(fontface = "bold")
+  ),
+  row_names_gp = gpar(fontface = "bold")
+)
+
+dte_pairwise_upset_plot_smaller
+```
+
+#### Final assembly of figure 2
+
+Now, we can finally assemble figure 2.
+
+```{r assemble figure 2 with smaller upsets}
+# export complexheatmap objects
+dge_pairwise_upset_plot_grab <-
+  grid.grabExpr(draw(dge_pairwise_upset_plot_smaller))
+dte_pairwise_upset_plot_grab <-
+  grid.grabExpr(draw(dte_pairwise_upset_plot_smaller))
+dtu_pairwise_upset_plot_grab <-
+  grid.grabExpr(draw(dtu_pairwise_upset_plot_smaller))
+
+# make left side
+left_side <-
+  plot_grid(dge_pairwise_upset_plot_grab, dte_pairwise_upset_plot_grab,
+    dtu_pairwise_upset_plot_grab,
+    ncol = 1
+  )
+
+left_side
+
+right_side <- plot_grid(NULL, stacked_barplot_paired_plot_horiz, NULL,
+  ncol = 1, rel_heights = c(0.4, 1, 0.2)
+)
+
+final_figure2 <-
+  plot_grid(left_side, NULL, right_side, NULL, rel_widths = c(1, 0.05, 0.7, 0.05), nrow = 1)
+
+final_figure2
+```
+
+Looks great! Now we can save our final figure
+
+```{r save final figure 2}
+png(here("results", "finished_figures", "figure2.png"),
+  width = 13, height = 9, units = "in", res = 300
+)
+
+final_figure2
+
+dev.off()
+```
+
+## Make supplementary figure - not in manuscript.
+
+To make a supplementary figure for one region vs all others in aggregate, you can use the code below. This was figure removed from the final manuscript.
+
+```{r create stacked barplot variable list}
+stacked_barplot <- create_stacked_dataframe(
+  "Cerebellum", "Cortex",
+  "Hippocampus", "Striatum"
+)
+```
+
+Now that the dataframe has been created, we can plot.
+
+```{r plot stacked barplot for unpaired}
+ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = EJ_custom_palette) +
+  xlab("Brain Region") +
+  ylab("Proportion of Total Genes") +
+  theme_minimal()
+
+ggsave(here("results", "plots", "bar_plots", "stacked_region_others_overlap.png"),
+  width = 6, height = 4
+)
+```
+
+
+Now that the dataframe has been created, we can plot.
+
+```{r plot stacked barplot}
+stacked_barplot_single_plot <-
+  ggplot(stacked_barplot, aes(fill = Analysis, y = n_genes, x = brain_region)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = EJ_custom_palette) +
+  xlab("Brain Regions") +
+  ylab("Proportion of Total Genes") +
+  theme_minimal() +
+  coord_flip() +
+  theme(
+    text = element_text(face = "bold"), legend.position = "bottom",
+    axis.text.y = element_text(color = "black")
+  ) +
+  guides(fill = guide_legend(nrow = 4))
+
+stacked_barplot_single_plot
+```
+
+#### Assemble supp figure
+
+```{r assemble figure 2 with smaller upsets}
+# export complexheatmap objects
+dge_single_upset_plot_grab <- grid.grabExpr(draw(dge_single_upset_plot))
+dte_single_upset_plot_grab <- grid.grabExpr(draw(dte_single_upset_plot))
+dtu_single_upset_plot_grab <- grid.grabExpr(draw(dtu_single_upset_plot))
+
+# make left side
+left_side <-
+  plot_grid(dge_single_upset_plot_grab, dte_single_upset_plot_grab,
+    dtu_single_upset_plot_grab,
+    ncol = 1
+  )
+
+left_side
+
+right_side <- plot_grid(NULL, stacked_barplot_single_plot, NULL,
+  ncol = 1, rel_heights = c(0.4, 1, 0.2)
+)
+
+right_side
+
+final_supp_2 <-
+  plot_grid(left_side, right_side, rel_widths = c(1, 0.7))
+
+final_supp_2
+```
+
+And save the figure!
+
+```{r save supp figure 2}
+png(here("results", "finished_figures", "supp2.png"),
+  width = 12, height = 9, units = "in", res = 300
+)
+
+final_supp_2
+dev.off()
+```
+
+#### Clean up script
+
+```{r tidy script}
+style_file("19_create_fig_2.Rmd")
+lint("19_create_fig_2.Rmd",
+  linters = linters_with_defaults(
+    object_length_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL
+  )
+)
+```
+
+Also, needed to get processing time.
+
+```{r proc time finish}
+fptm <- proc.time() - ptm
+fptm[3] / 60
+```
+
+#### Versions
+
+```{r versions}
+sessionInfo()
+```
+R version 4.3.1 (2023-06-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+ [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+[10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Etc/UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] grid      stats4    stats     graphics  grDevices utils     datasets  methods  
+[9] base     
+
+other attached packages:
+ [1] cowplot_1.1.1               here_1.0.1                  lintr_3.1.0                
+ [4] styler_1.10.2               gprofiler2_0.2.2            org.Mm.eg.db_3.17.0        
+ [7] viridis_0.6.4               viridisLite_0.4.2           ComplexHeatmap_2.16.0      
+[10] IsoformSwitchAnalyzeR_2.1.3 pfamAnalyzeR_1.0.1          sva_3.48.0                 
+[13] genefilter_1.82.1           mgcv_1.9-0                  nlme_3.1-163               
+[16] satuRn_1.8.0                DEXSeq_1.46.0               RColorBrewer_1.1-3         
+[19] AnnotationDbi_1.62.2        DESeq2_1.40.2               SummarizedExperiment_1.30.2
+[22] GenomicRanges_1.52.0        GenomeInfoDb_1.36.3         IRanges_2.34.1             
+[25] S4Vectors_0.38.1            MatrixGenerics_1.12.3       matrixStats_1.0.0          
+[28] Biobase_2.60.0              BiocGenerics_0.46.0         BiocParallel_1.34.2        
+[31] limma_3.56.2                lubridate_1.9.2             forcats_1.0.0              
+[34] stringr_1.5.0               dplyr_1.1.3                 purrr_1.0.2                
+[37] readr_2.1.4                 tidyr_1.3.0                 tibble_3.2.1               
+[40] ggplot2_3.4.3               tidyverse_2.0.0            
+
+loaded via a namespace (and not attached):
+  [1] splines_4.3.1                 later_1.3.1                  
+  [3] BiocIO_1.10.0                 bitops_1.0-7                 
+  [5] filelock_1.0.2                R.oo_1.25.0                  
+  [7] rex_1.2.1                     XML_3.99-0.14                
+  [9] lifecycle_1.0.3               rprojroot_2.0.3              
+ [11] edgeR_3.42.4                  doParallel_1.0.17            
+ [13] MASS_7.3-60                   processx_3.8.2               
+ [15] lattice_0.21-8                ensembldb_2.24.0             
+ [17] backports_1.4.1               magrittr_2.0.3               
+ [19] rmarkdown_2.24                plotly_4.10.2                
+ [21] remotes_2.4.2.1               yaml_2.3.7                   
+ [23] httpuv_1.6.11                 pbapply_1.7-2                
+ [25] DBI_1.1.3                     abind_1.4-5                  
+ [27] zlibbioc_1.46.0               R.cache_0.16.0               
+ [29] R.utils_2.12.2                AnnotationFilter_1.24.0      
+ [31] RCurl_1.98-1.12               rappdirs_0.3.3               
+ [33] circlize_0.4.15               GenomeInfoDbData_1.2.10      
+ [35] annotate_1.78.0               codetools_0.2-19             
+ [37] DelayedArray_0.26.7           xml2_1.3.5                   
+ [39] tidyselect_1.2.0              shape_1.4.6                  
+ [41] futile.logger_1.4.3           locfdr_1.1-8                 
+ [43] farver_2.1.1                  BiocFileCache_2.8.0          
+ [45] GenomicAlignments_1.36.0      jsonlite_1.8.7               
+ [47] GetoptLong_1.0.5              ellipsis_0.3.2               
+ [49] survival_3.5-7                iterators_1.0.14             
+ [51] systemfonts_1.0.4             foreach_1.5.2                
+ [53] tools_4.3.1                   progress_1.2.2               
+ [55] ragg_1.2.5                    Rcpp_1.0.11                  
+ [57] glue_1.6.2                    gridExtra_2.3                
+ [59] xfun_0.40                     withr_2.5.0                  
+ [61] formatR_1.14                  BiocManager_1.30.22          
+ [63] fastmap_1.1.1                 boot_1.3-28.1                
+ [65] fansi_1.0.4                   callr_3.7.3                  
+ [67] digest_0.6.33                 timechange_0.2.0             
+ [69] R6_2.5.1                      mime_0.12                    
+ [71] textshaping_0.3.6             colorspace_2.1-0             
+ [73] biomaRt_2.56.1                RSQLite_2.3.1                
+ [75] R.methodsS3_1.8.2             utf8_1.2.3                   
+ [77] generics_0.1.3                data.table_1.14.8            
+ [79] tximeta_1.18.3                rtracklayer_1.60.1           
+ [81] htmlwidgets_1.6.2             prettyunits_1.1.1            
+ [83] httr_1.4.7                    S4Arrays_1.0.6               
+ [85] pkgconfig_2.0.3               gtable_0.3.4                 
+ [87] blob_1.2.4                    hwriter_1.3.2.1              
+ [89] XVector_0.40.0                htmltools_0.5.6              
+ [91] geneplotter_1.78.0            ProtGenerics_1.32.0          
+ [93] clue_0.3-64                   scales_1.2.1                 
+ [95] cyclocomp_1.1.1               png_0.1-8                    
+ [97] knitr_1.44                    lambda.r_1.2.4               
+ [99] rstudioapi_0.15.0             tzdb_0.4.0                   
+[101] reshape2_1.4.4                rjson_0.2.21                 
+[103] curl_5.0.2                    cachem_1.0.8                 
+[105] GlobalOptions_0.1.2           BiocVersion_3.17.1           
+[107] parallel_4.3.1                desc_1.4.2                   
+[109] restfulr_0.0.15               pillar_1.9.0                 
+[111] vctrs_0.6.3                   promises_1.2.1               
+[113] dbplyr_2.3.3                  xtable_1.8-4                 
+[115] cluster_2.1.4                 tximport_1.28.0              
+[117] evaluate_0.21                 VennDiagram_1.7.3            
+[119] GenomicFeatures_1.52.2        cli_3.6.1                    
+[121] locfit_1.5-9.8                compiler_4.3.1               
+[123] futile.options_1.0.1          Rsamtools_2.16.0             
+[125] rlang_1.1.1                   crayon_1.5.2                 
+[127] labeling_0.4.3                ps_1.7.5                     
+[129] plyr_1.8.8                    stringi_1.7.12               
+[131] munsell_0.5.0                 Biostrings_2.68.1            
+[133] lazyeval_0.2.2                Matrix_1.6-1                 
+[135] BSgenome_1.68.0               hms_1.1.3                    
+[137] bit64_4.0.5                   KEGGREST_1.40.0              
+[139] statmod_1.5.0                 shiny_1.7.5                  
+[141] interactiveDisplayBase_1.38.0 AnnotationHub_3.8.0          
+[143] memoise_2.0.1                 bit_4.0.5                    
+[145] xmlparsedata_1.0.5    
