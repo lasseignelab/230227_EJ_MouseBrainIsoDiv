@@ -30,13 +30,19 @@ suppressPackageStartupMessages({
 
 ```{r load in data}
 cerebellum_cortex_dge_results <-
-  read_csv("results/gprofiler2/dge/cerebellum_cortex_results.csv")
+  read_csv(
+    here("results/gprofiler2/dge/cerebellum_cortex_results.csv")
+  )
 
 cerebellum_cortex_dte_results <-
-  read_csv("results/gprofiler2/dte/cerebellum_cortex_results.csv")
-
+  read_csv(
+    here("results/gprofiler2/dte/cerebellum_cortex_results.csv")
+  )
+    
 cerebellum_cortex_dtu_results <-
-  read_csv("results/gprofiler2/dtu/cerebellum_cortex_results.csv")
+  read_csv(
+    here("results/gprofiler2/dtu/cerebellum_cortex_results.csv")
+  )
 ```
 
 ## Get proportions of synaptic genes
