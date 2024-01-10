@@ -279,7 +279,7 @@ Data:
 Docker Images:
 [![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.10480924-blue)](https://doi.org/10.5281/zenodo.10480924)  
 GitHub Repository:
-PLACEHOLDER
+[![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.10481312-blue)](https://doi.org/10.5281/zenodo.10481312)  
 
 
 ## Docker
