@@ -50,7 +50,7 @@ welcome_about <- tabPanel(
         "Graphical overview of our data generation and analysis",
         "If you are interested in checking out our work, feel free to check",
         "out our accompanying manuscript",
-        a("here", href = "placeholder.com"),
+        a("here", href = "https://www.biorxiv.org/content/10.1101/2024.01.11.575219v1"),
         "."
       )
     ),
@@ -115,7 +115,7 @@ welcome_about <- tabPanel(
       class = "branding",
       p("All figures created with BioRender.com"),
       p(
-        "Copyright 2023 by the",
+        "Copyright 2024 by the",
         tags$a(href = "https://www.lasseigne.org/", "Lasseigne Lab")
       )
     )
