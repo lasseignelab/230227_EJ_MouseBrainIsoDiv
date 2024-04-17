@@ -1,0 +1,109 @@
+---
+title: "revisions"
+author: "Emma Jones"
+date: "2024-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The purpose of this script is to respond to some reviewer comments asking about the biological processes of DTU-exclusive genes. Therefore, I'm getting the unique DTU genes for each pairwise comparison and running gprofiler on each.
+
+```{r load packages and set seed}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(IsoformSwitchAnalyzeR)
+  library(ComplexHeatmap)
+  library(viridis)
+  library(org.Mm.eg.db)
+  library(gprofiler2)
+  library(styler)
+  library(lintr)
+  library(here)
+})
+
+set.seed(123)
+```
+
+
+```{r read in functions}
+source("../dtu_analyses/functions.R", local = knitr::knit_global())
+```
+
+```{r load in data}
+
+load(here::here("data/comparison_gene_lists/all_comparison_gene_lists.Rdata"))
+
+```
+
+## Get lists of lists
+
+```{r get list of comparisons}
+
+# make vector of comparisons
+comparisons <- c(
+  "cerebellum_cortex",
+  "cerebellum_hippocampus",
+  "cerebellum_striatum",
+  "cortex_hippocampus",
+  "cortex_striatum",
+  "hippocampus_striatum"
+)
+
+```
+
+## Get unqiue genes
+
+```{r get dtu genes so a single region comparison}
+
+get_dtu_only <- function(comp_name) {
+  
+  full_list <- get(paste0(comp_name, "_list"))
+  
+  dtu_list <- full_list[["DTU"]]
+  
+  dge_list <- full_list[["DGE"]]
+  
+  dte_list <- full_list[["DTE"]]
+  
+  diffs <- setdiff(dtu_list, c(dge_list, dte_list))
+  
+  dtu_only <- intersect(cerebellum_cortex_list[["DTU"]], diffs)
+
+return(dtu_only)
+}
+
+pairwise_dtu_only <- lapply(comparisons, get_dtu_only)
+
+names(pairwise_dtu_only) <- comparisons
+```
+
+## Get bg genes
+
+```{r get correct list of background genes}
+bg_genes <- unique(region_region_switchlist$isoformFeatures$gene_id)
+bg_genes <- str_extract(bg_genes, "ENSMUSG...........")
+```
+
+## Run gprofiler on unique genes
+
+
+
+```{r run gprofiler}
+lapply(seq_along(pairwise_dtu_only), function(i) {
+  print(names(pairwise_dtu_only)[[i]])
+  
+  run_plot_gprofiler(
+  gene_list = str_extract(pairwise_dtu_only[[i]], "ENSMUSG..........."),
+  name = names(pairwise_dtu_only)[[i]],
+  custom_bg_genes = bg_genes,
+  plot_save_path = here("results", "plots", "gprofiler2", "dtu_only"),
+  csv_save_path = here("results", "gprofiler2", "dtu_only")
+)
+})
+
+
+```
+

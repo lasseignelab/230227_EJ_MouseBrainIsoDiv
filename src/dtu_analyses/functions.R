@@ -224,7 +224,7 @@ run_plot_gprofiler <- function(gene_list,
     query = gene_list,
     organism = "mmusculus", ordered_query = FALSE,
     multi_query = FALSE, significant = TRUE, exclude_iea = FALSE,
-    measure_underrepresentation = FALSE, evcodes = FALSE,
+    measure_underrepresentation = FALSE, evcodes = TRUE,
     user_threshold = 0.05, correction_method = "g_SCS",
     domain_scope = "custom", custom_bg = custom_bg_genes,
     numeric_ns = "", sources = NULL, as_short_link = FALSE

@@ -1,0 +1,17 @@
+,x
+query,query_1
+significant,TRUE
+p_value,0.01448328114505
+term_size,16
+query_size,64
+intersection_size,3
+precision,0.046875
+recall,0.1875
+term_id,REAC:R-MMU-3214815
+source,REAC
+term_name,HDACs deacetylate histones
+effective_domain_size,13288
+source_order,617
+parents,REAC:R-MMU-3247509
+evidence_codes,REAC,REAC,REAC
+intersection,ENSMUSG00000021144,ENSMUSG00000039219,ENSMUSG00000066900

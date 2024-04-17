@@ -550,6 +550,15 @@ merged_cpm_iso_means$novel <- merged_cpm_iso_means$isoform_id %like% "tx"
 
 merged_cpm_iso_mean_df <- merged_cpm_iso_means[, c(1, 42, 43)]
 
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == TRUE],
+  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE],
+  conf.int = TRUE, alternative = "greater"
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
 # use ggplot to make density plots showing the two distributions
 ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
   geom_density(alpha = .5) +
@@ -561,21 +570,14 @@ ggplot(merged_cpm_iso_mean_df, aes(x = log10(means + 1), fill = novel)) +
   xlab("log10(Mean CPM + 1)") +
   ylab("Relative Density") +
   theme_minimal(base_size = 12) +
-  theme(text = element_text(face = "bold"))
+  theme(text = element_text(face = "bold")) +
+  ggtitle(paste0(nrow(merged_cpm_iso_mean_df), " Genes: no CPM threshold")) +
+  labs(subtitle = paste0("Wilcoxon rank-sum test, p = ", rank_sum[["p.value"]]))
 
-ggsave(here("results", "finished_figures", "supp1.png"))
+ggsave(here("results", "finished_figures", "supp1A.png"))
 
-rank_sum <- wilcox.test(
-  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == TRUE],
-  merged_cpm_iso_mean_df$means[merged_cpm_iso_mean_df$novel == FALSE],
-  conf.int = TRUE
-)
 
-rank_sum[["p.value"]]
-rank_sum[["conf.int"]]
 ```
-Expected p-value: 1.570014e-113
-Expected 95% CI: 2.802303, 4.414794
 
 What % are expressed with a mean CPM of 1 or higher? 
 
@@ -587,6 +589,156 @@ novel_cpm_means_df <-
 
 
 sum(novel_cpm_means_df$means >= 1) / nrow(novel_cpm_means_df) # 73%
+```
+
+Run second wilcoxon rank sum test for novel transcript means of at least 1
+
+```{r run second wilcoxon test}
+# plot - need to only include txs with mean with at least 1
+merged_cpm_iso_mean_df_over1 <-  
+  merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$means >= 1,]
+
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df_over1$means[merged_cpm_iso_mean_df_over1$novel == TRUE],
+  merged_cpm_iso_mean_df_over1$means[merged_cpm_iso_mean_df_over1$novel == FALSE],
+  conf.int = TRUE, alternative = "greater"
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df_over1, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(
+    values = other_colors,
+    name = "Transcript\nClassification",
+    labels = c("Annotated", "Novel")
+  ) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12) +
+  theme(text = element_text(face = "bold")) +
+  ggtitle(paste0(nrow(merged_cpm_iso_mean_df_over1), " Genes: at least 1 CPM")) +
+  labs(subtitle = paste0("Wilcoxon rank-sum test, p = ", rank_sum[["p.value"]]))
+
+ggsave(here("results", "finished_figures", "supp1B.png"))
+```
+```{r make one more with a cutoff of 2 CPM}
+
+# plot - need to only include txs with mean with at least 2
+merged_cpm_iso_mean_df_over2 <-  
+  merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$means >= 2,]
+
+# run wilcoxon rank sum test
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df_over2$means[merged_cpm_iso_mean_df_over2$novel == TRUE],
+  merged_cpm_iso_mean_df_over2$means[merged_cpm_iso_mean_df_over2$novel == FALSE],
+  conf.int = TRUE, alternative = "greater"
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df_over2, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(
+    values = other_colors,
+    name = "Transcript\nClassification",
+    labels = c("Annotated", "Novel")
+  ) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12) +
+  theme(text = element_text(face = "bold")) +
+  ggtitle(paste0(nrow(merged_cpm_iso_mean_df_over2), " Genes: at least 2 CPM")) +
+  labs(subtitle = paste0("Wilcoxon rank-sum test, p = ", rank_sum[["p.value"]]))
+
+ggsave(here("results", "finished_figures", "supp1C.png"))
+
+
+
+```
+
+```{r cutoff of 5 cpm}
+
+# plot - need to only include txs with mean with at least 5
+merged_cpm_iso_mean_df_over5 <-  
+  merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$means >= 5,]
+
+# run wicoxon rank sum test
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df_over5$means[merged_cpm_iso_mean_df_over5$novel == TRUE],
+  merged_cpm_iso_mean_df_over5$means[merged_cpm_iso_mean_df_over5$novel == FALSE],
+  conf.int = TRUE, alternative = "greater"
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df_over5, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(
+    values = other_colors,
+    name = "Transcript\nClassification",
+    labels = c("Annotated", "Novel")
+  ) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12) +
+  theme(text = element_text(face = "bold")) +
+  ggtitle(paste0(nrow(merged_cpm_iso_mean_df_over5), " Genes: at least 5 CPM")) +
+  labs(subtitle = paste0("Wilcoxon rank-sum test, p = ", rank_sum[["p.value"]]))
+
+ggsave(here("results", "finished_figures", "supp1D.png"))
+
+```
+
+
+```{r cutoff of 8 cpm}
+
+# plot - need to only include txs with mean with at least 8
+merged_cpm_iso_mean_df_over8 <-  
+  merged_cpm_iso_mean_df[merged_cpm_iso_mean_df$means >= 8,]
+
+# run wicoxon rank sum test
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df_over8$means[merged_cpm_iso_mean_df_over8$novel == TRUE],
+  merged_cpm_iso_mean_df_over8$means[merged_cpm_iso_mean_df_over8$novel == FALSE],
+  conf.int = TRUE, alternative = "greater"
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
+# use ggplot to make density plots showing the two distributions
+ggplot(merged_cpm_iso_mean_df_over8, aes(x = log10(means + 1), fill = novel)) +
+  geom_density(alpha = .5) +
+  scale_fill_manual(
+    values = other_colors,
+    name = "Transcript\nClassification",
+    labels = c("Annotated", "Novel")
+  ) +
+  xlab("log10(Mean CPM + 1)") +
+  ylab("Relative Density") +
+  theme_minimal(base_size = 12) +
+  theme(text = element_text(face = "bold")) +
+  ggtitle(paste0(nrow(merged_cpm_iso_mean_df_over8), " Genes: at least 8 CPM")) +
+  labs(subtitle = paste0("Wilcoxon rank-sum test, p = ", rank_sum[["p.value"]]))
+
+ggsave(here("results", "finished_figures", "supp1E.png"))
+
+rank_sum <- wilcox.test(
+  merged_cpm_iso_mean_df_over8$means[merged_cpm_iso_mean_df$novel == TRUE],
+  merged_cpm_iso_mean_df_over8$means[merged_cpm_iso_mean_df$novel == FALSE],
+  conf.int = TRUE
+)
+
+rank_sum[["p.value"]]
+rank_sum[["conf.int"]]
+
 ```
 
 Now, I'm going to try and pivot the data and run the same stat.
