@@ -1,10 +1,13 @@
 Long-read RNA sequencing identifies region- and sex-specific C57BL/6J
 mouse brain mRNA isoform expression and usage
 ================
-2024-01-12
+2024-06-25
 
 bioRxiv Preprint:
 [![DOI:10.1101/2024.01.11.575219](http://img.shields.io/badge/DOI-10.1101/2024.01.11.575219-52BCA3.svg)](https://doi.org/10.1101/2024.01.11.575219)
+
+Published Manuscript:
+[![DOI:10.1186/s13041-024-01112-7](http://img.shields.io/badge/DOI-10.1186/s13041-024-01112-7-52BCA3.svg)](https://doi.org/10.1186/s13041-024-01112-7)
 
 ## Authors
 
